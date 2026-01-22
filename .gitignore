@@ -1,0 +1,10 @@
+.vscode 
+.env
+
+__pychache__/
+*.pyc
+.venv/
+
+
+.DS_Store
+node_modules/

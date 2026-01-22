@@ -1,0 +1,23 @@
+<!-- prettier-ignore -->
+{% extends "base.html" %} 
+{% load static %} 
+{% block title %}Charts{% endblock %} 
+{% block content %}
+<main class="mx-auto max-w-xl p-6">
+  <h2
+    class="mb-4 text-2xl font-bold flex flex-col items-center text-yellow-500"
+  >
+    {{ user_name }}
+  </h2>
+  <div class="rounded-xl bg-white p-4 shadow">
+    <canvas id="expense-chart" width="360" height="360"></canvas>
+    <div id="chart-empty" class="mt-2 text-sm text-slate-500" hidden>
+      No data
+    </div>
+  </div>
+</main>
+
+{{ expense_data|json_script:"expense-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/charts.js' %}"></script>
+{% endblock %}
