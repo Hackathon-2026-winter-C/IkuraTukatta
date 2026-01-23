@@ -21,7 +21,7 @@ jobs:
             NAME="${PUSHER_NAME:-$ACTOR}"
 
             TEXT=$(cat <<EOF
-            ${NAME}さんが${BRANCH}にpushしました。
+            :rocket: ${NAME}さんが${BRANCH}にpushしました。
             [Github](${COMMIT_URL})
             コミットメッセージ: ${COMMIT_MSG}
             EOF)
