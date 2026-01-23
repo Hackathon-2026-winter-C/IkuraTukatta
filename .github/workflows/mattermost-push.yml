@@ -21,7 +21,7 @@ jobs:
           # JSONを安全に作る（改行やダブルクォートをざっくりエスケープ）
           NAME="${PUSHER_NAME:-$ACTOR}"
 
-          TEXT="${NAME}さんが${BRANCH}にpushしました。[Github](${COMMIT_URL}): ${COMMIT_MSG}"
+          TEXT=$'${NAME}さんが${BRANCH}にpushしました。\n[Github]('${COMMIT_URL}') 、コミットメッセージ: '${COMMIT_MSG}'
           export TEXT
 
           payload=$(python3 -c 'import json,os; print(json.dumps({"text": os.environ["TEXT"]}))')
