@@ -1,0 +1,50 @@
+name: Notify Mattermost on push
+
+on:
+  push:
+    branches: [ main, develop , infra-dev, frontend-dev , backend-dev ]
+  pull_request: 
+    types: [opened, reopened, synchronize]
+jobs:
+  notify-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notification to Mattermost
+        env:
+          MM_WEBHOOK: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          COMMIT_URL: ${{ github.event.head_commit.url }}
+        run: |
+          # JSONを安全に作る（改行やダブルクォートをざっくりエスケープ）
+          esc() { printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read())[1:-1])'; }
+
+          TEXT=":rocket: Push to **${REPO}** / **${BRANCH}** by **${ACTOR}**\n> $(esc "${COMMIT_MSG}")\n${COMMIT_URL}"
+          payload="{\"text\":\"$(esc "$TEXT")\"}"
+
+          curl -sS -X POST -H 'Content-Type: application/json' \
+            --data "$payload" \
+            "$MM_WEBHOOK"
+
+
+  notify-pr:
+    runs-on: ubuntu-latest
+    steps:
+        - name: Notify PR to Mattermost
+          if: ${{ github.event_name == 'pull_request' }}
+          env:
+            MM_WEBHOOK: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+            REPO: ${{ github.repository }}
+            ACTOR: ${{ github.actor }}
+            TITLE: ${{ github.event.pull_request.title }}
+            URL: ${{ github.event.pull_request.html_url }}
+            BASE: ${{ github.base_ref }}
+            HEAD: ${{ github.head_ref }}
+          run: |
+            esc() { printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read())[1:-1])'; }
+            TEXT=":git: PR **${REPO}**\n**${HEAD} → ${BASE}** by **${ACTOR}**\n> $(esc "${TITLE}")\n${URL}"
+            payload="{\"text\":\"$(esc "$TEXT")\"}"
+            curl -sS -X POST -H 'Content-Type: application/json' --data "$payload" "$MM_WEBHOOK"
+
