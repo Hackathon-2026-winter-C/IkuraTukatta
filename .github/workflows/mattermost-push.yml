@@ -54,7 +54,7 @@ jobs:
             *)         ACTION_JA="更新しました" ;;
           esac
 
-          TEXT==$(cat <<EOF
+          TEXT=$(cat <<EOF
           :information_source: ${ACTOR}さんがPRを${ACTION_JA}。
           (${HEAD} → ${BASE})
           [Github](${PR_URL})
