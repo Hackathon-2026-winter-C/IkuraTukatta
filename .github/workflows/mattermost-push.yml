@@ -54,7 +54,12 @@ jobs:
             *)         ACTION_JA="更新しました" ;;
           esac
 
-          TEXT="${ACTOR}さんがPRを${ACTION_JA}。(${HEAD} → ${BASE})\n${PR_URL}\nタイトル: ${PR_TITLE}"
+          TEXT==$(cat <<EOF
+          :information_source: ${ACTOR}さんがPRを${ACTION_JA}。
+          (${HEAD} → ${BASE})
+          [Github](${PR_URL})
+          タイトル: ${PR_TITLE}
+          EOF)
           export TEXT
 
           payload=$(python3 -c 'import json,os; print(json.dumps({"text": os.environ["TEXT"]}))')
