@@ -18,17 +18,20 @@ jobs:
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           COMMIT_URL: ${{ github.event.head_commit.url }}
         run: |
-          # JSONを安全に作る（改行やダブルクォートをざっくりエスケープ）
-          NAME="${PUSHER_NAME:-$ACTOR}"
+            NAME="${PUSHER_NAME:-$ACTOR}"
 
-          TEXT=$'${NAME}さんが${BRANCH}にpushしました。\n[Github]('${COMMIT_URL}') ,コミットメッセージ: '${COMMIT_MSG}'
-          export TEXT
-
-          payload=$(python3 -c 'import json,os; print(json.dumps({"text": os.environ["TEXT"]}))')
-
-          curl -sS -X POST -H "Content-Type: application/json" \
-            -d "$payload" \
-            "$MM_WEBHOOK"
+            TEXT=$(cat <<EOF
+            ${NAME}さんが${BRANCH}にpushしました。
+            [Github](${COMMIT_URL})
+            コミットメッセージ: ${COMMIT_MSG}
+            EOF)
+            export TEXT
+            
+            payload=$(python3 -c 'import json,os; print(json.dumps({"text": os.environ["TEXT"]}))')
+            
+            curl -sS -X POST -H "Content-Type: application/json" \
+                  -d "$payload" \
+                   "$MM_WEBHOOK"
   notify-pr:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' }}
