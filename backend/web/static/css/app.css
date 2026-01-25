@@ -1,1 +1,25 @@
-@import "tailwindcss"
+@import "tailwindcss";
+
+/* lightモードの時 */
+:root{
+    --app-bg: 232 232 232;
+    --app-text: 0 0 0;
+    --app-leftshadow: 3px 3px 5px rgba(197,197,197,1);
+    --app-rightshadow: -3px -3px 5px rgba(255,255,255,1);
+}
+
+
+/* ダークモードの時 */
+[data-theme="dark"]{
+    --app-bg: 33 33 33;
+    --app-text: 255 255 255;
+    --app-leftshadow: 3px 3px 5px rgba(47,47,47,1);
+    --app-rightshadow: -3px -3px 5px rgba(0,0,0,1);
+     
+}
+
+/* shadow共通 */
+/* --app-leftshadowなどは↑から参照 */
+.app-shadow{
+    box-shadow: var(--app-leftshadow),var(--app-rightshadow);
+}
