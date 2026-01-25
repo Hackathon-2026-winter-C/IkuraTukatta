@@ -4,8 +4,10 @@
 :root{
     --app-bg: 232 232 232;
     --app-text: 0 0 0;
-    --app-leftshadow: 3px 3px 5px rgba(197,197,197,1);
-    --app-rightshadow: -3px -3px 5px rgba(255,255,255,1);
+    --app-leftshadow: -6px -6px 12px rgba(255,255,255,1);
+    --app-rightshadow: 6px 6px 12px rgba(197,197,197,1);
+    --app-footer-circle-top-shadow: 0 -4px 8px rgba(255,255,255,1);
+    --app-footer-circle-bottom-shadow: 0 4px 10px rgba(197,197,197,1);
 }
 
 
@@ -13,9 +15,10 @@
 [data-theme="dark"]{
     --app-bg: 33 33 33;
     --app-text: 255 255 255;
-    --app-leftshadow: 3px 3px 5px rgba(47,47,47,1);
-    --app-rightshadow: -3px -3px 5px rgba(0,0,0,1);
-     
+    --app-leftshadow: -6px -6px 12px rgba(47,47,47,1);
+    --app-rightshadow: 6px 6px 12px rgba(0,0,0,1);
+    --app-footer-circle-top-shadow: 0 -4px 8px rgba(47,47,47,1);
+    --app-footer-circle-bottom-shadow: 0 4px 12px rgba(0,0,0,1);
 }
 
 /* shadow共通 */
@@ -23,3 +26,11 @@
 .app-shadow{
     box-shadow: var(--app-leftshadow),var(--app-rightshadow);
 }
+
+.footer-circle-shadow{
+    box-shadow: 0 -6px 2px  rgba(47,47,47,1); 
+ }
+
+ .footer-circle-button-shadow{
+    box-shadow: var(--app-footer-circle-top-shadow),var(--app-footer-circle-bottom-shadow)
+ }

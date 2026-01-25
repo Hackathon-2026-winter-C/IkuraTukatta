@@ -6,6 +6,8 @@
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css"/>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
@@ -25,6 +27,7 @@
         <p class="text-[rgb(var(--app-text))] text-xs">ダーク</p>
       </div>
     </header>
+    
     {% block content %}{% endblock %}
     {% django_browser_reload_script %}
 
