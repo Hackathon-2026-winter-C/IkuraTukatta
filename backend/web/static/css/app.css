@@ -1,36 +1,178 @@
 @import "tailwindcss";
 
 /* lightモードの時 */
-:root{
+:root {
     --app-bg: 232 232 232;
     --app-text: 0 0 0;
-    --app-leftshadow: -6px -6px 12px rgba(255,255,255,1);
-    --app-rightshadow: 6px 6px 12px rgba(197,197,197,1);
-    --app-footer-circle-top-shadow: 0 -4px 8px rgba(255,255,255,1);
-    --app-footer-circle-bottom-shadow: 0 4px 10px rgba(197,197,197,1);
+    --app-leftshadow: -6px -6px 12px rgba(255, 255, 255, 1);
+    --app-rightshadow: 6px 6px 12px rgba(197, 197, 197, 1);
+    --app-footer-circle-top-shadow: 0 -4px 8px rgba(255, 255, 255, 1);
+    --app-footer-circle-bottom-shadow: 0 4px 10px rgba(197, 197, 197, 1);
+    --app-mainbutton-shadow: 6px 6px 12px rgba(197, 197, 197, 1),
+        -6px -6px 12px rgba(255, 255, 255, 1);
 }
 
-
 /* ダークモードの時 */
-[data-theme="dark"]{
+html[data-theme="dark"] {
     --app-bg: 33 33 33;
     --app-text: 255 255 255;
-    --app-leftshadow: -6px -6px 12px rgba(47,47,47,1);
-    --app-rightshadow: 6px 6px 12px rgba(0,0,0,1);
-    --app-footer-circle-top-shadow: 0 -4px 8px rgba(47,47,47,1);
-    --app-footer-circle-bottom-shadow: 0 4px 12px rgba(0,0,0,1);
+    --app-leftshadow: -6px -6px 12px rgba(47, 47, 47, 1);
+    --app-rightshadow: 6px 6px 12px rgba(0, 0, 0, 1);
+    --app-footer-circle-top-shadow: 0 -4px 8px rgba(47, 47, 47, 1);
+    --app-footer-circle-bottom-shadow: 0 4px 12px rgba(0, 0, 0, 1);
 }
 
 /* shadow共通 */
-/* --app-leftshadowなどは↑から参照 */
-.app-shadow{
-    box-shadow: var(--app-leftshadow),var(--app-rightshadow);
+.app-shadow {
+    box-shadow: var(--app-leftshadow), var(--app-rightshadow);
 }
 
-.footer-circle-shadow{
-    box-shadow: 0 -6px 2px  rgba(47,47,47,1); 
- }
+.footer-circle-shadow {
+    box-shadow: 0 -6px 2px rgba(47, 47, 47, 1);
+}
 
- .footer-circle-button-shadow{
-    box-shadow: var(--app-footer-circle-top-shadow),var(--app-footer-circle-bottom-shadow)
- }
+.footer-circle-button-shadow {
+    box-shadow: var(--app-footer-circle-top-shadow), var(--app-footer-circle-bottom-shadow);
+}
+
+/* ニューモーフィズムパネル */
+.neu-panel {
+    width: 100%;
+    box-sizing: border-box;
+
+    background-color: rgba(224, 224, 224, 1);
+
+    border-radius: clamp(28px, 10vw, 80px) clamp(28px, 10vw, 80px) 0 0;
+
+    box-shadow: inset 4px 4px 10px rgba(188, 188, 188, 1),
+        inset -4px -4px 10px rgba(255, 255, 255, 1);
+
+    border: 2px solid rgb(206, 206, 206);
+    color: rgba(77, 77, 77, 1);
+
+    padding: 50px clamp(16px, 6vw, 42px);
+    margin: 0 auto;
+}
+
+/* 認証フォーム共通 */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-size: 16px;
+}
+
+/* Input（ライト/ダーク共通） */
+.input {
+    border: none;
+    outline: none;
+    font-size: 16px;
+    border-radius: 15px;
+    padding: 1em;
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: inset 2px 5px 10px rgba(0, 0, 0, 0.18);
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.input:focus {
+    transform: scale(1.02);
+    box-shadow: inset 2px 4px 10px rgba(0, 0, 0, 0.15),
+        0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* btn */
+.btn {
+    width: 100%;
+    border: none;
+    font-size: 16px;
+    border-radius: 12px;
+    padding: 16px 42px;
+    cursor: pointer;
+    transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.btn:active {
+    transform: translateY(2px);
+    filter: brightness(0.98);
+}
+
+/* light */
+/* orange */
+html[data-theme="light"] .btn-main {
+    background: #fd6b22;
+    color: #fff;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
+/* gray */
+html[data-theme="light"] .btn-sub {
+    background: #e8e8e8;
+    color: #111;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
+/* red */
+html[data-theme="light"] .btn-red {
+    background: #ff383c;
+    color: #fff;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
+/* light　押下 */
+/* orange */
+html[data-theme="light"] .btn-main:active {
+    box-shadow: inset 4px 4px 8px #d4571c, inset -4px -4px 8px #ff8a4a;
+}
+
+/* gray */
+html[data-theme="light"] .btn-sub:active {
+    color: #666;
+    box-shadow: inset 4px 4px 12px #c5c5c5, inset -4px -4px 12px #fff;
+}
+
+/* red */
+html[data-theme="light"] .btn-red:active {
+    box-shadow: inset 4px 4px 8px #cc2d30, inset -4px -4px 8px #ff6b6e;
+}
+
+/* dark */
+/* orange */
+html[data-theme="dark"] .btn-main {
+    background: #fd6b22;
+    color: #fff;
+    border: 1px solid #737373;
+    box-shadow: 6px 6px 12px #000, -6px -6px 12px #2f2f2f;
+}
+
+/* gray */
+html[data-theme="dark"] .btn-sub {
+    background: #212121;
+    color: #fff;
+    border: 1px solid #212121;
+    box-shadow: 6px 6px 12px #000, -6px -6px 12px #2f2f2f;
+}
+
+/* red */
+html[data-theme="dark"] .btn-red {
+    background: #ff383c;
+    color: #fff;
+    border: 1px solid #737373;
+    box-shadow: 6px 6px 12px #000, -6px -6px 12px #2f2f2f;
+}
+
+/* dark　押下 */
+/* orange */
+html[data-theme="dark"] .btn-main:active {
+    box-shadow: inset 4px 4px 8px #d4571c, inset -4px -4px 8px #ff8a4a;
+}
+
+/* gray */
+html[data-theme="dark"] .btn-sub:active {
+    color: #666;
+    box-shadow: inset 4px 4px 12px #000, inset -4px -4px 12px #1f1f1f;
+}
+
+/* red */
+html[data-theme="dark"] .btn-red:active {
+    box-shadow: inset 4px 4px 8px #cc2d30, inset -4px -4px 8px #ff6b6e;
+}
