@@ -27,6 +27,10 @@ def settings_page(request):
 def user_page(request):
     return render(request, "user.html")
 
+@ensure_csrf_cookie 
+def signup_view(request): 
+    return render(request, "accounts/signup.html")
+
 
 @ensure_csrf_cookie
 def charts_page(request):
