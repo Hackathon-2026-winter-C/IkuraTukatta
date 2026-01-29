@@ -4,7 +4,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
 from .models import InOrExp, AppUser
-from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import logout
 
 from datetime import date
 import calendar
@@ -122,3 +123,8 @@ def signup(request):
     else:
         form = UserCreationForm()
     return render(request, "signup.html", {"form": form})
+
+# ログアウト
+def logout_view(request):
+    logout(request)
+    return redirect("login")
