@@ -19,7 +19,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
      "django_browser_reload",
-    "web"
+    "web",
+    'django.contrib.humanize'
 ]
 
 MIDDLEWARE = [

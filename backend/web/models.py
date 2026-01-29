@@ -59,7 +59,7 @@ class Category(models.Model):
     updated_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        db_table = "CATEGORIS"
+        db_table = "CATEGORIES"
         managed = False
 
 
@@ -102,7 +102,7 @@ class InOrExp(models.Model):
     receipt = models.ForeignKey(
         Receipt,
         on_delete=models.DO_NOTHING,
-        db_column="receiept_id",
+        db_column="receipt_id",
         related_name="in_or_exps",
         blank=True,
         null=True,

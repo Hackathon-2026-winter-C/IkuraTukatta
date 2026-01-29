@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS `SHARE_GROUPS` (
   CONSTRAINT fk_share_groups_owner_user FOREIGN KEY (owner_user_id) REFERENCES `USERS` (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS `CATEGORIS` (
+CREATE TABLE IF NOT EXISTS `CATEGORIES` (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   group_id INT NOT NULL,
@@ -47,16 +47,17 @@ CREATE TABLE IF NOT EXISTS `IN_OR_EXPS` (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   category_id INT NOT NULL,
-  receiept_id INT,
+  receipt_id INT,
   group_id INT NOT NULL,
   amount INT NOT NULL,
   expense_date DATE NOT NULL,
   memo VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
   CONSTRAINT fk_in_or_exps_user FOREIGN KEY (user_id) REFERENCES `USERS` (id),
-  CONSTRAINT fk_in_or_exps_category FOREIGN KEY (category_id) REFERENCES `CATEGORIS` (id),
-  CONSTRAINT fk_in_or_exps_receiept FOREIGN KEY (receiept_id) REFERENCES `RECEIPTS` (id),
+  CONSTRAINT fk_in_or_exps_category FOREIGN KEY (category_id) REFERENCES `CATEGORIES` (id),
+  CONSTRAINT fk_in_or_exps_receipt FOREIGN KEY (receipt_id) REFERENCES `RECEIPTS` (id),
   CONSTRAINT fk_in_or_exps_group FOREIGN KEY (group_id) REFERENCES `SHARE_GROUPS` (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -68,5 +69,5 @@ CREATE TABLE IF NOT EXISTS `RECEIPT_ITEMS` (
   price INT NOT NULL,
   detection_date DATE,
   CONSTRAINT fk_receipt_items_receipt FOREIGN KEY (receipt_id) REFERENCES `RECEIPTS` (id),
-  CONSTRAINT fk_receipt_items_category FOREIGN KEY (category_id) REFERENCES `CATEGORIS` (id)
+  CONSTRAINT fk_receipt_items_category FOREIGN KEY (category_id) REFERENCES `CATEGORIES` (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

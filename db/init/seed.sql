@@ -1,17 +1,25 @@
 INSERT INTO `USERS` (id, group_id, email, password_hash, name, google_uid, created_at, updated_at) VALUES
-  (1, 1, 'alice@example.com', 'hashed-password-1', 'Alice', 'google-uid-alice', NOW(), NOW()),
-  (2, 1, 'bob@example.com',   'hashed-password-2', 'Bob',   'google-uid-bob',   NOW(), NOW());
+  (1, 1, 'haruto@example.com', 'hashed-password-1', 'haruto', 'google-uid-haruto', NOW(), NOW()),
+  (2, 1, 'hina@example.com',   'hashed-password-2', 'hina',   'google-uid-hina',   NOW(), NOW());
 
 INSERT INTO `SHARE_GROUPS` (id, name, owner_user_id, created_at, updated_at) VALUES
   (1, 'Main Group', 1, NOW(), NOW());
 
-INSERT INTO `CATEGORIS` (id, user_id, group_id, name, color, is_io_type, created_at, updated_at) VALUES
-  (1, 1, 1, 'Food',       '#F97316', 0, NOW(), NOW()),
-  (2, 1, 1, 'Transport',  '#3B82F6', 0, NOW(), NOW()),
-  (3, 1, 1, 'Salary',     '#22C55E', 1, NOW(), NOW()),
-  (4, 2, 1, 'Groceries',  '#F97316', 0, NOW(), NOW()),
-  (5, 2, 1, 'Rent',       '#6366F1', 0, NOW(), NOW()),
-  (6, 2, 1, 'Side Income','#14B8A6', 1, NOW(), NOW());
+INSERT INTO `CATEGORIES` (id, user_id, group_id, name, color, is_io_type, created_at, updated_at) VALUES
+  -- 支出（0）
+  (1,  1, 1, '食費',   '#FFB44F', 0, NOW(), NOW()),
+  (2,  1, 1, '住居費', '#E1BFFF', 0, NOW(), NOW()),
+  (3,  1, 1, '交通費', '#62B2FD', 0, NOW(), NOW()),
+  (4,  1, 1, '光熱費', '#9BDFC4', 0, NOW(), NOW()),
+  (5,  1, 1, '娯楽',   '#F99BAB', 0, NOW(), NOW()),
+  (6,  1, 1, '洋服',   '#FFC6D7', 0, NOW(), NOW()),
+  (7,  1, 1, '医療費', '#9F97F7', 0, NOW(), NOW()),
+  (8,  1, 1, '日用品', '#AEE3F5', 0, NOW(), NOW()),
+  (9,  1, 1, '支出その他', '#86BE63', 0, NOW(), NOW()),
+
+  -- 収入（1）
+  (10,  1, 1, '給料',   '#FACC15', 1, NOW(), NOW()),
+  (11, 1, 1, '収入その他', '#FFD5D2', 1, NOW(), NOW());
 
 INSERT INTO `RECEIPTS` (id, user_id, group_id, image_url, taken_at, ocr_status, created_at) VALUES
   (1, 1, 1, 'https://example.com/receipts/1.jpg', '2025-01-10 12:10:00', 'done', NOW()),
@@ -23,14 +31,115 @@ INSERT INTO `RECEIPT_ITEMS` (id, receipt_id, category_id, item_name, price, dete
   (3, 2, 4, 'Vegetables', 650, '2025-01-11'),
   (4, 2, 4, 'Milk',       220, '2025-01-11');
 
-INSERT INTO `IN_OR_EXPS` (id, user_id, category_id, receiept_id, group_id, amount, expense_date, memo, created_at, updated_at) VALUES
-  (1, 1, 1, 1,    1,  1160, '2025-01-10', 'Lunch',          NOW(), NOW()),
-  (2, 1, 2, NULL, 1,   480, '2025-01-11', 'Train',          NOW(), NOW()),
-  (3, 1, 3, NULL, 1, 250000, '2025-01-01', 'January salary', NOW(), NOW()),
-  (4, 1, 1, NULL, 1,   760, '2025-01-15', 'Dinner',         NOW(), NOW()),
-  (5, 1, 2, NULL, 1,   300, '2025-01-16', 'Bus',            NOW(), NOW()),
-  (6, 2, 4, 2,    1,   870, '2025-01-11', 'Grocery store',  NOW(), NOW()),
-  (7, 2, 5, NULL, 1, 78000, '2025-01-05', 'January rent',   NOW(), NOW()),
-  (8, 2, 6, NULL, 1, 12000, '2025-01-12', 'Freelance',      NOW(), NOW()),
-  (9, 2, 4, NULL, 1,   540, '2025-01-14', 'Snacks',         NOW(), NOW()),
-  (10, 2, 4, NULL, 1,  320, '2025-01-16', 'Bread',          NOW(), NOW());
+INSERT INTO `IN_OR_EXPS`
+(id, user_id, category_id, receipt_id, group_id, amount, expense_date, memo, created_at, updated_at)
+VALUES
+/* ===== 2026年1月 ===== */
+
+(1, 1, 5, NULL, 1,   100, '2026-01-01', '初詣お賽銭', NOW(), NOW()),
+(2, 1, 1, NULL, 1,   420, '2026-01-01', 'コンビニ（おにぎり＋ホットコーヒー）', NOW(), NOW()),
+
+(3, 1, 1, NULL, 1,  2300, '2026-01-03', 'スーパー（正月明けの食材まとめ買い）', NOW(), NOW()),
+
+(4, 1, 2, NULL, 1, 55000, '2026-01-05', '家賃', NOW(), NOW()),
+
+(5, 1, 3, NULL, 1,  3000, '2026-01-06', 'Suicaチャージ', NOW(), NOW()),
+(6, 1, 1, NULL, 1,   890, '2026-01-06', 'マック', NOW(), NOW()),
+
+(7, 1, 1, NULL, 1,   480, '2026-01-07', 'コンビニ（お菓子＋エナドリ）', NOW(), NOW()),
+
+(8, 1, 4, NULL, 1,  8000, '2026-01-08', 'スマホ代', NOW(), NOW()),
+
+(9, 1, 8, NULL, 1,  1950, '2026-01-10', 'ドラッグストア（洗剤・日用品）', NOW(), NOW()),
+(10,1, 1, NULL, 1,  2100, '2026-01-10', 'スーパー', NOW(), NOW()),
+
+(11,1, 8, NULL, 1,  2980, '2026-01-11', 'Amazon（日用品まとめ買い）', NOW(), NOW()),
+
+(12,1, 1, NULL, 1,   950, '2026-01-12', 'ラーメン屋', NOW(), NOW()),
+
+(13,1, 3, NULL, 1,  3000, '2026-01-13', 'Suicaチャージ', NOW(), NOW()),
+
+(14,1, 1, NULL, 1,   360, '2026-01-14', 'コンビニ', NOW(), NOW()),
+
+(15,1, 4, NULL, 1,  7600, '2026-01-15', '水道光熱費（請求）', NOW(), NOW()),
+
+(16,1, 1, NULL, 1,  1600, '2026-01-16', '友達とごはん（ファミレス）', NOW(), NOW()),
+
+(17,1, 5, NULL, 1,   990, '2026-01-17', 'Netflix', NOW(), NOW()),
+
+(18,1, 1, NULL, 1,  2450, '2026-01-18', 'スーパー', NOW(), NOW()),
+
+(19,1, 8, NULL, 1,   330, '2026-01-19', '100均', NOW(), NOW()),
+
+(20,1, 1, NULL, 1,   680, '2026-01-20', '牛丼チェーン', NOW(), NOW()),
+
+(21,1, 4, NULL, 1,  4000, '2026-01-21', 'Wi-Fi代', NOW(), NOW()),
+
+(22,1, 5, NULL, 1,  1200, '2026-01-22', 'ゲーム課金', NOW(), NOW()),
+
+(23,1, 1, NULL, 1,   510, '2026-01-23', 'コンビニ（夜食）', NOW(), NOW()),
+
+(24,1, 6, NULL, 1,  2990, '2026-01-24', 'ユニクロ（ヒートテック）', NOW(), NOW()),
+
+(25,1,10, NULL, 1,210000, '2026-01-25', '給料', NOW(), NOW()),
+(26,1,11, NULL, 1, 15000, '2026-01-25', '先取り貯金', NOW(), NOW()),
+
+(27,1, 3, NULL, 1,  3000, '2026-01-26', 'Suicaチャージ', NOW(), NOW()),
+
+(28,1, 1, NULL, 1,  2200, '2026-01-27', 'スーパー', NOW(), NOW()),
+
+(29,1, 7, NULL, 1,  4500, '2026-01-31', '美容室', NOW(), NOW()),
+(30,1, 5, NULL, 1,  7000, '2026-01-31', '飲み会割り勘', NOW(), NOW()),
+
+/* ===== 2026年2月 ===== */
+
+(101,1, 2, NULL, 1, 55000, '2026-02-01', '家賃', NOW(), NOW()),
+(102,1, 1, NULL, 1,   620, '2026-02-01', 'コンビニ（おにぎり＋唐揚げ棒）', NOW(), NOW()),
+
+(103,1, 3, NULL, 1,  3000, '2026-02-02', 'Suicaチャージ', NOW(), NOW()),
+
+(104,1, 1, NULL, 1,  2480, '2026-02-03', 'スーパー（自炊用）', NOW(), NOW()),
+
+(105,1, 4, NULL, 1,  8200, '2026-02-05', '水道光熱費（請求）', NOW(), NOW()),
+(106,1, 1, NULL, 1,   980, '2026-02-05', 'ラーメン屋', NOW(), NOW()),
+
+(107,1, 8, NULL, 1,  1480, '2026-02-06', 'ドラッグストア（洗剤・ティッシュ）', NOW(), NOW()),
+
+(108,1, 1, NULL, 1,  1950, '2026-02-07', 'スーパー', NOW(), NOW()),
+(109,1, 1, NULL, 1,   420, '2026-02-07', 'コンビニ（お菓子＋飲み物）帰りに寄っちゃった', NOW(), NOW()),
+
+(110,1, 4, NULL, 1,  8000, '2026-02-08', 'スマホ代', NOW(), NOW()),
+
+(111,1, 5, NULL, 1,  2200, '2026-02-09', '友達とカラオケ', NOW(), NOW()),
+
+(112,1, 3, NULL, 1,  3000, '2026-02-10', 'Suicaチャージ', NOW(), NOW()),
+
+(113,1, 6, NULL, 1,  3990, '2026-02-11', 'ユニクロ（パーカー）', NOW(), NOW()),
+
+(114,1, 4, NULL, 1,  4000, '2026-02-12', 'Wi-Fi代', NOW(), NOW()),
+
+(115,1, 5, NULL, 1, 15000, '2026-02-13', '飲み会割り勘', NOW(), NOW()),
+
+(116,1, 1, NULL, 1,  2300, '2026-02-14', 'スーパー（鍋材料）', NOW(), NOW()),
+
+(117,1, 4, NULL, 1,  5000, '2026-02-15', '電気・ガス追加分', NOW(), NOW()),
+
+(118,1, 5, NULL, 1,   990, '2026-02-16', 'Netflix', NOW(), NOW()),
+
+(119,1, 1, NULL, 1,   850, '2026-02-17', 'マック', NOW(), NOW()),
+(120,1, 2, NULL, 1,  4000, '2026-02-17', '家具・家電分割（冷蔵庫・洗濯機）', NOW(), NOW()),
+
+(121,1, 1, NULL, 1,   540, '2026-02-18', 'コンビニ', NOW(), NOW()),
+
+(122,1, 8, NULL, 1,   550, '2026-02-20', '100均', NOW(), NOW()),
+
+(123,1, 1, NULL, 1,   720, '2026-02-21', '牛丼チェーン', NOW(), NOW()),
+
+(124,1, 5, NULL, 1,  1500, '2026-02-23', 'ゲーム課金', NOW(), NOW()),
+
+(125,1, 1, NULL, 1,  2100, '2026-02-24', 'スーパー', NOW(), NOW()),
+
+(126,1,10, NULL, 1,210000, '2026-02-25', '給料', NOW(), NOW()),
+(127,1,11, NULL, 1, 15000, '2026-02-25', '先取り貯金', NOW(), NOW()),
+
+(128,1, 7, NULL, 1,  4500, '2026-02-28', '美容室', NOW(), NOW());
