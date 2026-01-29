@@ -1,9 +1,10 @@
 # backend/web/views.py
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
 from .models import InOrExp, AppUser
+from django.contrib.auth.forms import UserChangeForm
 
 from datetime import date
 import calendar
@@ -114,3 +115,14 @@ def dashboard_moneyflow_edit_page(request):
 def account_page(request):
     return render(request, 'accounts/account.html')
 
+# サインアップ
+def signup(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("login") # 登録後ログインページへ
+    
+    else:
+        form = UserCreationForm()
+    return render(request, "signup.html", {"form": form})
