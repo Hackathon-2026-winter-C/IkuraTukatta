@@ -1,10 +1,36 @@
 {% extends 'base.html' %}
 
-{% block title %}
-  新規登録
-{% endblock title %}
+{% load static %}
+
+{% block title %}サインアップ{% endblock title %}
 
 {% block content %}
-  <h2 class="text-[rgb(var(--app-text))]">新規登録ページ</h2>
+  <h2 class="text-[rgb(var(--app-text))]">サインアップページ</h2>
 
-{% endblock content %}
+  <div class="flex items-center relative  w-full">
+      <a href="{% url 'dashboard' %}" class="absolute left-10 text-black text-2xl mt-2 mb-12">&larr;</a>
+      <h2 class="text-xl font-bold text-black text-center w-full mt-2 mb-12">アカウント新規登録</h2>
+  </div>
+
+  <div class="mx-auto w-full">
+      <img src="{% static 'assets/images/signup_img.png' %}" alt="サインアップ画像" class="mx-auto mb-2 w-36 h-36 object-contain block shrink-0">               
+      <h3 class="text-xs font-bold text-black text-center">プロフィール写真をアップロードしてください</h3>
+  </div>
+
+  <div class="py-[50px] px-[clamp(16px,6vw,42px)] my-0 mx-auto w-full">
+      <form class="auth-form" method="post" action="{% url 'dashboard' %}">
+          <input type="text" id="name" name="name" class="input" placeholder="名前">
+          <input type="email" id="email" name="email" class="input" placeholder="メールアドレス">
+          <input type="password" id="password" name="password" class="input" placeholder="パスワード">
+          <input type="password" id="confirm_password" name="confirm_password" class="input" placeholder="確認用パスワード">
+
+          <button type="submit" class="btn btn-main">登録</button>
+
+          <div class="text-center text-black my-2">
+            アカウントをお持ちの方は
+            <a href="{% url 'login' %}" class="text-[#FF9400] font-bold">ログイン</a>
+          </div>
+      </form>
+  </div>
+
+{% endblock %}
