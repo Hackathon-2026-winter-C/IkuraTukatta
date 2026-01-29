@@ -12,7 +12,8 @@ urlpatterns = [
 
     # 開発
     path("login", views.login_page, name="login"),
-    path("signup", views.signup_page, name="signup"),
+    path("logout/", views.logout_view, name="logout"),
+    path("signup", views.signup, name="signup"),
     path("dashboard/",views.dashboard_page, name="dashboard"),
     path("dashboard/charts", views.charts_page, name="charts"),
     path("dashboard/list", views.dashboard_list_page, name="dashboard_list"),

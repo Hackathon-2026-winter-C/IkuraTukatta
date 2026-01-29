@@ -90,9 +90,6 @@ def test_footer_page(request):
 def login_page(request):
     return render(request, 'accounts/login.html')
 
-@ensure_csrf_cookie
-def signup_page(request):
-    return render(request, 'accounts/signup.html')
 
 @ensure_csrf_cookie
 def dashboard_list_page(request):
@@ -137,4 +134,4 @@ def account_edit(request):
     else:
         form = UserUpdateForm(instance=request.user)    
 
-    return render(equest, "accounts/account_edit.html", {"form": form})
+    return render(request, "accounts/account_edit.html", {"form": form})
