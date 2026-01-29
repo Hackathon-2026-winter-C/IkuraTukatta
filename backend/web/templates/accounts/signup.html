@@ -1,93 +1,36 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% load static %}
 
-{% block title %}signup{% endblock %}
+{% block title %}サインアップ{% endblock title %}
 
 {% block content %}
-    <div class="min-h-screen flex flex-col bg-gray-100">
-    <div class="flex-grow flex items-center justify-center"> 
-    <div class="bg-[#E8E8E8] p-8 rounded-lg shadow-md w-full max-w-[393px] h-full max-h-[852px]">
-      <div class="flex items-center relative mb-[46px] w-full max-w-[393px] h-[48px]">
-        <a href="#" class="absolute left-0 text-[#212121] text-2xl mt-[10px] mb-[10px]">
-            &larr;
-        </a>
-        <h2 class="text-2xl font-bold text-[#212121] text-center w-full mt-[10px] mb-[10px]">アカウント新規登録</h2> 
-      </div>
-        <div class="mx-auto w-full max-w-[295px] min-h-[613px]">
-         <img src="{% static 'assets/images/signup_img.png' %}" alt="サインアップ画像" class="mx-auto mb-2 w-36 h-36 object-contain block shrink-0">               
-         <h3 class="text-[11px] font-bold text-[#212121] text-center mb-[29px]">プロフィール写真をアップロードしてください</h3>
-        <form action="#" method="POST" class="flex flex-col gap-[29px]">
-          {% csrf_token %}
-            <div class="flex flex-col items-center">
-              <label for="username" class="sr-only">名前</label>
-              <input type="text" id="username" name="username" placeholder="名前" class="
-                w-full max-w-[295px] h-[55px] flex items-center justify-center 
-                bg-[#FFFFFF] border-none outline-none rounded-[15px] p-[1em] 
-                shadow-[inset_2px_5px_10px_rgba(0,0,0,0.3)] 
-                transition-all duration-300 ease-in-out 
-                focus:bg-white focus:scale-[1.05] 
-                focus:shadow-[13px_13px_100px_#969696,-13px_-13px_100px_#ffffff] text-sm" required>
-            </div>
-            <div class="flex flex-col items-center">
-              <label for="email" class="sr-only">メールアドレス</label>
-              <input type="email" id="email" name="email" placeholder="メールアドレス" class="
-                w-full max-w-[295px] h-[55px] flex items-center justify-center
-                bg-[#FFFFFF] border-none outline-none rounded-[15px] p-[1em]
-                shadow-[inset_2px_5px_10px_rgba(0,0,0,0.3)] 
-                transition-all duration-300 ease-in-out 
-                focus:bg-white focus:scale-[1.05] 
-                focus:shadow-[13px_13px_100px_#969696,-13px_-13px_100px_#ffffff] text-sm" required>
-            </div>
-            <div class="flex flex-col items-center">
-              <label for="password" class="sr-only">パスワード</label>
-              <input type="password" id="password" name="password" placeholder="パスワード" class="
-                w-full max-w-[295px] h-[55px] flex items-center justify-center
-                bg-[#FFFFFF] border-none outline-none rounded-[15px] p-[1em]
-                shadow-[inset_2px_5px_10px_rgba(0,0,0,0.3)] 
-                transition-all duration-300 ease-in-out 
-                focus:bg-white focus:scale-[1.05] 
-                focus:shadow-[13px_13px_100px_#969696,-13px_-13px_100px_#ffffff] text-sm" required>
-            </div>
-            <div class="flex flex-col items-center">
-              <label for="confirm_password" class="sr-only">確認用パスワード</label>
-              <input type="password" id="confirm_password" name="confirm_password" placeholder="確認用パスワード" class="
-                w-full max-w-[295px] h-[55px] flex items-center justify-center
-                bg-[#FFFFFF] border-none outline-none rounded-[15px] p-[1em]
-                shadow-[inset_2px_5px_10px_rgba(0,0,0,0.3)] 
-                transition-all duration-300 ease-in-out 
-                focus:bg-white focus:scale-[1.05] 
-                focus:shadow-[13px_13px_100px_#969696,-13px_-13px_100px_#ffffff] text-sm" required>
-            </div>
-            
-            <div class="mb-[29px] flex items-center justify-center">
-                <button type="submit" class="
-                  w-full max-w-[295px] h-[55px] flex items-center justify-center
-                  bg-[#FF9400] text-white font-bold text-sm rounded-[0.5em] cursor-pointer border border-[#FF9400]
-                  hover:bg-[#FFa01a] hover:shadow-[0_0_10px_rgba(255,148,0,0.3)]
-                  transition-all duration-300 
-                  shadow-[6px_6px_12px_#c5c5c5,-6px_-6px_12px_#ffffff] 
-                  active:text-white active:shadow-[inset_0px_0px_15px_rgba(255,148,0,0.2),_6px_6px_12px_rgba(255,255,255,0.7)] text-sm
-                  active:translate-y-0.5 active:scale-98">
-                  登録
-                </button>
-            </div>
-        </form>
-        <p class="text-center text-[#212121] text-sm "> 
-          アカウントをお持ちの方は
-          <a href="#" 
-            class="
-              text-[#FF9400] 
-              font-bold 
-              transition-all 
-              duration-300 
-              hover:scale-100
-              hover:text-[#FFa01a] 
-              hover:drop-shadow-[0_0_14px_rgba(255,148,0,0.7)] ">
-              ログイン
-          </a>
-        </p>      
-      </div>
-     </div>
-    </div>
+  <h2 class="text-[rgb(var(--app-text))]">サインアップページ</h2>
+
+  <div class="flex items-center relative  w-full">
+      <a href="{% url 'dashboard' %}" class="absolute left-10 text-black text-2xl mt-2 mb-12">&larr;</a>
+      <h2 class="text-xl font-bold text-black text-center w-full mt-2 mb-12">アカウント新規登録</h2>
+  </div>
+
+  <div class="mx-auto w-full">
+      <img src="{% static 'assets/images/signup_img.png' %}" alt="サインアップ画像" class="mx-auto mb-2 w-36 h-36 object-contain block shrink-0">               
+      <h3 class="text-xs font-bold text-black text-center">プロフィール写真をアップロードしてください</h3>
+  </div>
+
+  <div class="py-[50px] px-[clamp(16px,6vw,42px)] my-0 mx-auto w-full">
+      <form class="auth-form" method="post" action="{% url 'dashboard' %}">
+          <input type="text" id="name" name="name" class="input" placeholder="名前">
+          <input type="email" id="email" name="email" class="input" placeholder="メールアドレス">
+          <input type="password" id="password" name="password" class="input" placeholder="パスワード">
+          <input type="password" id="confirm_password" name="confirm_password" class="input" placeholder="確認用パスワード">
+
+          <button type="submit" class="btn btn-main">登録</button>
+
+          <div class="text-center text-black my-2">
+            アカウントをお持ちの方は
+            <a href="{% url 'login' %}" class="text-[#FF9400] font-bold">ログイン</a>
+          </div>
+      </form>
+  </div>
+
 {% endblock %}

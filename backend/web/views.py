@@ -57,7 +57,7 @@ def charts_page(request):
     ]
     return render(
         request,
-        "charts/chart.html",
+        "dashboard/charts/chart.html",
         {"expense_data": expense_data, "user_name": user_name},
     )
 
@@ -81,3 +81,36 @@ def users_api(request):
         AppUser.objects.values("id","name","email")
     )
     return JsonResponse({"users": users})
+
+@ensure_csrf_cookie
+def test_footer_page(request):
+    return render(request, "sample/test_footer.html")
+
+@ensure_csrf_cookie
+def login_page(request):
+    return render(request, 'accounts/login.html')
+
+@ensure_csrf_cookie
+def signup_page(request):
+    return render(request, 'accounts/signup.html')
+
+@ensure_csrf_cookie
+def dashboard_list_page(request):
+    return render(request, 'dashboard/list/list.html')
+
+@ensure_csrf_cookie
+def dashboard_moneyflow_form_page(request):
+    return render(request, 'dashboard/moneyflow/moneyflow_form.html')
+
+@ensure_csrf_cookie
+def dashboard_moneyflow_category_page(request):
+    return render(request, 'dashboard/moneyflow/category.html')
+
+@ensure_csrf_cookie
+def dashboard_moneyflow_edit_page(request):
+    return render(request, 'dashboard/moneyflow/moneyflow_edit.html')
+
+@ensure_csrf_cookie
+def account_page(request):
+    return render(request, 'accounts/account.html')
+
