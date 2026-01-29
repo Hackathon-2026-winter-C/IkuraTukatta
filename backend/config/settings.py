@@ -73,6 +73,11 @@ TIME_ZONE = "Asia/Tokyo"
 USE_I18N = True
 USE_TZ = True
 
+# ---- Auth(ログイン関連) ----
+LOGIN_URL = "login"
+LOHIN_REDIRECT_URL = "dashbord"
+LOGOUT_REDIRECT_URL = "login"
+
 # ---- Static ----
 STATIC_URL = "/static/"
 # 本番で collectstatic する時の出力先
