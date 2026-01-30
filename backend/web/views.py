@@ -5,8 +5,6 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
 from .models import InOrExp, AppUser
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.decorators import login_required
-from .forms import UserUpdateForm
 from django.contrib.auth import logout
 
 from datetime import date
@@ -90,6 +88,9 @@ def test_footer_page(request):
 def login_page(request):
     return render(request, 'accounts/login.html')
 
+@ensure_csrf_cookie
+def signup_page(request):
+    return render(request, 'accounts/signup.html')
 
 @ensure_csrf_cookie
 def dashboard_list_page(request):
@@ -121,17 +122,9 @@ def signup(request):
     
     else:
         form = UserCreationForm()
-    return render(request, "accounts/signup.html", {"form": form})
+    return render(request, "signup.html", {"form": form})
 
-# アカウント編集
-@login_required
-def account_edit(request):
-    if request.method == "POST":
-        form = UserUpdateForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
-            return redirect("account")
-    else:
-        form = UserUpdateForm(instance=request.user)    
-
-    return render(request, "accounts/account_edit.html", {"form": form})
+# ログアウト
+def logout_view(request):
+    logout(request)
+    return redirect("login")
