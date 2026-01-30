@@ -73,9 +73,9 @@ TIME_ZONE = "Asia/Tokyo"
 USE_I18N = True
 USE_TZ = True
 
-# ---- Auth(ログイン関連) ----
+# ---- AUTH() ----
 LOGIN_URL = "login"
-LOHIN_REDIRECT_URL = "dashbord"
+LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
 
 # ---- Static ----
