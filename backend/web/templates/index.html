@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Expenses{% endblock %}
+{% block content %}
+  <main class="flex flex-col items-center gap-3 ">
+    <h1 class="text-2xl text-[rgb(var(--app-text)/1)]">費用</h1>
+    <table class=" bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))]  rounded-3xl  app-shadow">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>User</th>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Memo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for expense in expenses %}
+          <tr>
+            <td>{{ expense.expense_date }}</td>
+            <td>{{ expense.user.name }}</td>
+            <td>
+              <span style="display:inline-block;width:0.75em;height:0.75em;background:{{ expense.category.color }};"></span>
+              {{ expense.category.name }}
+            </td>
+            <td>{{ expense.amount }}</td>
+            <td>{{ expense.memo|default:"-" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5">No data</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </main>
+{% endblock %}
