@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import login_view
+
 
 urlpatterns = [
     # テスト
@@ -12,8 +12,14 @@ urlpatterns = [
     path("test-footer/", views.test_footer_page, name="test_footer"),
 
     # 開発
+
+    
+
     path("login/", views.login_view, name="login"),
-    path("signup", views.signup_page, name="signup"),
+
+    path("logout/", views.logout_view, name="logout"),
+
+    path("signup/", views.signup_view, name="signup"),
     path("dashboard/",views.dashboard_page, name="dashboard"),
     path("dashboard/charts", views.charts_page, name="charts"),
     path("dashboard/list", views.dashboard_list_page, name="dashboard_list"),
@@ -21,7 +27,10 @@ urlpatterns = [
     path("dashboard/moneyflow/edit", views.dashboard_moneyflow_edit_page, name="dashboard_moneyflow_edit"),
     path("dashboard/moneyflow/category", views.dashboard_moneyflow_category_page, name="dashboard_moneyflow_category"),
     path("dashboard/account", views.account_page, name="account"),
+
     path("whoami/", views.whoami, name="whoami"),
+
+
 
 
     # テストAPI

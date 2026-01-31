@@ -1,21 +1,38 @@
 {% load static %}
 {% load django_browser_reload %}
 <!doctype html>
-<html lang="ja" data-theme="light">
+<html lang="ja" data-theme="dark">
 
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css"/>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <link rel="icon" href="{% static 'assets/images/favicon.ico' %}" type="image/x-icon"/>
     <title>
       {% block title %}App{% endblock %}
     </title>
   </head>
 
-  <body class="bg-cyan-800 text-slate-900 min-h-screen pt-16">
+  <body class="bg-[rgb(var(--app-bg))] text-slate-900 min-h-screen pt-3">
+    {% comment %} ダークモードのテスト {% endcomment %}
+    <header class="w-full h-12 flex items-center justify-center">
+      <span class="flex-1"></span>
+      <div class="w-36 h-full flex items-center justify-center gap-2">
+        <p class="text-[rgb(var(--app-text))] text-xs">ライト</p>
+        <input class="toggle toggle-sm toggle-accent " type="checkbox" checked="checked"/>
+        <p class="text-[rgb(var(--app-text))] text-xs">ダーク</p>
+      </div>
+    </header>
+    
     {% block content %}{% endblock %}
     {% django_browser_reload_script %}
+
+    <script src="{% static 'js/theme-toggle.js' %}">
+    </script>
   </body>
 
 </html>

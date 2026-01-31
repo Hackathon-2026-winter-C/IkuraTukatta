@@ -1,4 +1,13 @@
 # backend/web/views.py
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_GET
+from .models import InOrExp, AppUser
+from django.contrib.auth.forms import UserChangeForm
+
+
 from datetime import date
 import calendar
 
@@ -118,6 +127,7 @@ def dashboard_moneyflow_edit_page(request):
 def account_page(request):
     return render(request, 'accounts/account.html')
 
+
 @require_http_methods(["GET", "POST"])
 def login_view(request):
     if request.method == "POST":
@@ -149,3 +159,16 @@ def logout_view(request):
 @login_required
 def whoami(request):
     return HttpResponse(f"OK: authenticated={request.user.is_authenticated}, user={request.user}")
+
+# サインアップ
+def signup(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("login") # 登録後ログインページへ
+    
+    else:
+        form = UserCreationForm()
+    return render(request, "signup.html", {"form": form})
+
