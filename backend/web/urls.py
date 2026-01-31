@@ -13,6 +13,7 @@ urlpatterns = [
 
     # 開発
 
+
     
 
     path("login/", views.login_view, name="login"),
@@ -20,6 +21,11 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
 
     path("signup/", views.signup_view, name="signup"),
+
+    path("login", views.login_page, name="login"),
+    path("logout/", views.logout_view, name="logout"),
+    path("signup", views.signup, name="signup"),
+
     path("dashboard/",views.dashboard_page, name="dashboard"),
     path("dashboard/charts", views.charts_page, name="charts"),
     path("dashboard/list", views.dashboard_list_page, name="dashboard_list"),
@@ -27,6 +33,7 @@ urlpatterns = [
     path("dashboard/moneyflow/edit", views.dashboard_moneyflow_edit_page, name="dashboard_moneyflow_edit"),
     path("dashboard/moneyflow/category", views.dashboard_moneyflow_category_page, name="dashboard_moneyflow_category"),
     path("dashboard/account", views.account_page, name="account"),
+    path("account/edit/", views.account_edit, name="account_edit"),
 
     path("whoami/", views.whoami, name="whoami"),
 
