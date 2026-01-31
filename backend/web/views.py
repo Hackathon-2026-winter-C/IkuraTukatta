@@ -1,9 +1,9 @@
 # backend/web/views.py
-<<<<<<< HEAD
 
-=======
+
+
 from django.contrib.auth.decorators import login_required
->>>>>>> origin/backend-dev
+ 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -176,10 +176,10 @@ def signup(request):
     
     else:
         form = UserCreationForm()
-<<<<<<< HEAD
+
     return render(request, "signup.html", {"form": form})
 
-=======
+
     return render(request, "accounts/signup.html", {"form": form})
 
 # アカウント設定
@@ -199,4 +199,4 @@ def account_edit(request):
 def logout_view(request):
     logout(request)
     return redirect("login")
->>>>>>> origin/backend-dev
+
