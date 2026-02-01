@@ -1,10 +1,109 @@
-{% extends 'base.html' %}
+{% extends "base.html" %} {% load static %} {% block title %}アカウント{% endblock %} {% block content %}
+<main class="w-full flex flex-col items-center gap-4 px-4 pt-2 pb-10">
+  <!-- ================= アイコン ================= -->
+  <div class="relative mt-2">
+    <div class="w-[120px] h-[120px] rounded-[18px] overflow-hidden bg-[rgb(var(--app-bg))] app-shadow">
+      {% if request.user.icon %}
+      <!-- ユーザーが登録したアイコンがある場合 -->
+      <img src="{{ request.user.icon.url }}" alt="avatar" class="w-full h-full object-cover" />
+      {% else %}
+      <!-- 無い場合はデフォルト画像 -->
+      <img src="{% static 'assets/images/default-avatar.png' %}" alt="avatar" class="w-full h-full object-cover" />
+      {% endif %}
+    </div>
 
-{% block title %}
-  アカウント設定
-{% endblock title %}
+    <!-- アイコン変更ボタン -->
+    <button type="button" class="absolute -top-[10px] -right-[10px] w-[44px] h-[44px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] grid place-items-center border-none app-shadow" aria-label="change icon">{% include "accounts/account_icons/refresh-cw.svg" with class="w-6 h-6" %}</button>
+  </div>
 
-{% block content %}
-  <h2 class="text-[rgb(var(--app-text))]">アカウント設定ページ</h2>
+  <!-- ================= 設定一覧 ================= -->
+  <section class="w-full max-w-[420px] flex flex-col gap-3 mt-2">
+    <!-- 名前 -->
+    <button type="button" class="setting-btn app-shadow">
+      <!-- 左側（アイコン＋テキスト） -->
+      <span class="setting-left">
+        <span class="setting-icon"> {% include "accounts/account_icons/user.svg" with class="w-6 h-6" %} </span>
+        <!-- ユーザー名表示（長いと … になる） -->
+        <span class="setting-text">{{ request.user.name }}</span>
+      </span>
+      <!-- 右側（丸ボタン） -->
+      <span class="setting-right">
+        <span class="setting-action app-shadow"> {% include "accounts/account_icons/refresh-cw.svg" with class="w-5 h-5" %} </span>
+      </span>
+    </button>
 
-{% endblock content %}
+    <!-- メールアドレス -->
+    <button type="button" class="setting-btn app-shadow">
+      <span class="setting-left">
+        <span class="setting-icon"> {% include "accounts/account_icons/mail.svg" with class="w-6 h-6" %} </span>
+        <span class="setting-text">{{ request.user.email }}</span>
+      </span>
+      <span class="setting-right">
+        <span class="setting-action app-shadow"> {% include "accounts/account_icons/refresh-cw.svg" with class="w-5 h-5" %} </span>
+      </span>
+    </button>
+
+    <!-- パスワード -->
+    <button type="button" class="setting-btn app-shadow">
+      <span class="setting-left">
+        <span class="setting-icon"> {% include "accounts/account_icons/key.svg" with class="w-6 h-6" %} </span>
+        <span class="setting-text tracking-widest">•••••</span>
+      </span>
+      <span class="setting-right">
+        <span class="setting-action app-shadow"> {% include "accounts/account_icons/refresh-cw.svg" with class="w-5 h-5" %} </span>
+      </span>
+    </button>
+
+    <!-- 共有　-->
+    <button type="button" class="setting-btn app-shadow">
+      <span class="setting-left">
+        <span class="setting-icon"> {% include "accounts/account_icons/user.svg" with class="w-6 h-6" %} </span>
+        <span class="setting-text">共有する</span>
+      </span>
+      <span class="setting-right">
+        <span class="setting-next app-shadow"> {% include "accounts/account_icons/chevron-right.svg" with class="w-5 h-5" %} </span>
+      </span>
+    </button>
+
+    <!-- カラーテーマ -->
+    <div class="setting-btn app-shadow" role="group" aria-label="theme">
+      <span class="setting-left">
+        <span class="setting-icon"> {% include "accounts/account_icons/sun-moon.svg" with class="w-6 h-6" %} </span>
+        <span class="setting-text">カラーテーマ</span>
+      </span>
+
+      <!-- トグル -->
+      <label class="switch">
+        <input id="checkbox" type="checkbox" checked />
+        <span class="slider">
+          <!-- 夜用の星 -->
+          <div class="star star_1"></div>
+          <div class="star star_2"></div>
+          <div class="star star_3"></div>
+          <!-- 昼用の雲 -->
+          <svg viewBox="0 0 16 16" class="cloud_1 cloud">
+            <path transform="matrix(.77976 0 0 .78395-299.99-418.63)" fill="#fff" d="m391.84 540.91c-.421-.329-.949-.524-1.523-.524-1.351 0-2.451 1.084-2.485 2.435-1.395.526-2.388 1.88-2.388 3.466 0 1.874 1.385 3.423 3.182 3.667v.034h12.73v-.006c1.775-.104 3.182-1.584 3.182-3.395 0-1.747-1.309-3.186-2.994-3.379.007-.106.011-.214.011-.322 0-2.707-2.271-4.901-5.072-4.901-2.073 0-3.856 1.202-4.643 2.925" />
+          </svg>
+        </span>
+      </label>
+    </div>
+
+    <!-- ログアウト -->
+    <button type="button" class="setting-btn app-shadow">
+      <span class="setting-left">
+        <span class="setting-icon"> {% include "accounts/account_icons/log-out.svg" with class="w-6 h-6" %} </span>
+        <span class="setting-text">ログアウト</span>
+      </span>
+      <span class="setting-right">
+        <span class="setting-next app-shadow"> {% include "accounts/account_icons/chevron-right.svg" with class="w-5 h-5" %} </span>
+      </span>
+    </button>
+
+    <!-- アカウント削除 -->
+    <p class="text-center text-xs mt-2">
+      <span class="text-[rgb(var(--app-text))] opacity-70">アカウントを削除する方は</span>
+      <a href="#" class="text-[#FF383C] font-bold">こちら</a>
+    </p>
+  </section>
+</main>
+{% endblock %}
