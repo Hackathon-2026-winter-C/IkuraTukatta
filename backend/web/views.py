@@ -1,10 +1,13 @@
 # backend/web/views.py
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
 from .models import InOrExp, User
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.forms import UserCreationForm
+from .forms import CustomUserCreationForm
+from django.contrib.auth import logout
 
 from datetime import date
 import calendar
@@ -114,17 +117,30 @@ def account_page(request):
 # サインアップ
 def signup(request):
     if request.method == "POST":
-        email = request.POST["email"]
-        password = request.POST["password"]
-        name = request.POST.get("name")
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("login") # 登録後ログインページへ
+    else:
+        form = CustomUserCreationForm()
+    return render(request, "accounts/signup.html", {"form": form})
 
-        User.objects.create(
-            email=email,
-            name=name,
-            password_hash=make_password(password)
-        )
-        
-        return redirect("login") # 登録後ログインページへ
-    
-    
-    return render(request, "signup.html"
+
+# アカウント設定
+@login_required
+def account_edit(request):
+    if request.method == "POST":
+        form = UserUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect("account") # アカウントページへ戻る
+    else:
+        form = UserUpdateForm(instance=request.user)
+
+    return render(request, "accounts/account_edit.html", {"form": form})
+
+
+# ログアウト
+def logout_view(request):
+    logout(request)
+    return redirect("login")
