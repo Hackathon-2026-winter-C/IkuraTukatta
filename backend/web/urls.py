@@ -12,12 +12,6 @@ urlpatterns = [
     path("test-footer/", views.test_footer_page, name="test_footer"),
 
     # 開発
-
-
-    
-
-   
-
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
     path("signup", views.signup, name="signup"),
