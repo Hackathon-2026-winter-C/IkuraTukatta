@@ -3,8 +3,8 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
-from .models import InOrExp, AppUser
-from django.contrib.auth.forms import UserChangeForm
+from .models import InOrExp, User
+from django.contrib.auth.hashers import make_password
 
 from datetime import date
 import calendar
@@ -114,11 +114,17 @@ def account_page(request):
 # サインアップ
 def signup(request):
     if request.method == "POST":
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect("login") # 登録後ログインページへ
+        email = request.POST["email"]
+        password = request.POST["password"]
+        name = request.POST.get("name")
+
+        User.objects.create(
+            email=email,
+            name=name,
+            password_hash=make_password(password)
+        )
+        
+        return redirect("login") # 登録後ログインページへ
     
-    else:
-        form = UserCreationForm()
-    return render(request, "signup.html", {"form": form})
+    
+    return render(request, "signup.html"
