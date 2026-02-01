@@ -1,7 +1,7 @@
 {% load static %}
 {% load django_browser_reload %}
 <!doctype html>
-<html lang="ja" data-theme="dark">
+<html lang="ja" data-theme="{{ request.COOKIES.theme | default:''}}">
 
   <head>
     <meta charset="utf-8"/>
@@ -10,6 +10,8 @@
       rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css"/>
+  
+    <script src="{% static 'js/theme-toggle.js' %}" defer></script>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <link rel="icon" href="{% static 'assets/images/favicon.ico' %}" type="image/x-icon"/>
     <title>
@@ -17,22 +19,15 @@
     </title>
   </head>
 
-  <body class="bg-[rgb(var(--app-bg))] text-slate-900 min-h-screen pt-3">
-    {% comment %} ダークモードのテスト {% endcomment %}
-    <header class="w-full h-12 flex items-center justify-center">
-      <span class="flex-1"></span>
-      <div class="w-36 h-full flex items-center justify-center gap-2">
-        <p class="text-[rgb(var(--app-text))] text-xs">ライト</p>
-        <input class="toggle toggle-sm toggle-accent " type="checkbox" checked="checked"/>
-        <p class="text-[rgb(var(--app-text))] text-xs">ダーク</p>
-      </div>
-    </header>
+  <body class="bg-[rgb(var(--app-bg))] text-slate-900 min-h-screen pt-10">
+
+    {% include 'sample/footer.html' %}
     
     {% block content %}{% endblock %}
     {% django_browser_reload_script %}
 
-    <script src="{% static 'js/theme-toggle.js' %}">
-    </script>
+
+
   </body>
 
 </html>

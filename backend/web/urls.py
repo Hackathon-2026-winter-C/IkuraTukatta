@@ -8,7 +8,7 @@ urlpatterns = [
     path("user", views.user_page, name="user"),
     # path("charts", views.charts_page, name="charts"),
     # path("dashboard/",views.dashboard_page, name="dashboard"),
-    path("test-footer/", views.test_footer_page, name="test_footer"),
+    # path("test-footer/", views.test_footer_page, name="test_footer"),
 
     # 開発
     path("login", views.login_page, name="login"),
