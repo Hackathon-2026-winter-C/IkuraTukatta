@@ -30,13 +30,19 @@
                 <div class="h-10 rounded-lg bg-base-200/60"></div>
                 <!-- buttons: add data-hover -->
               {% elif day == today_day %}
-                <button type="button" class="calendar-day h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold cursor-pointer transition-colors" data-selected="1" data-base-bg="bg-amber-200" data-base-text="text-black">
-                  {{ day }}
-                </button>
+               <a  
+                 href="/dashboard/date/?year={{ year }}&month={{ month }}&day={{ day }}"
+                 class="calendar-day h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold cursor-pointer transition-colors">
+                {{ day }}
+               </a>
+                
               {% else %}
-                <button type="button" class="calendar-day h-10 rounded-lg bg-base-200 text-base-content flex items-center justify-center cursor-pointer transition-colors hover:bg-base-300" data-base-bg="bg-base-200" data-base-text="text-base-content" data-hover="hover:bg-base-300">
+                 <a
+                  href="/dashboard/date/?year={{ year }}&month={{ month }}&day={{ day }}"
+                  class="calendar-day h-10 rounded-lg bg-base-200 text-base-content flex items-center justify-center cursor-pointer transition-colors hover:bg-base-300"
+      >         
                   {{ day }}
-                </button>
+                </a>
               {% endif %}
             {% endfor %}
           {% endfor %}

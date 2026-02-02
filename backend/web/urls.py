@@ -12,19 +12,14 @@ urlpatterns = [
     path("test-footer/", views.test_footer_page, name="test_footer"),
 
     # 開発
-
-
-    
-
-   
-
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
     path("signup", views.signup, name="signup"),
 
     path("dashboard/",views.dashboard_page, name="dashboard"),
+    path("dashboard/date/", views.dashboard_date_page, name="dashboard_date"), #カレンダーを押した後
     path("dashboard/charts", views.charts_page, name="charts"),
-    path("dashboard/list", views.dashboard_list_page, name="dashboard_list"),
+    path("dashboard/list/", views.dashboard_list_page, name="dashboard_list"),
     path("dashboard/moneyflow/form", views.dashboard_moneyflow_form_page, name="dashboard_moneyflow_form"),
     path("dashboard/moneyflow/edit", views.dashboard_moneyflow_edit_page, name="dashboard_moneyflow_edit"),
     path("dashboard/moneyflow/category", views.dashboard_moneyflow_category_page, name="dashboard_moneyflow_category"),

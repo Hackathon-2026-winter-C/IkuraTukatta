@@ -25,6 +25,8 @@ from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.decorators import login_required
 
 from .models import InOrExp, AppUser
+#仮のカレンダー
+from django.http import Http404
 
 
 
@@ -81,18 +83,6 @@ def charts_page(request):
     )
 
 
-@ensure_csrf_cookie
-def dashboard_page(request):
-    today = date.today()
-    cal = calendar.Calendar(firstweekday=6)
-    weeks = cal.monthdayscalendar(today.year, today.month)
-    month_label = f"{today.year}年{today.month}月"
-
-    return render(
-        request,
-        "dashboard/calendar.html",
-        {"weeks": weeks, "month_label": month_label, "today_day": today.day},
-    )
 
 @require_GET
 def users_api(request):
@@ -197,3 +187,41 @@ def logout_view(request):
     logout(request)
     return redirect("login")
 
+# カレンダーの日付を押した後
+@ensure_csrf_cookie
+def dashboard_date_page(request):
+    try:
+        y = int(request.GET.get("year"))
+        m = int(request.GET.get("month"))
+        d = int(request.GET.get("day"))
+        selected_date = date(y, m, d)
+    except Exception:
+        raise Http404("Invalid date")
+
+    return render(request, "dashboard_date.html", {
+       "selected_date": selected_date,
+    })
+
+@ensure_csrf_cookie
+def dashboard_page(request):
+    today = date.today()
+
+    year = today.year
+    month = today.month
+
+    cal = calendar.Calendar(firstweekday=6)
+    weeks = cal.monthdayscalendar(year, month)
+
+    month_label = f"{year}年{month}月"
+
+    return render(
+        request,
+        "dashboard/calendar.html",
+        {
+            "weeks": weeks,
+            "month_label": month_label,
+            "today_day": today.day,
+            "year": year,
+            "month": month,
+        },
+    )
