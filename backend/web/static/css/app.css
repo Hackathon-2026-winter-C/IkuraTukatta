@@ -1,4 +1,8 @@
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
 @import "tailwindcss";
+@import './_radio-group.css';
 
 /* lightモードの時 */
 :root {
@@ -52,6 +56,17 @@ html[data-theme="dark"] {
 
     padding: 50px clamp(16px, 6vw, 42px);
     margin: 0 auto;
+}
+
+/* カードパネル */
+.card {
+  width: 100%;
+  
+
+  border-radius: 30px;
+  background: #e0e0e0;
+  box-shadow: 15px 15px 30px #bebebe,
+             -15px -15px 30px #ffffff;
 }
 
 /* 認証フォーム共通 */
