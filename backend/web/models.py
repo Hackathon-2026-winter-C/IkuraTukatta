@@ -1,32 +1,75 @@
 # backend/web/models.py
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.utils import timezone
 
 
-class AppUser(models.Model):
-    group = models.ForeignKey(
-        "ShareGroup",
-        on_delete=models.DO_NOTHING,
-        db_column="group_id",
-        related_name="users",
-        blank=True,
-        null=True,
-    )
+# ---- USERS ----
+# ---- UserCreatiomFormを対応させる ----
+class UserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Email is required')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+        return self.create_user(email, password, **extra_fields)
+    
+class User(AbstractBaseUser, PermissionsMixin):
+    group = models.ForeignKey("ShareGroup", null=True, blank=True, on_delete=models.DO_NOTHING)
     email = models.EmailField(unique=True)
-    password_hash = models.CharField(max_length=255)
     name = models.CharField(max_length=255, blank=True, null=True)
-    google_uid = models.CharField(max_length=255, unique=True, blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True)
-    updated_at = models.DateTimeField(blank=True, null=True)
+    image_url = models.CharField(max_length=255, blank=True, null=True)
+  # google_uid = models.CharField(max_length=255, blank=True, null=True)
+
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    USERNAME_FIELD ="email"
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
 
     class Meta:
         db_table = "USERS"
-        managed = False
+
+
+#class User(models.Model):
+#    group = models.ForeignKey(
+#        "Group",
+#        on_delete=models.DO_NOTHING,
+#        db_column="group_id",
+#        related_name="users",
+#        blank=True,
+#        null=True,
+#    )
+#    email = models.EmailField(unique=True)
+#    password_hash = models.CharField(max_length=255)
+#    name = models.CharField(max_length=255, blank=True, null=True)
+#    google_uid = models.CharField(max_length=255, unique=True, blank=True, null=True)
+#    image_url = models.URL_Field(blank=True, null=True)
+#    created_at = models.DateTimeField(blank=True, null=True)
+#    updated_at = models.DateTimeField(blank=True, null=True)
+
+#    class Meta:
+#        db_table = "USERS"
+#        managed = False
 
 
 class ShareGroup(models.Model):
     name = models.CharField(max_length=255)
     owner_user = models.ForeignKey(
-        AppUser,
+        "User",
         on_delete=models.DO_NOTHING,
         db_column="owner_user_id",
         related_name="owned_groups",
@@ -41,7 +84,7 @@ class ShareGroup(models.Model):
 
 class Category(models.Model):
     user = models.ForeignKey(
-        AppUser,
+        "User",
         on_delete=models.DO_NOTHING,
         db_column="user_id",
         related_name="categories",
@@ -59,13 +102,13 @@ class Category(models.Model):
     updated_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        db_table = "CATEGORIS"
+        db_table = "CATEGORIES"
         managed = False
 
 
 class Receipt(models.Model):
     user = models.ForeignKey(
-        AppUser,
+        "User",
         on_delete=models.DO_NOTHING,
         db_column="user_id",
         related_name="receipts",
@@ -88,7 +131,7 @@ class Receipt(models.Model):
 
 class InOrExp(models.Model):
     user = models.ForeignKey(
-        AppUser,
+        "User",
         on_delete=models.DO_NOTHING,
         db_column="user_id",
         related_name="in_or_exps",

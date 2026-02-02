@@ -8,9 +8,9 @@ from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
-from .models import InOrExp, AppUser
+from .models import InOrExp, User
 from django.contrib.auth.forms import UserCreationForm
-from .forms import UserUpdateForm
+from .forms import CustomUserCreationForm
 from django.contrib.auth import logout
 
 
@@ -169,17 +169,14 @@ def whoami(request):
 # サインアップ
 def signup(request):
     if request.method == "POST":
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect("login") # 登録後ログインページへ
-    
     else:
-        form = UserCreationForm()
-
-    
-
+        form = CustomUserCreationForm()
     return render(request, "accounts/signup.html", {"form": form})
+
 
 # アカウント設定
 @login_required
@@ -193,6 +190,7 @@ def account_edit(request):
         form = UserUpdateForm(instance=request.user)
 
     return render(request, "accounts/account_edit.html", {"form": form})
+
 
 # ログアウト
 def logout_view(request):
