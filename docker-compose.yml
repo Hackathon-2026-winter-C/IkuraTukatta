@@ -1,7 +1,7 @@
 services:
   db:
     image: mysql:8.0
-    command: --default-authentication-plugin=mysql_native_password
+    command: ["--default-authentication-plugin=mysql_native_password", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
@@ -11,7 +11,7 @@ services:
       - mysql_data:/var/lib/mysql
       - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD","mysqladmin","ping","-h","127.0.0.1","-u","root","-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -27,12 +27,14 @@ services:
       DB_PASSWORD: ${MYSQL_PASSWORD}
       DEBUG: "1"
       ALLOWED_HOSTS: "localhost,127.0.0.1"
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
     volumes:
       - ./backend:/app
     depends_on:
       db:
         condition: service_healthy
-    command: ["bash","scripts/entrypoint.sh"]
+    command: ["bash", "scripts/entrypoint.sh"]
     ports:
       - "8000:8000"
 

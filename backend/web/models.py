@@ -53,13 +53,16 @@ class Category(models.Model):
         related_name="categories",
     )
     name = models.CharField(max_length=255)
+    icon_key = models.CharField(max_length=50, default="default")
     color = models.CharField(max_length=20)
     is_io_type = models.BooleanField()
     created_at = models.DateTimeField(blank=True, null=True)
     updated_at = models.DateTimeField(blank=True, null=True)
+    is_builtin = models.BooleanField(default=False)
+
 
     class Meta:
-        db_table = "CATEGORIS"
+        db_table = "CATEGORIES"
         managed = False
 
 
@@ -102,7 +105,7 @@ class InOrExp(models.Model):
     receipt = models.ForeignKey(
         Receipt,
         on_delete=models.DO_NOTHING,
-        db_column="receiept_id",
+        db_column="receipt_id",
         related_name="in_or_exps",
         blank=True,
         null=True,
