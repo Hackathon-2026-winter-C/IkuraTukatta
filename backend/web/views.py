@@ -97,7 +97,39 @@ def signup_page(request):
 
 @ensure_csrf_cookie
 def dashboard_list_page(request):
-    return render(request, 'dashboard/list/list.html')
+    # ★ここから追加・変更するよ！★
+
+    # charts_page と同じように、アリスのデータを取得するロジック
+    user_email = "alice@example.com" # または、ログインユーザーのメールアドレスを使うなら request.user.email
+    qs = (
+        InOrExp.objects.select_related("user", "category")
+        .filter(user__email=user_email)
+        .order_by("-expense_date", "-id") # 日付の新しい順に並べられている
+    )
+    expense_list = list(qs)
+    
+    # user_name を準備
+    first = expense_list[0] if expense_list else None
+    user_name = first.user.name if first and first.user and first.user.name else user_email
+
+    # expense_data を準備
+    expense_data = [
+        {
+            "date": e.expense_date.isoformat(),
+            "amount": e.amount,
+            "category": e.category.name,
+            "categoryColor": e.category.color,
+            "memo": e.memo,
+            "user": e.user.name,
+        }
+        for e in expense_list
+    ]
+
+    return render(
+        request,
+        'dashboard/list/list.html',
+        {"expense_data": expense_data, "user_name": user_name} # ★コンテキスト辞書にデータを追加★
+    )
 
 @ensure_csrf_cookie
 def dashboard_moneyflow_form_page(request):

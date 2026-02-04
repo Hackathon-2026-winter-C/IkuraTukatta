@@ -1,10 +1,22 @@
 {% extends 'base.html' %}
-
+{% load static %} 
 {% block title %}
   支出リスト
 {% endblock title %}
 
 {% block content %}
   <h2 class="text-[rgb(var(--app-text))]">支出リストページ</h2>
+<main class="mx-auto max-w-xl p-6">
+  <div class="radio-group w-full mx-auto mb-5">
+        <h2 class="text-base flex justify-center items-center text-black w-full">
+          {{ user_name }}
+        </h2>
+   </div>
 
-{% endblock content %}
+  <div class="card w-full min-h-24"> 
+        <div id="chart-categories" class="mt-4 p-6 text-2xl text-slate-700"></div>
+   </div> 
+</main>
+{{ expense_data|json_script:"expense-data" }}
+<script src="{% static 'js/list.js' %}"></script>
+{% endblock content%}
