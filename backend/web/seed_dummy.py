@@ -1,8 +1,7 @@
-from datetime import timedelta
+from datetime import date
 from decimal import Decimal
 
 from django.db import transaction
-from django.utils import timezone
 
 from web.models import Category, MoneyFlow, User
 
@@ -18,25 +17,32 @@ def seed():
         user.save(update_fields=["password"])
 
     category_specs = [
-        ("食費", False, "food", 12),
-        ("住居費", False, "home", 20),
-        ("交通費", False, "transport", 30),
-        ("光熱費", False, "utility", 40),
-        ("日用品", False, "daily", 50),
-        ("娯楽", False, "entertainment", 60),
-        ("洋服", False, "clothes", 70),
-        ("医療費", False, "medical", 80),
-        ("給料", True, "salary", 90),
+        # 支出（0）
+        ("食費", False, "food", "#FFB44F"),
+        ("住居費", False, "home", "#E1BFFF"),
+        ("交通費", False, "transport", "#62B2FD"),
+        ("光熱費", False, "utilities", "#9BDFC4"),
+        ("娯楽", False, "fun", "#F99BAB"),
+        ("洋服", False, "clothes", "#FFC6D7"),
+        ("医療費", False, "medical", "#9F97F7"),
+        ("日用品", False, "daily", "#AEE3F5"),
+        ("支出その他", False, "other_exp", "#86BE63"),
+        # 収入（1）
+        ("給料", True, "salary", "#FACC15"),
+        ("収入その他", True, "other_inc", "#FFD5D2"),
     ]
 
+    def color_to_int(hex_color: str) -> int:
+        return int(hex_color.lstrip("#"), 16) % 256
+
     categories = {}
-    for name, is_in_type, icon_key, color in category_specs:
+    for name, is_in_type, icon_key, color_hex in category_specs:
         cat, _ = Category.objects.update_or_create(
             user=user,
             group=None,
             name=name,
             defaults={
-                "color": color,
+                "color": color_to_int(color_hex),
                 "is_in_type": is_in_type,
                 "icon_key": icon_key,
                 "is_builtin": False,
@@ -44,52 +50,76 @@ def seed():
         )
         categories[name] = cat
 
-    today = timezone.localdate()
-    start = today - timedelta(days=59)
+    moneyflow_specs = [
+        # ===== 2026年1月 =====
+        ("娯楽", 100, "2026-01-01", "初詣お賽銭"),
+        ("食費", 420, "2026-01-01", "コンビニ（おにぎり＋ホットコーヒー）"),
+        ("食費", 2300, "2026-01-03", "スーパー（正月明けの食材まとめ買い）"),
+        ("住居費", 55000, "2026-01-05", "家賃"),
+        ("交通費", 3000, "2026-01-06", "Suicaチャージ"),
+        ("食費", 890, "2026-01-06", "マック"),
+        ("食費", 480, "2026-01-07", "コンビニ（お菓子＋エナドリ）"),
+        ("光熱費", 8000, "2026-01-08", "スマホ代"),
+        ("日用品", 1950, "2026-01-10", "ドラッグストア（洗剤・日用品）"),
+        ("食費", 2100, "2026-01-10", "スーパー"),
+        ("日用品", 2980, "2026-01-11", "Amazon（日用品まとめ買い）"),
+        ("食費", 950, "2026-01-12", "ラーメン屋"),
+        ("交通費", 3000, "2026-01-13", "Suicaチャージ"),
+        ("食費", 360, "2026-01-14", "コンビニ"),
+        ("光熱費", 7600, "2026-01-15", "水道光熱費（請求）"),
+        ("食費", 1600, "2026-01-16", "友達とごはん（ファミレス）"),
+        ("娯楽", 990, "2026-01-17", "Netflix"),
+        ("食費", 2450, "2026-01-18", "スーパー"),
+        ("日用品", 330, "2026-01-19", "100均"),
+        ("食費", 680, "2026-01-20", "牛丼チェーン"),
+        ("光熱費", 4000, "2026-01-21", "Wi-Fi代"),
+        ("娯楽", 1200, "2026-01-22", "ゲーム課金"),
+        ("食費", 510, "2026-01-23", "コンビニ（夜食）"),
+        ("洋服", 2990, "2026-01-24", "ユニクロ（ヒートテック）"),
+        ("給料", 210000, "2026-01-25", "給料"),
+        ("収入その他", 15000, "2026-01-25", "先取り貯金"),
+        ("交通費", 3000, "2026-01-26", "Suicaチャージ"),
+        ("食費", 2200, "2026-01-27", "スーパー"),
+        ("医療費", 4500, "2026-01-31", "美容室"),
+        ("娯楽", 7000, "2026-01-31", "飲み会割り勘"),
+        # ===== 2026年2月 =====
+        ("住居費", 55000, "2026-02-01", "家賃"),
+        ("食費", 620, "2026-02-01", "コンビニ（おにぎり＋唐揚げ棒）"),
+        ("交通費", 3000, "2026-02-02", "Suicaチャージ"),
+        ("食費", 2480, "2026-02-03", "スーパー（自炊用）"),
+        ("光熱費", 8200, "2026-02-05", "水道光熱費（請求）"),
+        ("食費", 980, "2026-02-05", "ラーメン屋"),
+        ("日用品", 1480, "2026-02-06", "ドラッグストア（洗剤・ティッシュ）"),
+        ("食費", 1950, "2026-02-07", "スーパー"),
+        ("食費", 420, "2026-02-07", "コンビニ（お菓子＋飲み物）帰りに寄っちゃった"),
+        ("光熱費", 8000, "2026-02-08", "スマホ代"),
+        ("娯楽", 2200, "2026-02-09", "友達とカラオケ"),
+        ("交通費", 3000, "2026-02-10", "Suicaチャージ"),
+        ("洋服", 3990, "2026-02-11", "ユニクロ（パーカー）"),
+        ("光熱費", 4000, "2026-02-12", "Wi-Fi代"),
+        ("娯楽", 15000, "2026-02-13", "飲み会割り勘"),
+        ("食費", 2300, "2026-02-14", "スーパー（鍋材料）"),
+        ("光熱費", 5000, "2026-02-15", "電気・ガス追加分"),
+        ("娯楽", 990, "2026-02-16", "Netflix"),
+        ("食費", 850, "2026-02-17", "マック"),
+        ("住居費", 4000, "2026-02-17", "家具・家電分割（冷蔵庫・洗濯機）"),
+        ("食費", 540, "2026-02-18", "コンビニ"),
+        ("日用品", 550, "2026-02-20", "100均"),
+        ("食費", 720, "2026-02-21", "牛丼チェーン"),
+        ("娯楽", 1500, "2026-02-23", "ゲーム課金"),
+        ("食費", 2100, "2026-02-24", "スーパー"),
+        ("給料", 210000, "2026-02-25", "給料"),
+        ("収入その他", 15000, "2026-02-25", "先取り貯金"),
+        ("医療費", 4500, "2026-02-28", "美容室"),
+    ]
 
-    MoneyFlow.objects.filter(
-        category__in=[categories[name] for name, *_ in category_specs],
-        memo__startswith="seed:",
-        expense_date__range=(start, today),
-    ).delete()
-
-    expense_names = ["食費", "住居費", "交通費", "光熱費", "日用品", "娯楽", "洋服", "医療費"]
-    base_amounts = {
-        "食費": 900,
-        "住居費": 3000,
-        "交通費": 600,
-        "光熱費": 1200,
-        "日用品": 700,
-        "娯楽": 1500,
-        "洋服": 2000,
-        "医療費": 1000,
-    }
-
-    weeks = ((today - start).days // 7) + 1
-    for i in range(weeks):
-        d = start + timedelta(days=i * 7)
-        name = expense_names[i % len(expense_names)]
-        amount = Decimal(base_amounts[name] + (i * 123) % 800)
-        MoneyFlow.objects.create(
+    for name, amount, expense_date, memo in moneyflow_specs:
+        MoneyFlow.objects.update_or_create(
             category=categories[name],
-            amount=amount,
-            expense_date=d,
-            memo=f"seed:{name}:{d.isoformat()}",
-            receipt_id=None,
+            expense_date=date.fromisoformat(expense_date),
+            memo=memo,
+            defaults={
+                "amount": Decimal(str(amount)),
+                "receipt_id": None,
+            },
         )
-
-    # 給料は各月の1日に入れる
-    cursor = start.replace(day=1)
-    while cursor <= today:
-        if cursor >= start:
-            MoneyFlow.objects.create(
-                category=categories["給料"],
-                amount=Decimal("250000"),
-                expense_date=cursor,
-                memo=f"seed:給料:{cursor.strftime('%Y-%m')}",
-                receipt_id=None,
-            )
-        if cursor.month == 12:
-            cursor = cursor.replace(year=cursor.year + 1, month=1)
-        else:
-            cursor = cursor.replace(month=cursor.month + 1)

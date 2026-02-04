@@ -6,14 +6,16 @@ from django.views.decorators.http import require_GET
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login,authenticate,logout
 from .forms import EmailUserCreationForm
+from .models import MoneyFlow ,User
 
 from datetime import date
 import calendar
 
 
+# /にアクセスがあった時
 @ensure_csrf_cookie
 def index_page(request):
-    return render(request, "index.html")
+    return redirect("login")
 
 
 # サインアップ
@@ -61,6 +63,7 @@ def login_page(request):
         error = "メールアドレスかパスワードが違います。"
     return render(request, 'accounts/login.html',{"error": error, "email": email})
 
+#ログアウト処理
 @require_GET
 def logout_view(request):
     logout(request)
@@ -70,6 +73,30 @@ def logout_view(request):
 # ログイン後表示されるカレンダーページ
 @login_required(login_url="login")
 def dashboard_page(request):
+    user = User.objects.filter(email=request.user.email).first()
+    if user is None:
+        return redirect("login")
+
+    moneyflows = (
+        MoneyFlow.objects.select_related("category")
+        .filter(category__user=user)
+        .order_by("-expense_date", "-id")
+    )
+
+    today = date.today()
+    weeks = calendar.Calendar(firstweekday=6).monthdayscalendar(today.year, today.month)
+    month_label = f"{today.year}年{today.month}月"
+
+    return render(
+        request,
+        "dashboard/calendar.html",
+        {
+            "month_label": month_label,
+            "weeks": weeks,
+            "today_day": today.day,
+            "moneyflows": moneyflows,
+        },
+    )
     return render (request, "dashboard/calendar.html")
 
 
