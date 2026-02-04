@@ -30,3 +30,5 @@ media/
 
 node_modules/
 
+/dev-sample/
+

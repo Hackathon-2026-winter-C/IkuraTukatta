@@ -1,7 +1,7 @@
 {% load static %}
 {% load django_browser_reload %}
 <!doctype html>
-<html lang="ja" data-theme="{{ request.COOKIES.theme | default:'light'}}">
+<html lang="ja" data-theme="light">
 
   <head>
     <meta charset="utf-8"/>
@@ -13,7 +13,6 @@
   
     <script src="{% static 'js/theme-toggle.js' %}" defer></script>
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
-    <link rel="stylesheet" href="{% static 'css/_radio-group.css' %}">
     <link rel="icon" href="{% static 'assets/images/favicon.ico' %}" type="image/x-icon"/>
     <title>
       {% block title %}App{% endblock %}
@@ -22,7 +21,7 @@
 
   <body class="bg-[rgb(var(--app-bg))] text-slate-900 min-h-screen">
 
-    {% include 'sample/footer.html' %}
+    
     
     {% block content %}{% endblock %}
     {% django_browser_reload_script %}

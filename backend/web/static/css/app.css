@@ -10,6 +10,7 @@
     --app-text: 0 0 0;
     --app-leftshadow: -6px -6px 12px rgba(255, 255, 255, 1);
     --app-rightshadow: 6px 6px 12px rgba(197, 197, 197, 1);
+    --app-footer-basecircle-shadow:0 -6px 8px -2px rgba(255, 255, 255, 1);
     --app-footer-circle-top-shadow: 0 -4px 8px rgba(255, 255, 255, 1);
     --app-footer-circle-bottom-shadow: 0 4px 10px rgba(197, 197, 197, 1);
     --app-mainbutton-shadow: 6px 6px 12px rgba(197, 197, 197, 1),
@@ -22,6 +23,7 @@ html[data-theme="dark"] {
     --app-text: 255 255 255;
     --app-leftshadow: -6px -6px 12px rgba(47, 47, 47, 1);
     --app-rightshadow: 6px 6px 12px rgba(0, 0, 0, 1);
+    --app-footer-basecircle-shadow:0 -6px 8px -2px rgba(47, 47, 47, 1);
     --app-footer-circle-top-shadow: 0 -4px 8px rgba(47, 47, 47, 1);
     --app-footer-circle-bottom-shadow: 0 4px 12px rgba(0, 0, 0, 1);
 }
@@ -32,7 +34,7 @@ html[data-theme="dark"] {
 }
 
 .footer-circle-shadow {
-    box-shadow: 0 -6px 2px rgba(47, 47, 47, 1);
+    box-shadow: var(--app-footer-basecircle-shadow);
 }
 
 .footer-circle-button-shadow {
@@ -114,7 +116,7 @@ html[data-theme="dark"] {
 /* light */
 /* orange */
 html[data-theme="light"] .btn-main {
-    background: #fd6b22;
+    background: #FF9400;
     color: #fff;
     box-shadow: var(--app-mainbutton-shadow);
 }
@@ -153,13 +155,13 @@ html[data-theme="light"] .btn-red:active {
 /* dark */
 /* orange */
 html[data-theme="dark"] .btn-main {
-    background: #fd6b22;
+    background: #FF9400;
     color: #fff;
     border: 1px solid #737373;
     box-shadow: 6px 6px 12px #000, -6px -6px 12px #2f2f2f;
 }
 
-/* gray */
+/* black */
 html[data-theme="dark"] .btn-sub {
     background: #212121;
     color: #fff;
@@ -181,7 +183,7 @@ html[data-theme="dark"] .btn-main:active {
     box-shadow: inset 4px 4px 8px #d4571c, inset -4px -4px 8px #ff8a4a;
 }
 
-/* gray */
+/* black */
 html[data-theme="dark"] .btn-sub:active {
     color: #666;
     box-shadow: inset 4px 4px 12px #000, inset -4px -4px 12px #1f1f1f;
@@ -190,4 +192,195 @@ html[data-theme="dark"] .btn-sub:active {
 /* red */
 html[data-theme="dark"] .btn-red:active {
     box-shadow: inset 4px 4px 8px #cc2d30, inset -4px -4px 8px #ff6b6e;
+}
+
+
+/* =========================
+   アカウント画面専用
+========================= */
+
+
+/* 設定行のベース */
+.setting-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* 左ブロックと右ブロックを両端へ */
+    gap: 12px;
+
+    padding: 16px 18px;
+    border-radius: 18px;
+
+    background: rgb(var(--app-bg));
+    color: rgb(var(--app-text));
+    border: none;
+}
+
+/* 押下時 */
+.setting-btn:active {
+    transform: translateY(1px);
+    filter: brightness(0.985);
+}
+
+/* 左側：アイコン＋文字 */
+.setting-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+/* 右側：丸ボタンや矢印 */
+.setting-right {
+    display: flex;
+    /* 横並びにする */
+    align-items: center;
+    /* 縦中央揃え */
+    gap: 8px;
+    /* ボタン同士の間隔 */
+    flex-shrink: 0;
+    /* 左の文字が長くても潰れないようにする */
+}
+
+/* 左側のアイコン枠 */
+.setting-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+
+    color: rgb(var(--app-text));
+    opacity: 0.9;
+}
+
+/* テキスト（長い場合は・・・にする） */
+.setting-text {
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 右側の丸いボタン（更新アイコン/矢印アイコン） */
+.setting-action,
+.setting-next {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+
+    background: rgb(var(--app-bg));
+    color: rgb(var(--app-text));
+    display: grid;
+    place-items: center;
+
+    border: none;
+}
+
+
+/* トグル */
+.switch {
+    font-size: 17px;
+    position: relative;
+    display: inline-block;
+    width: 4em;
+    height: 2.2em;
+    border-radius: 30px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* 背景 */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    background-color: #2a2a2a;
+    transition: 0.4s;
+    border-radius: 30px;
+    overflow: hidden;
+}
+
+/* つまみ（before） */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 1.2em;
+    width: 1.2em;
+    border-radius: 20px;
+
+    left: 0.5em;
+    bottom: 0.5em;
+
+    transition: 0.4s;
+    transition-timing-function: cubic-bezier(0.81, -0.04, 0.38, 1.5);
+
+    box-shadow: inset 8px -4px 0px 0px #fff;
+}
+
+/* チェック時：背景色昼 */
+.switch input:checked+.slider {
+    background-color: #00a6ff;
+}
+
+/* チェック時：太陽 */
+.switch input:checked+.slider:before {
+    transform: translateX(1.8em);
+    box-shadow: inset 15px -4px 0px 15px #ffcf48;
+}
+
+/* 星 */
+.star {
+    background-color: #fff;
+    border-radius: 50%;
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    transition: all 0.4s;
+}
+
+.star_1 {
+    left: 2.5em;
+    top: 0.5em;
+}
+
+.star_2 {
+    left: 2.2em;
+    top: 1.2em;
+}
+
+.star_3 {
+    left: 3em;
+    top: 0.9em;
+}
+
+/* チェック時：星を消す（昼） */
+.switch input:checked~.slider .star {
+    opacity: 0;
+}
+
+/* 雲 */
+.cloud {
+    width: 3.5em;
+    position: absolute;
+    bottom: -1.4em;
+    left: -1.1em;
+    opacity: 0;
+    transition: all 0.4s;
+}
+
+/* チェック時：雲を出す */
+.switch input:checked~.slider .cloud {
+    opacity: 1;
 }
