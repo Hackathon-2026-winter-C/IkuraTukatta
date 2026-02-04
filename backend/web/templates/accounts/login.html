@@ -1,5 +1,5 @@
-{% extends 'base.html' %} {% load static %} {% block title %}ログイン{% endblock title %} {% block content %}
-<h2 class="text-[rgb(var(--app-text))]">ログインページ</h2>
+{% extends 'accounts/base.html' %} {% load static %} {% block title %}ログイン{% endblock title %} {% block content %}
+{% comment %} <h2 class="text-[rgb(var(--app-text))]">ログインページ</h2> {% endcomment %}
 
 <main class="bg-black flex flex-col items-center min-h-[100dvh] w-full justify-end gap-6">
   {% comment %} ロゴ画像 {% endcomment %}
@@ -9,9 +9,10 @@
 
   {% comment %} ログインフォーム {% endcomment %}
   <div class="neu-panel w-full">
-    <form class="auth-form" method="get" action="{% url 'dashboard' %}">
-      <input type="email" class="input" placeholder="メールアドレス" />
-      <input type="password" class="input" placeholder="パスワード" />
+    <form class="auth-form" method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      <input type="email" name="email" class="input" value="{{ email|default:'' }}" placeholder="メールアドレス" />
+      <input type="password" name="password" class="input" placeholder="パスワード" />
 
       <button type="submit" class="btn btn-main">Login</button>
 
@@ -21,6 +22,9 @@
         <img src="{% static 'assets/images/google.svg' %}" alt="Google" class="w-4 h-4" />
         <span>Continue with Google</span>
       </button>
+      {% if error %}
+    <p class="text-red-500 text-sm">{{ error }}</p>
+  {% endif %}
 
       <div class="text-center text-black my-2">
         アカウントをお持ちでない方は

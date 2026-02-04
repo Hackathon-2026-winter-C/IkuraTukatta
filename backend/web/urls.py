@@ -3,9 +3,9 @@ from . import views
 
 urlpatterns = [
     # テスト
-    path("", views.index_page, name="index"),
-    path("settings", views.settings_page, name="settings"),
-    path("user", views.user_page, name="user"),
+    # path("", views.index_page, name="index"),
+    # path("settings", views.settings_page, name="settings"),
+    # path("user", views.user_page, name="user"),
     # path("charts", views.charts_page, name="charts"),
     # path("dashboard/",views.dashboard_page, name="dashboard"),
     # path("test-footer/", views.test_footer_page, name="test_footer"),
@@ -13,6 +13,7 @@ urlpatterns = [
     # 開発
     path("login", views.login_page, name="login"),
     path("signup", views.signup_page, name="signup"),
+    path("logout", views.logout_view, name="logout"),
     path("dashboard/",views.dashboard_page, name="dashboard"),
     path("dashboard/charts", views.charts_page, name="charts"),
     path("dashboard/list", views.dashboard_list_page, name="dashboard_list"),
@@ -23,5 +24,5 @@ urlpatterns = [
 
 
     # テストAPI
-    path("api/users", views.users_api, name="users_api")
+    # path("api/users", views.users_api, name="users_api")
 ]

@@ -11,6 +11,9 @@ DEBUG = os.getenv("DEBUG", "1") == "1"
 # "localhost,127.0.0.1" みたいに env で渡したのを分割
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 
+AUTH_USER_MODEL = "web.User"
+
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
