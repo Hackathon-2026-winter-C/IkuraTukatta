@@ -7,6 +7,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login,authenticate,logout
 from .forms import EmailUserCreationForm
 from .models import MoneyFlow ,User
+from django.http import Http404
+
 
 from datetime import date
 import calendar
@@ -99,6 +101,44 @@ def dashboard_page(request):
     )
     return render (request, "dashboard/calendar.html")
 
+# カレンダーの日付を押した後
+@ensure_csrf_cookie
+def dashboard_date_page(request):
+    try:
+        y = int(request.GET.get("year"))
+        m = int(request.GET.get("month"))
+        d = int(request.GET.get("day"))
+        selected_date = date(y, m, d)
+    except Exception:
+        raise Http404("Invalid date")
+
+    return render(request, "dashboard_date.html", {
+       "selected_date": selected_date,
+    })
+
+@ensure_csrf_cookie
+def dashboard_page(request):
+    today = date.today()
+
+    year = today.year
+    month = today.month
+
+    cal = calendar.Calendar(firstweekday=6)
+    weeks = cal.monthdayscalendar(year, month)
+
+    month_label = f"{year}年{month}月"
+
+    return render(
+        request,
+        "dashboard/calendar.html",
+        {
+            "weeks": weeks,
+            "month_label": month_label,
+            "today_day": today.day,
+            "year": year,
+            "month": month,
+        },
+    )
 
 @login_required(login_url="login")
 @ensure_csrf_cookie

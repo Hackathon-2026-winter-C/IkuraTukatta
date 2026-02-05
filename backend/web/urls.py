@@ -23,6 +23,7 @@ urlpatterns = [
     path("dashboard/moneyflow/category", views.dashboard_moneyflow_category_page, name="dashboard_moneyflow_category"),
     path("dashboard/account", views.account_page, name="account"),
 
+ path("dashboard/date/", views.dashboard_date_page, name="dashboard_date"), #
 
     # テストAPI
     # path("api/users", views.users_api, name="users_api")
