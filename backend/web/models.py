@@ -1,44 +1,17 @@
 # backend/web/models.py
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.utils import timezone
-
-
-# ---- UserCreatiomFormを対応させる ----
-class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError('Email is required')
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-    
-    def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
-        return self.create_user(email, password, **extra_fields)
-
-# ---- USER ----    
-class User(AbstractBaseUser, PermissionsMixin):
-    group = models.ForeignKey(
-        "ShareGroup",
-        null=True, 
-        blank=True, 
-        on_delete=models.SET_NULL,
-        related_name="users"
-    )
-    email = models.EmailField(unique=True)
-    name = models.CharField(max_length=255, blank=True, null=True)
-    image_url = models.CharField(max_length=255, blank=True, null=True)
-    google_uid = models.CharField(max_length=255, blank=True, null=True, unique=True)
 
 
 class User(AbstractUser):
-    id = models.BigAutoField(primary_key=True)
+    username = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True,
+        unique=False,
+    )
+
     email = models.EmailField(unique=True)
     group = models.ForeignKey(
         "ShareGroup",
@@ -53,11 +26,12 @@ class User(AbstractUser):
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    USERNAME_FIELD="email"
-    REQUIRED_FIELDS = ["username"]
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []   # ← ここが重要
 
     class Meta:
         db_table = "USERS"
+
 
 
 # ---- SHARE GROUP ----

@@ -5,11 +5,10 @@ from .models import User
 class EmailUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ["email", "password1", "password2"]
-
+        fields = ["email", "username", "password1", "password2"]
 
 # UserUpdateForm
 class UserUpdateForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ["name", "image_url"]
+        fields = ["username", "image_url"]
