@@ -5,33 +5,24 @@
 from django.contrib.auth.decorators import login_required
  
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_GET
-from .models import InOrExp, User
-from django.contrib.auth.forms import UserCreationForm
-from .forms import CustomUserCreationForm
-from django.contrib.auth import logout
-
-
-from datetime import date
-import calendar
-
-from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django.contrib.auth import authenticate, login as auth_login, logout
 from django.contrib.auth.decorators import login_required
 
-from .models import InOrExp, AppUser
+from datetime import date
+import calendar
+
+from .models import MoneyFlow, User
+from .forms import CustomUserCreationForm, UserUpdateForm
 
 
 
 @ensure_csrf_cookie
 def index_page(request):
     expenses = (
-        InOrExp.objects.select_related("user", "category")
+        MoneyFlow.objects.select_related("user", "category")
         .order_by("-expense_date", "-id")
     )
     return render(request, "index.html", {"expenses": expenses})
@@ -55,7 +46,7 @@ def signup_view(request):
 def charts_page(request):
     user_email = "alice@example.com"
     qs = (
-        InOrExp.objects.select_related("user", "category")
+        MoneyFlow.objects.select_related("user", "category")
         .filter(user__email=user_email)
         .order_by("-expense_date", "-id")
     )
@@ -97,7 +88,7 @@ def dashboard_page(request):
 @require_GET
 def users_api(request):
     users = list(
-        AppUser.objects.values("id","name","email")
+        User.objects.values("id","name","email")
     )
     return JsonResponse({"users": users})
 
@@ -158,9 +149,6 @@ def login_view(request):
     return render(request, "accounts/login.html")
 
 
-def logout_view(request):
-    logout(request)
-    return redirect("/login/")
 
 @login_required
 def whoami(request):
