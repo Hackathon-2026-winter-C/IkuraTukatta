@@ -2,8 +2,13 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import User
 
-# UserCreationFormを拡張
-class CustomUserCreationForm(UserCreationForm):
-    class Meta:
+class EmailUserCreationForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
         model = User
-        fields = ["email", "password1", "password2"]
+        fields = ("username", "email")
+
+    def clean_email(self):
+        email = self.cleaned_data["email"].lower()
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("このメールアドレスは既に登録されています。")
+        return email

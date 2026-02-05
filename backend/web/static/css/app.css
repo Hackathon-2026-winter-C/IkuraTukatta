@@ -6,6 +6,7 @@
     --app-text: 0 0 0;
     --app-leftshadow: -6px -6px 12px rgba(255, 255, 255, 1);
     --app-rightshadow: 6px 6px 12px rgba(197, 197, 197, 1);
+    --app-footer-basecircle-shadow:0 -6px 8px -2px rgba(255, 255, 255, 1);
     --app-footer-circle-top-shadow: 0 -4px 8px rgba(255, 255, 255, 1);
     --app-footer-circle-bottom-shadow: 0 4px 10px rgba(197, 197, 197, 1);
     --app-mainbutton-shadow: 6px 6px 12px rgba(197, 197, 197, 1),
@@ -18,6 +19,7 @@ html[data-theme="dark"] {
     --app-text: 255 255 255;
     --app-leftshadow: -6px -6px 12px rgba(47, 47, 47, 1);
     --app-rightshadow: 6px 6px 12px rgba(0, 0, 0, 1);
+    --app-footer-basecircle-shadow:0 -6px 8px -2px rgba(47, 47, 47, 1);
     --app-footer-circle-top-shadow: 0 -4px 8px rgba(47, 47, 47, 1);
     --app-footer-circle-bottom-shadow: 0 4px 12px rgba(0, 0, 0, 1);
 }
@@ -28,7 +30,7 @@ html[data-theme="dark"] {
 }
 
 .footer-circle-shadow {
-    box-shadow: 0 -6px 2px rgba(47, 47, 47, 1);
+    box-shadow: var(--app-footer-basecircle-shadow);
 }
 
 .footer-circle-button-shadow {
