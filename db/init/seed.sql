@@ -5,7 +5,7 @@ INSERT INTO `USERS` (id, group_id, email, password_hash, name, google_uid, creat
 INSERT INTO `SHARE_GROUPS` (id, name, owner_user_id, created_at, updated_at) VALUES
   (1, 'Main Group', 1, NOW(), NOW());
 
-INSERT INTO `CATEGORIS` (id, user_id, group_id, name, color, is_io_type, created_at, updated_at) VALUES
+INSERT INTO `CATEGORIES` (id, user_id, group_id, name, color, is_in_type, created_at, updated_at) VALUES
   (1, 1, 1, 'Food',       '#F97316', 0, NOW(), NOW()),
   (2, 1, 1, 'Transport',  '#3B82F6', 0, NOW(), NOW()),
   (3, 1, 1, 'Salary',     '#22C55E', 1, NOW(), NOW()),
@@ -23,7 +23,7 @@ INSERT INTO `RECEIPT_ITEMS` (id, receipt_id, category_id, item_name, price, dete
   (3, 2, 4, 'Vegetables', 650, '2025-01-11'),
   (4, 2, 4, 'Milk',       220, '2025-01-11');
 
-INSERT INTO `IN_OR_EXPS` (id, user_id, category_id, receiept_id, group_id, amount, expense_date, memo, created_at, updated_at) VALUES
+INSERT INTO `MONEY_FLOWS` (id, user_id, category_id, receipt_id, group_id, amount, expense_date, memo, created_at, updated_at) VALUES
   (1, 1, 1, 1,    1,  1160, '2025-01-10', 'Lunch',          NOW(), NOW()),
   (2, 1, 2, NULL, 1,   480, '2025-01-11', 'Train',          NOW(), NOW()),
   (3, 1, 3, NULL, 1, 250000, '2025-01-01', 'January salary', NOW(), NOW()),
