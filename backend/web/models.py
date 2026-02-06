@@ -98,9 +98,10 @@ class Receipt(models.Model):
         related_name="receipts",
     )
     image_url = models.CharField(max_length=2048, blank=True, null=True)
-    taken_at = models.DateTimeField(blank=True, null=True)
     ocr_status = models.CharField(max_length=50, blank=True, null=True)
+    
     created_at = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         db_table = "RECEIPTS"
