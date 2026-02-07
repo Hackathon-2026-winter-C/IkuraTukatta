@@ -10,6 +10,7 @@ from .models import MoneyFlow ,User
 from django.http import Http404
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
+from django.contrib.auth.models import User as AuthUser
 
 
 from datetime import date
