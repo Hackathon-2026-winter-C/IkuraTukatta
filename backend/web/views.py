@@ -8,6 +8,8 @@ from django.contrib.auth import login,authenticate,logout
 from .forms import EmailUserCreationForm
 from .models import MoneyFlow ,User
 from django.http import Http404
+from django.views.decorators.http import require_http_methods
+from django.db import transaction
 
 
 from datetime import date
@@ -139,6 +141,38 @@ def dashboard_page(request):
             "month": month,
         },
     )
+
+#アカウントの共有ボタンを押すと共有ページに移動
+@login_required
+@require_http_methods(["GET", "POST"])
+def share_page(request):
+    if request.method == "GET":
+        return render(request, "share.html")
+    
+    email = (request.POST.get("email") or "").strip().lower()
+
+    if not email:
+        return render(request, "share.html", {"error": "メールアドレスを入力してください"})
+
+    me = request.user
+    my_group_id = getattr(me, "group_id", None)
+
+    if not my_group_id:
+        return render(request, "share.html", {"error": "グループを作成してください"})
+    
+    try:
+        target = Appuser.objects.get(email=email)
+    except Appuser.DoseNotExist:
+        return render(request, "share.html", {"error": "メールアドレスが存在しません"})
+
+    if target.id == me.id:
+        return render(request, "share.html", {"すでに同じ共有グループです"})
+    
+    with transaction.atomic():
+        target.group_id = my_group_id
+        target.save(update_fields=["group_id"])
+
+    return render(request, "share.html", {"message": f"{email} を共有グループに追加しました"})
 
 @login_required(login_url="login")
 @ensure_csrf_cookie

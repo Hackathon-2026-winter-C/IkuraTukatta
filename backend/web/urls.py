@@ -22,6 +22,7 @@ urlpatterns = [
     path("dashboard/moneyflow/edit", views.dashboard_moneyflow_edit_page, name="dashboard_moneyflow_edit"),
     path("dashboard/moneyflow/category", views.dashboard_moneyflow_category_page, name="dashboard_moneyflow_category"),
     path("dashboard/account", views.account_page, name="account"),
+    path("dashboard/account/share", views.share_page, name="share"),
 
  path("dashboard/date/", views.dashboard_date_page, name="dashboard_date"), #
 

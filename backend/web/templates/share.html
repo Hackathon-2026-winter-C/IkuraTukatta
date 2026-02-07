@@ -1,0 +1,14 @@
+{%extends "base.html" %}
+{% block title %}共有ページ{% endblock %}
+{% block content %}
+    <h1>共有ページ</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label>共有したい相手のメール</label>
+        <input type="email" name="email" required>
+            <button type=""submit>共有に追加</button>
+    </form>
+
+{% if error %}<p style="color:red;">{{ error }}</p>{% endif %}
+{% if message %}<p style="color:green;">{{ message }}</p>{% endif %}
+{% endblock %}
