@@ -13,4 +13,4 @@ class CustomUserCreationForm(UserCreationForm):
 class UserUpdateForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ["name", "image_url"]
+        fields = ["name", "icon"]
