@@ -1,6 +1,6 @@
 from django.urls import path
-from . import views
 
+from . import views
 
 urlpatterns = [
     # テスト
@@ -16,20 +16,27 @@ urlpatterns = [
     path("login", views.login_page, name="login"),
     path("signup", views.signup_page, name="signup"),
     path("logout", views.logout_view, name="logout"),
-    path("dashboard/",views.dashboard_page, name="dashboard"),
+    path("dashboard/", views.dashboard_page, name="dashboard"),
     path("dashboard/charts", views.charts_page, name="charts"),
     path("dashboard/list", views.dashboard_list_page, name="dashboard_list"),
-    path("dashboard/moneyflow/form", views.dashboard_moneyflow_form_page, name="dashboard_moneyflow_form"),
-    path("dashboard/moneyflow/edit", views.dashboard_moneyflow_edit_page, name="dashboard_moneyflow_edit"),
-    path("dashboard/moneyflow/category", views.dashboard_moneyflow_category_page, name="dashboard_moneyflow_category"),
+    path(
+        "dashboard/moneyflow/form",
+        views.dashboard_moneyflow_form_page,
+        name="dashboard_moneyflow_form",
+    ),
+    path(
+        "dashboard/moneyflow/edit",
+        views.dashboard_moneyflow_edit_page,
+        name="dashboard_moneyflow_edit",
+    ),
+    path(
+        "dashboard/moneyflow/category",
+        views.dashboard_moneyflow_category_page,
+        name="dashboard_moneyflow_category",
+    ),
     path("dashboard/account", views.account_page, name="account"),
     path("account/edit/", views.account_edit, name="account_edit"),
 
-    path("whoami/", views.whoami, name="whoami"),
-
-
-
-
     # テストAPI
-    # path("api/users", views.users_api, name="users_api")
+    path("api/users", views.users_api, name="users_api"),
 ]
