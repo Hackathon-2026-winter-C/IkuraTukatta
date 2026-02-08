@@ -1,4 +1,6 @@
 # backend/web/views.py
+from django.contrib.auth.decorators import login_required
+ 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, Http404
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
