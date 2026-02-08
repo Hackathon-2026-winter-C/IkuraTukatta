@@ -1,18 +1,23 @@
 # backend/web/views.py
 from django.shortcuts import render, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.http import require_GET
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login,authenticate,logout
+from django.contrib.auth import get_user_model
 from .forms import EmailUserCreationForm
 from .models import MoneyFlow ,User
 from django.http import Http404
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
-from django.contrib.auth.models import User as AuthUser
+from django.contrib.auth.models import User as User
 
+from .models import ShareGroup
 
+User = get_user_model()
+
+from .models import User
 from datetime import date
 import calendar
 
@@ -102,7 +107,7 @@ def dashboard_page(request):
             "moneyflows": moneyflows,
         },
     )
-    return render (request, "dashboard/calendar.html")
+    
 
 # カレンダーの日付を押した後
 @ensure_csrf_cookie
@@ -147,34 +152,66 @@ def dashboard_page(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def share_page(request):
+    #グループがない場合　グループ作成を見せる
+    #グループがある場合　メール招待フォームを見せる
     if request.method == "GET":
         return render(request, "share.html")
-    
-    email = (request.POST.get("email") or "").strip().lower()
 
+    me = request.user #相手のメールアドレス
+
+    #1
+    if not getattr(me, "group_id", None):
+        return render(request, {"error": "共有するには先に共有グループを作成してください"})
+    
+    #2
+    email = (request.POST.get("email") or "").strip().lower()
     if not email:
-        return render(request, "share.html", {"error": "メールアドレスを入力してください"})
+        return render(request,"share.html", {"error": "メールアドレスを入力してください"})
+    try: #エラー処理
+        target = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return render(request, "share.html", {"error": "そのメールアドレスのユーザーはいません"})
+    
+    #自分自身の招待は禁止
+    if target.pk == me.pk:
+        return render(request, "share.html", {"error": "自分自身は追加できません"})
+    
+    #同じグループ
+    if getattr(target, "group_id", None) == me.group_id:
+        return render(request, "share.html", {"message": "すでに同じ共有グループです"})
+    
+    #同時更新に備えるための atomic(原子性)
+    with transaction.atomic():
+        target.group_id = me.group_id
+        target.save(update_fields=["group"])
+
+    return render(request, "share.html", {"message": f"{email}を共有グループに追加しました"})
+
+@login_required
+@require_http_methods(["POST"])
+def group_create(request):
 
     me = request.user
-    my_group_id = getattr(me, "group_id", None)
 
-    if not my_group_id:
-        return render(request, "share.html", {"error": "グループを作成してください"})
+    #ユーザーがグループに所属しているなら作らない
+    if getattr(me, "group_id", None):
+        return redirect("share")
     
-    try:
-        target = Appuser.objects.get(email=email)
-    except Appuser.DoseNotExist:
-        return render(request, "share.html", {"error": "メールアドレスが存在しません"})
+    name = (request.POST.get("name") or "").strip()
+    if not name:
+        name = f"{me.email}のグループ"
 
-    if target.id == me.id:
-        return render(request, "share.html", {"すでに同じ共有グループです"})
-    
     with transaction.atomic():
-        target.group_id = my_group_id
-        target.save(update_fields=["group_id"])
+        group = ShareGroup.objects.create(
+            name=name,
+            owner_user=me,
+            )
 
-    return render(request, "share.html", {"message": f"{email} を共有グループに追加しました"})
+        me.group = group
+        me.save(update_fields=["group"])
 
+    return redirect("share")
+    
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_list_page(request):
