@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("web", "0002_alter_user_managers_remove_user_name_and_more"),
+        ("web", "0001_initial"),
     ]
 
     operations = [
