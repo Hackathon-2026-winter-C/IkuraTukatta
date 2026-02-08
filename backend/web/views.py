@@ -1,4 +1,6 @@
 # backend/web/views.py
+from django.contrib.auth.decorators import login_required
+ 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
@@ -10,6 +12,10 @@ from .models import MoneyFlow ,User
 
 from datetime import date
 import calendar
+
+from .models import MoneyFlow, User
+from .forms import CustomUserCreationForm, UserUpdateForm
+
 
 
 # /にアクセスがあった時
@@ -129,6 +135,36 @@ def charts_page(request):
 @ensure_csrf_cookie
 def account_page(request):
     return render(request, 'accounts/account.html')
+
+
+@require_http_methods(["GET", "POST"])
+def login_view(request):
+    if request.method == "POST":
+        username = (request.POST.get("username", "") or "").strip()
+        password = request.POST.get("password", "") or ""
+        remember_me = request.POST.get("remember_me") == "on"
+
+        print("LOGIN_VIEW HIT")
+        print("POST username=", repr(username), "pw_len=", len(password))
+
+        user = authenticate(request, username=username, password=password)
+        print("AUTH RESULT =", user)
+
+        if user is not None:
+            auth_login(request, user)
+            request.session.set_expiry(0 if not remember_me else 60 * 60 * 24 * 14)
+            next_url = request.POST.get("next") or "/dashboard/"
+            return redirect(next_url)
+
+        return render(request, "accounts/login.html", {"error": "ユーザー名またはパスワードが違います"})
+
+    return render(request, "accounts/login.html")
+
+
+
+@login_required
+def whoami(request):
+    return HttpResponse(f"OK: authenticated={request.user.is_authenticated}, user={request.user}")
 
 # サインアップ
 # def signup(request):
