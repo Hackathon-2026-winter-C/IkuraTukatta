@@ -1,10 +1,36 @@
-{% extends 'base.html' %}
+{% extends 'accounts/base.html' %} {% load static %} {% block title %}ログイン{% endblock title %} {% block content %}
+{% comment %} <h2 class="text-[rgb(var(--app-text))]">ログインページ</h2> {% endcomment %}
 
-{% block title %}
-  ログイン
-{% endblock title %}
+<main class="bg-black flex flex-col items-center min-h-[100dvh] w-full justify-end gap-6">
+  {% comment %} ロゴ画像 {% endcomment %}
+  <div class="pt-8 pb-4">
+    <img src="{% static 'assets/images/login.png' %}" alt="いくらつかった？" class="w-[80vw] max-w-[380px]" />
+  </div>
 
-{% block content %}
-  <h2 class="text-[rgb(var(--app-text))]">ログインページ</h2>
+  {% comment %} ログインフォーム {% endcomment %}
+  <div class="neu-panel w-full">
+    <form class="auth-form" method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      <input type="email" name="email" class="input" value="{{ email|default:'' }}" placeholder="メールアドレス" />
+      <input type="password" name="password" class="input" placeholder="パスワード" />
 
-{% endblock content %}
+      <button type="submit" class="btn btn-main">Login</button>
+
+      <div class="text-center text-black my-2">OR</div>
+
+      <button type="button" class="btn btn-sub flex items-center justify-center gap-2">
+        <img src="{% static 'assets/images/google.svg' %}" alt="Google" class="w-4 h-4" />
+        <span>Continue with Google</span>
+      </button>
+      {% if error %}
+    <p class="text-red-500 text-sm">{{ error }}</p>
+  {% endif %}
+
+      <div class="text-center text-black my-2">
+        アカウントをお持ちでない方は
+        <a href="{% url 'signup' %}" class="text-[#FF9400] font-bold">こちら</a>
+      </div>
+    </form>
+  </div>
+</main>
+{% endblock %}

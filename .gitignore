@@ -1,10 +1,41 @@
-.vscode 
-.env
-
+# Python
 __pychache__/
 *.pyc
+venv/
+env/
 .venv/
 
+# 環境変数
+.env
+.env.local
+config.json
 
+# ログファイル
+logs/
+*.log
+*.out
+
+# MySQL
+mysql_data/
+*.sql
+
+# Django
+statisfiles/
+media/
+**/migration/__pychache__/
+
+# IDE / OS
+.vscode
 .DS_Store
+
 node_modules/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+
+/dev-sample/
+
