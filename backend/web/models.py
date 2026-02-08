@@ -100,7 +100,7 @@ class Receipt(models.Model):
         on_delete=models.CASCADE,
         related_name="receipts",
     )
-    image_url = models.CharField(max_length=2048, blank=True, null=True)
+    icon = models.CharField(max_length=2048, blank=True, null=True)
     ocr_status = models.CharField(max_length=50, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
