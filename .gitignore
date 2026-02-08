@@ -30,5 +30,12 @@ media/
 
 node_modules/
 
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+
 /dev-sample/
 
