@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET
+from collections import defaultdict
 
 from .forms import EmailUserCreationForm, UserUpdateForm
 from .models import MoneyFlow, User
@@ -27,9 +28,11 @@ def signup_page(request):
         form = EmailUserCreationForm(request.POST)
         # バリデーションOKならユーザー作成
         if form.is_valid():
-            form.save()
+            user = form.save()
+            login(request,user)
             # ログイン画面へリダイレクト
-            return redirect("login")
+
+            return redirect("dashboard")
     # GETリクエスト
     else:
         form = EmailUserCreationForm()
@@ -175,8 +178,8 @@ def dashboard_page(request):
     # DBからこのユーザーのデータを取得
     # 表示範囲の日付だけを対象にする
     qs = (
-        InOrExp.objects.select_related("category", "user")
-        .filter(user__email=user_email, expense_date__range=(start_date, end_date))
+    MoneyFlow.objects.select_related("category", "category__user")
+    .filter(category__user=request.user, expense_date__range=(start_date, end_date))
     )
 
     # デバッグ用：ちゃんとデータが取れているか確認
@@ -193,10 +196,11 @@ def dashboard_page(request):
         key = e.expense_date.isoformat()
 
         # category.is_io_type が 1 なら収入、そうでなければ支出
-        if getattr(e.category, "is_io_type", 0) == 1:
+        if e.category.is_in_type:
             daily[key]["in"] += int(e.amount)
         else:
             daily[key]["out"] += int(e.amount)
+
 
     # テンプレートで使いやすい形にデータを整形する
     # 1日分ごとに「辞書」を作って持たせる
@@ -237,21 +241,13 @@ def dashboard_page(request):
 @require_GET
 def users_api(request):
     users = list(
-        AppUser.objects.values("id","name","email")
+        User.objects.values("id","name","email")
     )
     return JsonResponse({"users": users})
 
 @ensure_csrf_cookie
 def test_footer_page(request):
     return render(request, "sample/test_footer.html")
-
-@ensure_csrf_cookie
-def login_page(request):
-    return render(request, 'accounts/login.html')
-
-@ensure_csrf_cookie
-def signup_page(request):
-    return render(request, 'accounts/signup.html')
 
 @login_required(login_url="login")
 @ensure_csrf_cookie
