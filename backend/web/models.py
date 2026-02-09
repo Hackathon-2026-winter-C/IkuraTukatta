@@ -1,4 +1,28 @@
 # backend/web/models.py
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+
+class User(AbstractUser):
+    username = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True,
+        unique=False,
+    )
+
+    email = models.EmailField(unique=True)
+    group = models.ForeignKey(
+        "ShareGroup",
+        on_delete=models.SET_NULL,
+        db_column="group_id",
+        null=True,
+        blank=True,
+        related_name="members",
+    )
+    image_url = models.CharField(max_length=2048, null=True, blank=True)
+    google_uid = models.CharField(max_length=255, unique=True, null=True, blank=True)
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils import timezone
@@ -34,17 +58,19 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    USERNAME_FIELD ="email"
-    REQUIRED_FIELDS = []
-
-    objects = UserManager()
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []   # ← ここが重要
 
     class Meta:
         db_table = "USERS"
 
 
+
+# ---- SHARE GROUP ----
 class ShareGroup(models.Model):
+    id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=255)
     owner_user = models.ForeignKey(
         "User",
@@ -61,6 +87,7 @@ class ShareGroup(models.Model):
 
 
 class Category(models.Model):
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(
         "User",
         on_delete=models.DO_NOTHING,

@@ -1,5 +1,5 @@
 {% extends "base.html" %} {% load static %} {% block title %}アカウント{% endblock %} {% block content %}
-<main class="w-full flex flex-col items-center gap-4 px-4 pt-2 pb-10">
+<main class="w-full flex flex-col items-center gap-4 px-4 pt-10 pb-10">
   <!-- ================= アイコン ================= -->
   <div class="relative mt-2">
     <div class="w-[120px] h-[120px] rounded-[18px] overflow-hidden bg-[rgb(var(--app-bg))] app-shadow">
@@ -55,6 +55,7 @@
     </button>
 
     <!-- 共有　-->
+  <a href="{% url 'share' %}">
     <button type="button" class="setting-btn app-shadow">
       <span class="setting-left">
         <span class="setting-icon"> {% include "accounts/account_icons/user.svg" with class="w-6 h-6" %} </span>
@@ -64,6 +65,7 @@
         <span class="setting-next app-shadow"> {% include "accounts/account_icons/chevron-right.svg" with class="w-5 h-5" %} </span>
       </span>
     </button>
+  </a>
 
     <!-- カラーテーマ -->
     <div class="setting-btn app-shadow" role="group" aria-label="theme">
@@ -74,7 +76,7 @@
 
       <!-- トグル -->
       <label class="switch">
-        <input id="checkbox" type="checkbox" checked />
+        <input id="checkbox" type="checkbox"  data-theme-toggle/>
         <span class="slider">
           <!-- 夜用の星 -->
           <div class="star star_1"></div>
@@ -89,7 +91,7 @@
     </div>
 
     <!-- ログアウト -->
-    <button type="button" class="setting-btn app-shadow">
+    <button type="button" class="setting-btn app-shadow" data-logout data-logout-url="{% url 'logout' %}" data-logout-redirect="{% url 'login' %}">
       <span class="setting-left">
         <span class="setting-icon"> {% include "accounts/account_icons/log-out.svg" with class="w-6 h-6" %} </span>
         <span class="setting-text">ログアウト</span>
@@ -106,4 +108,5 @@
     </p>
   </section>
 </main>
+<script src="{% static 'js/logout.js' %}" defer></script>
 {% endblock %}
