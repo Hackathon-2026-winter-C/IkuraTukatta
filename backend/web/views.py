@@ -96,15 +96,7 @@ def logout_view(request):
 # ログイン後表示されるカレンダーページ
 @login_required(login_url="login")
 def dashboard_page(request):
-    moneyflows = (
-        MoneyFlow.objects.select_related("category")
-        .filter(category__user=request.user)
-        .order_by("-expense_date", "-id")
-    )
-
     today = date.today()
-    weeks = calendar.Calendar(firstweekday=6).monthdayscalendar(today.year, today.month)
-    month_label = f"{today.year}年{today.month}月"
 
     # 月を前後にずらすための関数
     # 例：
@@ -172,20 +164,11 @@ def dashboard_page(request):
     # 週の数が何個あるか分からないけど、一番最後の週[last_week_day0, last_week_day1, ..., last_week_day6]  # weeks[-1]
     end_date = weeks[-1][-1]
 
-    # 仮のユーザー（ログイン機能ができるまで）
-    user_email = "haruto@example.com"
-
-    # DBからこのユーザーのデータを取得
     # 表示範囲の日付だけを対象にする
     qs = (
-    MoneyFlow.objects.select_related("category", "category__user")
-    .filter(category__user=request.user, expense_date__range=(start_date, end_date))
+        MoneyFlow.objects.select_related("category", "category__user")
+        .filter(category__user=request.user, expense_date__range=(start_date, end_date))
     )
-
-    # デバッグ用：ちゃんとデータが取れているか確認
-    print("user_email:", user_email)
-    print("qs_count:", qs.count())
-    print("first_5:", list(qs.values("expense_date", "amount")[:5]))
 
     # 日付ごとの「収入」「支出」をまとめる入れ物
     # 例: daily["2026-01-29"] = {"in": 5000, "out": 1200}
@@ -238,16 +221,6 @@ def dashboard_page(request):
     )
 
 
-@require_GET
-def users_api(request):
-    users = list(
-        User.objects.values("id","name","email")
-    )
-    return JsonResponse({"users": users})
-
-@ensure_csrf_cookie
-def test_footer_page(request):
-    return render(request, "sample/test_footer.html")
 
 @login_required(login_url="login")
 @ensure_csrf_cookie
@@ -276,7 +249,42 @@ def dashboard_moneyflow_edit_page(request):
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def charts_page(request):
-    return render(request, "dashboard/charts/chart.html")
+    # ログイン中ユーザーに紐づく明細だけを新しい順で取得
+    qs = (
+        MoneyFlow.objects.select_related("category")
+        .filter(category__user=request.user)
+        .order_by("-expense_date", "-id")
+    )
+
+    # テンプレートで扱いやすいように一度リスト化
+    expense_list = list(qs)
+
+    # 画面表示名は「氏名 -> ユーザー名 -> メール」の優先で決める
+    user_name = (
+        request.user.get_full_name().strip()
+        or request.user.username
+        or request.user.email
+    )
+
+    # chart.html / charts.js で使うJSONデータを整形
+    expense_data = [
+        {
+            "date": e.expense_date.isoformat(),  # "YYYY-MM-DD"
+            "amount": e.amount,                  # 金額
+            "category": e.category.name,         # カテゴリ名
+            "categoryColor": e.category.color,   # カテゴリ色（#RRGGBB）
+            "memo": e.memo,                      # メモ
+            "user": user_name,                   # 表示用ユーザー名
+        }
+        for e in expense_list
+    ]
+
+    # チャート画面へデータを渡して描画
+    return render(
+        request,
+        "dashboard/charts/chart.html",
+        {"expense_data": expense_data, "user_name": user_name},
+    )
 
 
 @login_required(login_url="login")
@@ -298,7 +306,6 @@ def account_edit(request):
     return render(request, "accounts/account_edit.html", {"form": form})
 
 
-@login_required(login_url="login")
 @require_GET
 def users_api(request):
     users = list(User.objects.values("id", "username", "email"))

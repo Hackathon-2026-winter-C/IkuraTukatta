@@ -1,4 +1,4 @@
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -66,8 +66,9 @@ class Category(models.Model):
         related_name="categories",
     )
     name = models.CharField(max_length=255)
-    color = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(255)]
+    color = models.CharField(
+        max_length=7,
+        validators=[RegexValidator(regex=r"^#[0-9A-Fa-f]{6}$")],
     )
     is_in_type = models.BooleanField()
     icon_key = models.CharField(max_length=50)
@@ -106,5 +107,4 @@ class MoneyFlow(models.Model):
 
     class Meta:
         db_table = "MONEY_FLOWS"
-
 

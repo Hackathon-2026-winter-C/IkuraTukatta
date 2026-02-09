@@ -1,23 +1,41 @@
-<!-- prettier-ignore -->
 {% extends "base.html" %} 
 {% load static %} 
 {% block title %}Charts{% endblock %} 
 {% block content %}
+
 <main class="mx-auto max-w-xl p-6">
-  <h2
-    class="mb-4 text-2xl font-bold flex flex-col items-center text-yellow-500"
-  >
-    {{ user_name }}
-  </h2>
-  <div class="rounded-xl bg-white p-4 shadow">
-    <canvas id="expense-chart" width="360" height="360"></canvas>
-    <div id="chart-empty" class="mt-2 text-sm text-slate-500" hidden>
-      No data
+   <div class="radio-group w-full mx-auto mb-5">
+        <h2 class="text-base flex justify-center items-center text-[rgb(var(--app-text))] w-full">
+          {{ user_name }}
+        </h2>
+   </div>
+  <div class="radio-group w-full mx-auto mb-5">
+    <div class="slider"></div>
+    <div class="radio-option">
+        <input type="radio" name="option" id="option1" checked="" />
+        <label for="option1" class="radio-label">Year</label>
+    </div>
+    <div class="radio-option">
+        <input type="radio" name="option" id="option2" />
+        <label for="option2" class="radio-label">Month</label>
     </div>
   </div>
+
+  <div class="card w-full mb-5">    
+      <div class="p-4 h-64 shadow flex justify-center items-center rounded-[30px] bg-transparent">
+        <canvas id="expense-chart" class="w-52 h-52"></canvas>
+        <div id="chart-empty" class="mt-2 text-sm text-black" hidden>
+          No data
+        </div>
+      </div>
+  </div>
+   <div class="card w-full h-64"> 
+        <div id="chart-categories" class="mt-4 p-6 text-2xl text-slate-700"></div>
+   </div>  
 </main>
 
 {{ expense_data|json_script:"expense-data" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="{% static 'js/charts.js' %}"></script>
+ <script src="{% static 'js/charts_categorys.js' %}"></script> 
 {% endblock %}
