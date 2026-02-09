@@ -33,7 +33,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255, blank=True, null=True)
-    image_url = models.CharField(max_length=255, blank=True, null=True)
+    icon = models.CharField(max_length=255, blank=True, null=True)
     google_uid = models.CharField(max_length=255, blank=True, null=True, unique=True)
 
     is_staff = models.BooleanField(default=False)
