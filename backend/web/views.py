@@ -1,158 +1,248 @@
 # backend/web/views.py
-
-
-
 from django.contrib.auth.decorators import login_required
  
 from django.shortcuts import render, redirect
-from django.http import JsonResponse, HttpResponse
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_GET, require_http_methods, require_POST
-from django.contrib.auth import authenticate, login as auth_login, logout
+from django.http import JsonResponse, Http404
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
+from django.views.decorators.http import require_GET
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login,authenticate,logout
+from django.contrib.auth import get_user_model
+from .forms import EmailUserCreationForm
+from .models import MoneyFlow ,User
+from django.http import Http404
+from django.views.decorators.http import require_http_methods
+from django.db import transaction
+from django.contrib.auth.models import User as User
 
+from .models import ShareGroup
+
+User = get_user_model()
+
+from .models import User
 from datetime import date
 import calendar
 
-from .models import MoneyFlow, User
-from .forms import CustomUserCreationForm, UserUpdateForm
 
-
-
+# /にアクセスがあった時
 @ensure_csrf_cookie
 def index_page(request):
-    expenses = (
-        MoneyFlow.objects.select_related("user", "category")
-        .order_by("-expense_date", "-id")
-    )
-    return render(request, "index.html", {"expenses": expenses})
+    return redirect("login")
 
 
+# サインアップ
+@csrf_exempt
 @ensure_csrf_cookie
-def settings_page(request):
-    return render(request, "settings.html")
+def signup_page(request):
+    # POSTリクエスト
+    if request.method == "POST":
+        form = EmailUserCreationForm(request.POST)
+        # バリデーションOKならユーザー作成
+        if form.is_valid():
+            form.save()
+            # ログイン画面へリダイレクト
+            return redirect("login")
+    # GETリクエスト
+    else:
+        form = EmailUserCreationForm()
+
+    return render(request, "accounts/signup.html", {"form": form})
 
 
+# ログイン
 @ensure_csrf_cookie
-def user_page(request):
-    return render(request, "user.html")
+def login_page(request):
+    # GETリクエスト
+    # すでにログイン済みなら dashboard へ
+    if request.user.is_authenticated:
+        return redirect("dashboard")
 
-@ensure_csrf_cookie 
-def signup_view(request): 
-    return render(request, "accounts/signup.html")
+    error = None
+    email = ""
 
+    # POSTリクエスト（ログイン試行）
+    if request.method == "POST":
+        # フォームから email / password を取得
+        email = request.POST.get("email", "").strip()
+        password = request.POST.get("password", "")
+        # 認証（emailをusernameとして使う）
+        user = authenticate(request, username=email, password=password)
+        if user is not None:
+            # 認証成功 → ログインしてdashboardへ
+            login(request, user)
+            return redirect("dashboard")
+        # 認証失敗 → エラーメッセージをセット
+        error = "メールアドレスかパスワードが違います。"
+    return render(request, 'accounts/login.html',{"error": error, "email": email})
 
-@ensure_csrf_cookie
-def charts_page(request):
-    user_email = "alice@example.com"
-    qs = (
-        MoneyFlow.objects.select_related("user", "category")
-        .filter(user__email=user_email)
-        .order_by("-expense_date", "-id")
-    )
-    expense_list = list(qs)
-    first = expense_list[0] if expense_list else None
-    user_name = first.user.name if first and first.user and first.user.name else user_email
-
-    expense_data = [
-        {
-            "date": e.expense_date.isoformat(),
-            "amount": e.amount,
-            "category": e.category.name,
-            "categoryColor": e.category.color,
-            "memo": e.memo,
-            "user": e.user.name,
-        }
-        for e in expense_list
-    ]
-    return render(
-        request,
-        "dashboard/charts/chart.html",
-        {"expense_data": expense_data, "user_name": user_name},
-    )
+#ログアウト処理
+@require_GET
+def logout_view(request):
+    logout(request)
+    return redirect("login")
 
 
-@ensure_csrf_cookie
+# ログイン後表示されるカレンダーページ
+@login_required(login_url="login")
 def dashboard_page(request):
+    user = User.objects.filter(email=request.user.email).first()
+    if user is None:
+        return redirect("login")
+
+    moneyflows = (
+        MoneyFlow.objects.select_related("category")
+        .filter(category__user=user)
+        .order_by("-expense_date", "-id")
+    )
+
     today = date.today()
-    cal = calendar.Calendar(firstweekday=6)
-    weeks = cal.monthdayscalendar(today.year, today.month)
+    weeks = calendar.Calendar(firstweekday=6).monthdayscalendar(today.year, today.month)
     month_label = f"{today.year}年{today.month}月"
 
     return render(
         request,
         "dashboard/calendar.html",
-        {"weeks": weeks, "month_label": month_label, "today_day": today.day},
+        {
+            "month_label": month_label,
+            "weeks": weeks,
+            "today_day": today.day,
+            "moneyflows": moneyflows,
+        },
+    )
+    
+
+# カレンダーの日付を押した後
+@ensure_csrf_cookie
+def dashboard_date_page(request):
+    try:
+        y = int(request.GET.get("year"))
+        m = int(request.GET.get("month"))
+        d = int(request.GET.get("day"))
+        selected_date = date(y, m, d)
+    except Exception:
+        raise Http404("Invalid date")
+
+    return render(request, "dashboard_date.html", {
+       "selected_date": selected_date,
+    })
+
+@ensure_csrf_cookie
+def dashboard_page(request):
+    today = date.today()
+
+    year = today.year
+    month = today.month
+
+    cal = calendar.Calendar(firstweekday=6)
+    weeks = cal.monthdayscalendar(year, month)
+
+    month_label = f"{year}年{month}月"
+
+    return render(
+        request,
+        "dashboard/calendar.html",
+        {
+            "weeks": weeks,
+            "month_label": month_label,
+            "today_day": today.day,
+            "year": year,
+            "month": month,
+        },
     )
 
-@require_GET
-def users_api(request):
-    users = list(
-        User.objects.values("id","name","email")
-    )
-    return JsonResponse({"users": users})
+#アカウントの共有ボタンを押すと共有ページに移動
+@login_required
+@require_http_methods(["GET", "POST"])
+def share_page(request):
+    #グループがない場合　グループ作成を見せる
+    #グループがある場合　メール招待フォームを見せる
+    if request.method == "GET":
+        return render(request, "share.html")
 
-@ensure_csrf_cookie
-def test_footer_page(request):
-    return render(request, "sample/test_footer.html")
+    me = request.user #相手のメールアドレス
 
-@ensure_csrf_cookie
-def login_page(request):
-    return render(request, 'accounts/login.html')
+    #1
+    if not getattr(me, "group_id", None):
+        return render(request, {"error": "共有するには先に共有グループを作成してください"})
+    
+    #2
+    email = (request.POST.get("email") or "").strip().lower()
+    if not email:
+        return render(request,"share.html", {"error": "メールアドレスを入力してください"})
+    try: #エラー処理
+        target = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return render(request, "share.html", {"error": "そのメールアドレスのユーザーはいません"})
+    
+    #自分自身の招待は禁止
+    if target.pk == me.pk:
+        return render(request, "share.html", {"error": "自分自身は追加できません"})
+    
+    #同じグループ
+    if getattr(target, "group_id", None) == me.group_id:
+        return render(request, "share.html", {"message": "すでに同じ共有グループです"})
+    
+    #同時更新に備えるための atomic(原子性)
+    with transaction.atomic():
+        target.group_id = me.group_id
+        target.save(update_fields=["group"])
 
-@ensure_csrf_cookie
-def signup_page(request):
-    return render(request, 'accounts/signup.html')
+    return render(request, "share.html", {"message": f"{email}を共有グループに追加しました"})
 
+@login_required
+@require_http_methods(["POST"])
+def group_create(request):
+
+    me = request.user
+
+    #ユーザーがグループに所属しているなら作らない
+    if getattr(me, "group_id", None):
+        return redirect("share")
+    
+    name = (request.POST.get("name") or "").strip()
+    if not name:
+        name = f"{me.email}のグループ"
+
+    with transaction.atomic():
+        group = ShareGroup.objects.create(
+            name=name,
+            owner_user=me,
+            )
+
+        me.group = group
+        me.save(update_fields=["group"])
+
+    return redirect("share")
+    
+@login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_list_page(request):
     return render(request, 'dashboard/list/list.html')
 
+@login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_moneyflow_form_page(request):
     return render(request, 'dashboard/moneyflow/moneyflow_form.html')
 
+@login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_moneyflow_category_page(request):
     return render(request, 'dashboard/moneyflow/category.html')
 
+@login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_moneyflow_edit_page(request):
     return render(request, 'dashboard/moneyflow/moneyflow_edit.html')
 
+@login_required(login_url="login")
+@ensure_csrf_cookie
+def charts_page(request):
+    return render (request, 'dashboard/charts/chart.html')
+
+@login_required(login_url="login")
 @ensure_csrf_cookie
 def account_page(request):
     return render(request, 'accounts/account.html')
-
-
-@require_http_methods(["GET", "POST"])
-def login_view(request):
-    if request.method == "POST":
-        username = (request.POST.get("username", "") or "").strip()
-        password = request.POST.get("password", "") or ""
-        remember_me = request.POST.get("remember_me") == "on"
-
-        print("LOGIN_VIEW HIT")
-        print("POST username=", repr(username), "pw_len=", len(password))
-
-        user = authenticate(request, username=username, password=password)
-        print("AUTH RESULT =", user)
-
-        if user is not None:
-            auth_login(request, user)
-            request.session.set_expiry(0 if not remember_me else 60 * 60 * 24 * 14)
-            next_url = request.POST.get("next") or "/dashboard/"
-            return redirect(next_url)
-
-        return render(request, "accounts/login.html", {"error": "ユーザー名またはパスワードが違います"})
-
-    return render(request, "accounts/login.html")
-
-
-
-@login_required
-def whoami(request):
-    return HttpResponse(f"OK: authenticated={request.user.is_authenticated}, user={request.user}")
 
 # サインアップ
 def signup(request):
@@ -170,7 +260,11 @@ def signup(request):
 @login_required
 def account_edit(request):
     if request.method == "POST":
-        form = UserUpdateForm(request.POST, instance=request.user)
+        form = UserUpdateForm(
+            request.POST, 
+            request.FILES, 
+            instance=request.user
+        )
         if form.is_valid():
             form.save()
             return redirect("account") # アカウントページへ戻る
