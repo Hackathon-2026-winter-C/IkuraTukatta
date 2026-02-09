@@ -245,13 +245,37 @@ def account_page(request):
     return render(request, 'accounts/account.html')
 
 # サインアップ
-# def signup(request):
-#     if request.method == "POST":
-#         form = UserCreationForm(request.POST)
-#         if form.is_valid():
-#             form.save()
-#             return redirect("login") # 登録後ログインページへ
-    
-#     else:
-#         form = UserCreationForm()
-#     return render(request, "signup.html", {"form": form})
+def signup(request):
+    if request.method == "POST":
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("login") # 登録後ログインページへ
+    else:
+        form = CustomUserCreationForm()
+    return render(request, "accounts/signup.html", {"form": form})
+
+
+# アカウント設定
+@login_required
+def account_edit(request):
+    if request.method == "POST":
+        form = UserUpdateForm(
+            request.POST, 
+            request.FILES, 
+            instance=request.user
+        )
+        if form.is_valid():
+            form.save()
+            return redirect("account") # アカウントページへ戻る
+    else:
+        form = UserUpdateForm(instance=request.user)
+
+    return render(request, "accounts/account_edit.html", {"form": form})
+
+
+# ログアウト
+def logout_view(request):
+    logout(request)
+    return redirect("login")
+

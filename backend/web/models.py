@@ -50,8 +50,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     group = models.ForeignKey("ShareGroup", null=True, blank=True, on_delete=models.DO_NOTHING)
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255, blank=True, null=True)
-    image_url = models.CharField(max_length=255, blank=True, null=True)
-  # google_uid = models.CharField(max_length=255, blank=True, null=True)
+    icon = models.ImageField(upload_to="user_icons/", blank=True, null=True)
+    google_uid = models.CharField(max_length=255, blank=True, null=True, unique=True)
 
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -124,7 +124,7 @@ class Receipt(models.Model):
         db_column="group_id",
         related_name="receipts",
     )
-    image_url = models.CharField(max_length=2048, blank=True, null=True)
+    icon = models.CharField(max_length=2048, blank=True, null=True)
     ocr_status = models.CharField(max_length=50, blank=True, null=True)
     
     created_at = models.DateTimeField(blank=True, null=True)
