@@ -89,27 +89,27 @@ class Category(models.Model):
     
 
 
-class Receipt(models.Model):
-    user = models.ForeignKey(
-        "User",
-        on_delete=models.DO_NOTHING,
-        db_column="user_id",
-        related_name="receipts",
-    )
-    group = models.ForeignKey(
-        ShareGroup,
-        on_delete=models.DO_NOTHING,
-        db_column="group_id",
-        related_name="receipts",
-    )
-    image = models.ImageField(upload_to="receipts/", blank=True, null=True)
-    ocr_status = models.CharField(max_length=50, blank=True, null=True)
+# class Receipt(models.Model):
+#     user = models.ForeignKey(
+#         "User",
+#         on_delete=models.DO_NOTHING,
+#         db_column="user_id",
+#         related_name="receipts",
+#     )
+#     group = models.ForeignKey(
+#         ShareGroup,
+#         on_delete=models.DO_NOTHING,
+#         db_column="group_id",
+#         related_name="receipts",
+#     )
+#     image = models.ImageField(upload_to="receipts/", blank=True, null=True)
+#     ocr_status = models.CharField(max_length=50, blank=True, null=True)
     
-    created_at = models.DateTimeField(blank=True, null=True)
-    updated_at = models.DateTimeField(blank=True, null=True)
+#     created_at = models.DateTimeField(blank=True, null=True)
+#     updated_at = models.DateTimeField(blank=True, null=True)
 
-    class Meta:
-        db_table = "RECEIPTS"
+#     class Meta:
+#         db_table = "RECEIPTS"
     
 
 
