@@ -3,4 +3,6 @@ mysqlclient>=2.2
 python-dotenv>=1.0
 django-browser-reload>=1.12
 
+pytesseract
+opencv-python-headless
 Pillow
