@@ -3,9 +3,9 @@
   <!-- ================= アイコン ================= -->
   <div class="relative mt-2">
     <div class="w-[120px] h-[120px] rounded-[18px] overflow-hidden bg-[rgb(var(--app-bg))] app-shadow">
-      {% if request.user.icon %}
+      {% if request.user.image_url %}
       <!-- ユーザーが登録したアイコンがある場合 -->
-      <img src="{{ request.user.icon.url }}" alt="avatar" class="w-full h-full object-cover" />
+      <img src="{{ request.user.image_url }}" alt="avatar" class="w-full h-full object-cover" />
       {% else %}
       <!-- 無い場合はデフォルト画像 -->
       <img src="{% static 'assets/images/default-avatar.png' %}" alt="avatar" class="w-full h-full object-cover" />
