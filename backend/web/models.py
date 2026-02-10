@@ -1,28 +1,5 @@
 # backend/web/models.py
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-
-
-class User(AbstractUser):
-    username = models.CharField(
-        max_length=150,
-        null=True,
-        blank=True,
-        unique=False,
-    )
-
-    email = models.EmailField(unique=True)
-    group = models.ForeignKey(
-        "ShareGroup",
-        on_delete=models.SET_NULL,
-        db_column="group_id",
-        null=True,
-        blank=True,
-        related_name="members",
-    )
-    image_url = models.CharField(max_length=2048, null=True, blank=True)
-    google_uid = models.CharField(max_length=255, unique=True, null=True, blank=True)
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils import timezone
@@ -58,7 +35,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+
+    objects = UserManager()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []   # ← ここが重要
@@ -83,7 +61,7 @@ class ShareGroup(models.Model):
 
     class Meta:
         db_table = "SHARE_GROUPS"
-        managed = False
+        
 
 
 class Category(models.Model):
@@ -108,7 +86,7 @@ class Category(models.Model):
 
     class Meta:
         db_table = "CATEGORIES"
-        managed = False
+    
 
 
 class Receipt(models.Model):
@@ -132,7 +110,7 @@ class Receipt(models.Model):
 
     class Meta:
         db_table = "RECEIPTS"
-        managed = False
+    
 
 
 class MoneyFlow(models.Model):
@@ -140,19 +118,19 @@ class MoneyFlow(models.Model):
         "User",
         on_delete=models.DO_NOTHING,
         db_column="user_id",
-        related_name="money_frows",
+        related_name="money_flows",
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.DO_NOTHING,
         db_column="category_id",
-        related_name="money_frows",
+        related_name="money_flows",
     )
     receipt = models.ForeignKey(
         Receipt,
         on_delete=models.DO_NOTHING,
         db_column="receipt_id",
-        related_name="money_frows",
+        related_name="money_flows",
         blank=True,
         null=True,
     )
@@ -160,7 +138,7 @@ class MoneyFlow(models.Model):
         ShareGroup,
         on_delete=models.DO_NOTHING,
         db_column="group_id",
-        related_name="money_frows",
+        related_name="money_flows",
     )
     amount = models.IntegerField()
     expense_date = models.DateField()
@@ -170,7 +148,7 @@ class MoneyFlow(models.Model):
 
     class Meta:
         db_table = "MONEY_FLOWS"
-        managed = False
+        
 
 
 # class ReceiptItem(models.Model):
@@ -192,4 +170,4 @@ class MoneyFlow(models.Model):
 
 #     class Meta:
 #         db_table = "RECEIPT_ITEMS"
-#         managed = False
+#         
