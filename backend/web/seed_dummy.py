@@ -10,7 +10,7 @@ from web.models import Category, MoneyFlow, User
 def seed():
     user, created = User.objects.get_or_create(
         email="demo@example.com",
-        defaults={"username": "demo"},
+        defaults={"username": "demo", "image_url":"https://hackathon-media-s3-bucket-20260207.s3.ap-northeast-1.amazonaws.com/Demo+User.png"},
     )
     if created or not user.has_usable_password():
         user.set_password("demo1234")
@@ -32,9 +32,6 @@ def seed():
         ("収入その他", True, "other_inc", "#FFD5D2"),
     ]
 
-    def color_to_int(hex_color: str) -> int:
-        return int(hex_color.lstrip("#"), 16) % 256
-
     categories = {}
     for name, is_in_type, icon_key, color_hex in category_specs:
         cat, _ = Category.objects.update_or_create(
@@ -42,7 +39,7 @@ def seed():
             group=None,
             name=name,
             defaults={
-                "color": color_to_int(color_hex),
+                "color": color_hex,
                 "is_in_type": is_in_type,
                 "icon_key": icon_key,
                 "is_builtin": False,

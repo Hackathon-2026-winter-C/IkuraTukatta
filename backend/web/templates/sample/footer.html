@@ -68,8 +68,17 @@
       <span class="material-icons text-white scale-125 hover:text-orange-400 transition  hover:scale-150 cursor-pointer {% if url_name == 'charts' %}invisible{% endif %}">access_time</span>
     </a>
     <a href="{% url 'account' %}" class="pointer-events-auto">
+      
+      {% if request.user.is_authenticated and request.user.image_url %}
+        <img src="{{ request.user.image_url }}" alt="account" class="w-[25px] h-[25px] rounded-full  object-cover transition hover:scale-150 cursor-pointer {% if url_name == 'account' %}invisible{% endif %}">
+        {% else %}
       <span class="material-icons text-white scale-125 hover:text-orange-400 transition  hover:scale-150 cursor-pointer {% if url_name == 'account' %}invisible{% endif %}">account_circle</span>
+
+      {% endif %}
     </a>
+    {% comment %} <a href="{% url 'account' %}" class="pointer-events-auto">
+      <span class="material-icons text-white scale-125 hover:text-orange-400 transition  hover:scale-150 cursor-pointer {% if url_name == 'account' %}invisible{% endif %}">account_circle</span>
+    </a> {% endcomment %}
   </footer>
 </div>
 {% endwith %}

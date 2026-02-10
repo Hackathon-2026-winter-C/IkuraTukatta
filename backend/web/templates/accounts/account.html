@@ -24,7 +24,7 @@
       <span class="setting-left">
         <span class="setting-icon"> {% include "accounts/account_icons/user.svg" with class="w-6 h-6" %} </span>
         <!-- ユーザー名表示（長いと … になる） -->
-        <span class="setting-text">{{ request.user.name }}</span>
+        <span class="setting-text">{{ request.user.username }}</span>
       </span>
       <!-- 右側（丸ボタン） -->
       <span class="setting-right">
