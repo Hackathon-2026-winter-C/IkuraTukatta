@@ -98,10 +98,11 @@ class MoneyFlow(models.Model):
         db_column="category_id",
         related_name="money_flows",
     )
-    receipt_id = models.BigIntegerField(null=True, blank=True)
+
     amount = models.DecimalField(max_digits=10, decimal_places=0)
     expense_date = models.DateField()
     memo = models.CharField(max_length=255, null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

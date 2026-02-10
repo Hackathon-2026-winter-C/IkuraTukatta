@@ -1,5 +1,5 @@
 # backend/web/views.py
-from datetime import date
+from datetime import date, datetime
 import calendar
 import json
 import re
@@ -13,8 +13,12 @@ from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 from collections import defaultdict
 
+from PIL import Image 
+import pytesseract
+
 from .forms import EmailUserCreationForm, UserUpdateForm
 from .models import Category, MoneyFlow, User
+
 
 
 MAX_EXPENSE_CATEGORIES = 16
@@ -427,6 +431,44 @@ def category_delete_api(request, category_id: int):
 
     cat.delete()
     return JsonResponse({"ok": True, "deleted_id": category_id})
+
+# レシートアップロードAPI
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def receipt_upload_api(request):
+    image = request.FILES.get("image")
+    if not image:
+        return JsonResponse({"ok": False, "error": "image is required"}, status=400)
+
+    text = pytesseract.image_to_string(Image.open(image), lang="jpn")
+
+    # 合計金額抽出
+    total_match = re.search(r"(合計|総計)[^\d]*(\d+)", text)
+    # 日付抽出
+    date_match = re.search(r"(\d{4}[/-]\d{1,2}[/-]\d{1,2})", text)
+
+    if not total_match or not date_match:
+        return JsonResponse({"ok": False, "error": "日付または金額が取得できません"}, status=400)
+    
+    total = int(total_match.group(2))
+
+    date_str = date_match.group(1).replace("-", "/")
+    expense_date = datetime.strptime(date_str, "%Y/%m/%d").date()
+
+    # 支出カテゴリ
+    category = Category.objects.filter(user=request.user, is_in_type=False).first()
+    if not category:
+        return JsonResponse({"ok": False, "error": "カテゴリが存在しません"}, status=400)
+    
+    MoneyFlow.objects.create(
+        category=category,
+        amount=total,
+        expense_date=expense_date,
+        memo="レシートから自動登録"
+    )
+
+    return JsonResponse({"ok": True, "amount": total, "date": expense_date.strftime("%Y-%m-%d")})
 
 
 @login_required(login_url="login")
