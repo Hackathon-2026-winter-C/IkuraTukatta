@@ -157,7 +157,7 @@ def share_page(request):
     if request.method == "GET":
         return render(request, "share.html")
 
-    me = request.user #相手のメールアドレス
+    me = request.user #自分のメールアドレス
 
     #1
     if not getattr(me, "group_id", None):
