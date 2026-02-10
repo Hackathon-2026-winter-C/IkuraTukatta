@@ -102,7 +102,7 @@ class Receipt(models.Model):
         db_column="group_id",
         related_name="receipts",
     )
-    icon = models.CharField(max_length=2048, blank=True, null=True)
+    image = models.ImageField(upload_to="receipts/", blank=True, null=True)
     ocr_status = models.CharField(max_length=50, blank=True, null=True)
     
     created_at = models.DateTimeField(blank=True, null=True)

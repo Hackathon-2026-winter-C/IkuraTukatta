@@ -279,3 +279,17 @@ def logout_view(request):
     logout(request)
     return redirect("login")
 
+# レシートアップロード用
+@login_required
+@require_http_methods(["POST"])
+def upload_receipt(request):
+    image = request.FILES.get("image")
+    if not image:
+        return JsonResponse({"error": "画像がありません"}, status=400)
+    
+    receipt = Receipt.object.create(
+        user=request.user,
+        group=request.user.group,
+        image=image,
+        ocr_status="uploaded"
+    )
