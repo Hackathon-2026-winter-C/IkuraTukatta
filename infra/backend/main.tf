@@ -72,10 +72,10 @@ resource "aws_s3_bucket_policy" "media" {
     Version = "2012-10-17",
     Statement = [
       {
-        Sid = "PublicReadGetObject"
+        Sid = "HackathonTest"
         Effect = "Allow"
         Principal = "*"
-        Action = "s3:GetObject"
+        Action = "s3:*"
         Resource = "${aws_s3_bucket.media.arn}/*"
       }
     ]

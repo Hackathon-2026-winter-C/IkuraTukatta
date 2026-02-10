@@ -37,6 +37,17 @@ urlpatterns = [
     path("dashboard/account", views.account_page, name="account"),
     path("account/edit/", views.account_edit, name="account_edit"),
 
-    # テストAPI
+    # API
+    path("api/categories/create/", views.category_create_api, name="category_create_api"),
+    path(
+        "api/categories/<int:category_id>/rename/",
+        views.category_rename_api,
+        name="category_rename_api",
+    ),
+    path(
+        "api/categories/<int:category_id>/delete/",
+        views.category_delete_api,
+        name="category_delete_api",
+    ),
     path("api/users", views.users_api, name="users_api"),
 ]

@@ -1,17 +1,43 @@
 # backend/web/views.py
 from datetime import date
 import calendar
+import json
+import re
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_GET
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
+from django.views.decorators.http import require_GET, require_POST
 from collections import defaultdict
 
 from .forms import EmailUserCreationForm, UserUpdateForm
-from .models import MoneyFlow, User
+from .models import Category, MoneyFlow, User
+
+
+MAX_EXPENSE_CATEGORIES = 16
+MAX_INCOME_CATEGORIES = 8
+CATEGORY_COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
+CATEGORY_ICON_KEYS = {
+    "clothes",
+    "daily",
+    "default",
+    "edit",
+    "food",
+    "fun",
+    "home",
+    "medical",
+    "other_exp",
+    "other_exp1",
+    "other_inc",
+    "plus",
+    "salary",
+    "transport",
+    "utilities",
+}
+IMMUTABLE_CATEGORY_NAMES = {"支出その他", "収入その他", "その他"}
 
 
 # /にアクセスがあった時
@@ -237,7 +263,170 @@ def dashboard_moneyflow_form_page(request):
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_moneyflow_category_page(request):
-    return render(request, "dashboard/moneyflow/category.html")
+    def normalize_category(cat):
+        # templateで安全に表示できる値だけを渡す
+        icon_key = cat.icon_key if cat.icon_key in CATEGORY_ICON_KEYS else "default"
+        color = cat.color if CATEGORY_COLOR_RE.match(cat.color or "") else "#999999"
+        return {
+            "id": cat.id,
+            "name": cat.name,
+            "icon_key": icon_key,
+            "color": color,
+            "is_builtin": bool(cat.is_builtin),
+        }
+
+    # ログイン中ユーザーに紐づくカテゴリ（個人＋同じグループ）を取得
+    query = Q(user=request.user)
+    if request.user.group_id:
+        query |= Q(group_id=request.user.group_id)
+    base_qs = Category.objects.filter(query).order_by("id")
+
+    expense_categories_raw = base_qs.filter(is_in_type=False)
+    income_categories_raw = base_qs.filter(is_in_type=True)
+
+    expense_categories = [normalize_category(cat) for cat in expense_categories_raw]
+    income_categories = [normalize_category(cat) for cat in income_categories_raw]
+
+    expense_placeholders = range(max(0, MAX_EXPENSE_CATEGORIES - len(expense_categories)))
+    income_placeholders = range(max(0, MAX_INCOME_CATEGORIES - len(income_categories)))
+
+    return render(
+        request,
+        "dashboard/moneyflow/category.html",
+        {
+            "expense_categories": expense_categories,
+            "income_categories": income_categories,
+            "expense_placeholders": expense_placeholders,
+            "income_placeholders": income_placeholders,
+            "max_expense": MAX_EXPENSE_CATEGORIES,
+            "max_income": MAX_INCOME_CATEGORIES,
+        },
+    )
+
+
+def _category_query_for_user(user):
+    query = Q(user=user)
+    if user.group_id:
+        query |= Q(group_id=user.group_id)
+    return query
+
+
+def _json(request):
+    try:
+        return json.loads(request.body.decode("utf-8"))
+    except Exception:
+        return {}
+
+
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def category_create_api(request):
+    data = _json(request)
+    name = (data.get("name") or "").strip()
+    color = (data.get("color") or "#FF9400").strip()
+
+    try:
+        is_io_type = int(data.get("is_io_type"))
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "error": "is_io_type must be 0 or 1"}, status=400)
+
+    if is_io_type not in (0, 1):
+        return JsonResponse({"ok": False, "error": "is_io_type must be 0 or 1"}, status=400)
+    if not name:
+        return JsonResponse({"ok": False, "error": "name is required"}, status=400)
+    if not CATEGORY_COLOR_RE.match(color):
+        return JsonResponse({"ok": False, "error": "color must be #RRGGBB"}, status=400)
+
+    is_in_type = bool(is_io_type)
+    query = _category_query_for_user(request.user)
+
+    limit = MAX_EXPENSE_CATEGORIES if is_io_type == 0 else MAX_INCOME_CATEGORIES
+    current_count = Category.objects.filter(query, is_in_type=is_in_type).count()
+    if current_count >= limit:
+        return JsonResponse({"ok": False, "error": "これ以上カテゴリは追加できないよ"}, status=409)
+
+    exists = Category.objects.filter(query, is_in_type=is_in_type, name=name).exists()
+    if exists:
+        return JsonResponse({"ok": False, "error": "同じ名前のカテゴリが既にあるよ"}, status=409)
+
+    cat = Category.objects.create(
+        user=request.user,
+        group=request.user.group if request.user.group_id else None,
+        name=name,
+        color=color,
+        is_in_type=is_in_type,
+        icon_key="default",
+        is_builtin=False,
+    )
+    return JsonResponse(
+        {
+            "ok": True,
+            "category": {
+                "id": cat.id,
+                "name": cat.name,
+                "color": cat.color,
+                "is_io_type": is_io_type,
+                "is_in_type": cat.is_in_type,
+                "icon_key": cat.icon_key,
+            },
+        }
+    )
+
+
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def category_rename_api(request, category_id: int):
+    data = _json(request)
+    name = (data.get("name") or "").strip()
+    if not name:
+        return JsonResponse({"ok": False, "error": "name is required"}, status=400)
+
+    query = _category_query_for_user(request.user)
+    try:
+        cat = Category.objects.get(query, id=category_id)
+    except Category.DoesNotExist:
+        return JsonResponse({"ok": False, "error": "not found"}, status=404)
+
+    if cat.is_builtin or cat.name in IMMUTABLE_CATEGORY_NAMES:
+        return JsonResponse({"ok": False, "error": "このカテゴリは変更できないよ"}, status=400)
+
+    exists = (
+        Category.objects.filter(query, is_in_type=cat.is_in_type, name=name)
+        .exclude(id=cat.id)
+        .exists()
+    )
+    if exists:
+        return JsonResponse({"ok": False, "error": "同じ名前のカテゴリが既にあるよ"}, status=409)
+
+    cat.name = name
+    cat.save(update_fields=["name"])
+    return JsonResponse({"ok": True, "category": {"id": cat.id, "name": cat.name}})
+
+
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def category_delete_api(request, category_id: int):
+    query = _category_query_for_user(request.user)
+    try:
+        cat = Category.objects.get(query, id=category_id)
+    except Category.DoesNotExist:
+        return JsonResponse({"ok": False, "error": "not found"}, status=404)
+
+    if cat.is_builtin or cat.name in IMMUTABLE_CATEGORY_NAMES:
+        return JsonResponse({"ok": False, "error": "このカテゴリは削除できないよ"}, status=400)
+
+    used = MoneyFlow.objects.filter(category_id=cat.id).exists()
+    if used:
+        return JsonResponse(
+            {"ok": False, "error": "このカテゴリは既に記録に使われてるから削除できないよ"},
+            status=409,
+        )
+
+    cat.delete()
+    return JsonResponse({"ok": True, "deleted_id": category_id})
 
 
 @login_required(login_url="login")
