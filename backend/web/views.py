@@ -6,6 +6,9 @@ from django.views.decorators.http import require_GET
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login,authenticate,logout
 from .forms import EmailUserCreationForm
+from .models import User, Category, MoneyFlow
+from collections import defaultdict # これを追加！
+from datetime import date # これも追加！
 
 from datetime import date
 import calendar
@@ -76,38 +79,30 @@ def dashboard_page(request):
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_list_page(request):
-    # ★ここから追加・変更するよ！★
-
-    # charts_page と同じように、アリスのデータを取得するロジック
-    user_email = "alice@example.com" # または、ログインユーザーのメールアドレスを使うなら request.user.email
+    user_email = "demo@example.com" # または request.user.email
     qs = (
-        InOrExp.objects.select_related("user", "category")
-        .filter(user__email=user_email)
-        .order_by("-expense_date", "-id") # 日付の新しい順に並べられている
-    )
-    expense_list = list(qs)
-    
-    # user_name を準備
-    first = expense_list[0] if expense_list else None
-    user_name = first.user.name if first and first.user and first.user.name else user_email
-
-    # expense_data を準備
-    expense_data = [
-        {
-            "date": e.expense_date.isoformat(),
+        MoneyFlow.objects.select_related("category__user", "category")
+        .filter(category__user__email=user_email)
+        .order_by("-expense_date", "-id")
+    )   
+    # 日付ごとに支出をグループ化する
+    grouped_expenses = defaultdict(list)
+    for e in qs:
+        grouped_expenses[e.expense_date].append({
             "amount": e.amount,
             "category": e.category.name,
             "categoryColor": e.category.color,
             "memo": e.memo,
-            "user": e.user.name,
-        }
-        for e in expense_list
-    ]
-
+            "user": e.category.user.username,
+        })
+    # 日付の新しい順にソートされたリストにする
+    sorted_grouped_expenses = sorted(grouped_expenses.items(), key=lambda item: item[0], reverse=True)
+    # user_name を準備
+    user_name = request.user.username if request.user.username else user_email
     return render(
         request,
         'dashboard/list/list.html',
-        {"expense_data": expense_data, "user_name": user_name} # ★コンテキスト辞書にデータを追加★
+        {"grouped_expenses": sorted_grouped_expenses, "user_name": user_name} # ここで渡すデータを変更！
     )
 
 @login_required(login_url="login")
@@ -128,7 +123,31 @@ def dashboard_moneyflow_edit_page(request):
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def charts_page(request):
-    return render (request, 'dashboard/charts/chart.html')
+    user_email = "demo@example.com" # ここを "demo@example.com" に固定！
+    qs = (
+        MoneyFlow.objects.select_related("category__user", "category")
+        .filter(category__user__email=user_email)
+        .order_by("-expense_date", "-id")
+    )
+    expense_list = list(qs)
+    user_name = "demo" # user_name も "demo" に固定する
+    expense_data = [
+        {
+            "date": e.expense_date.isoformat(),
+            "amount": e.amount,
+            "category": e.category.name,
+            "categoryColor": e.category.color,
+            "memo": e.memo,
+            "user": e.category.user.username,
+        }
+        for e in expense_list
+    ]
+    return render (
+        request,
+        'dashboard/charts/chart.html',
+        {"expense_data": expense_data, "user_name": user_name}
+    )
+    
 
 @login_required(login_url="login")
 @ensure_csrf_cookie

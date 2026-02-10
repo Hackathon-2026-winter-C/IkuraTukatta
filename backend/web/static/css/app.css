@@ -66,9 +66,9 @@ html[data-theme="dark"] {
   
 
   border-radius: 30px;
-  background: #e0e0e0;
-  box-shadow: 15px 15px 30px #bebebe,
-             -15px -15px 30px #ffffff;
+  background: rgba(224, 224, 224, 1);
+  /* box-shadow: 15px 15px 30px #bebebe,
+             -15px -15px 30px #ffffff; */
 }
 
 /* 認証フォーム共通 */
