@@ -548,6 +548,11 @@ def users_api(request):
     users = list(User.objects.values("id", "username", "email"))
     return JsonResponse({"users": users})
 
+# テスト用　画面ビュー
+@login_required(login_url="login")
+def receipt_test_page(request):
+    return render(request, "receipt_test.html")
+
 
 # サインアップ
 # def signup(request):
