@@ -11,13 +11,30 @@
       <h2 class="text-xl font-bold text-black text-center w-full mt-2 mb-12">アカウント新規登録</h2>
   </div>
 
-  <div class="mx-auto w-full ">
-      <img src="{% static 'assets/images/signup_img.png' %}" alt="サインアップ画像" class="mx-auto mb-2 w-36 h-36 object-contain block shrink-0">              
-      <h3 class="text-xs font-bold text-black text-center">プロフィール写真をアップロードしてください</h3>
-  </div>
+  <div class="mx-auto w-full">
+  <button type="button" id="pick-profile-image" class="mx-auto block">
+    <img
+      id="profile-image-preview"
+      src="{% static 'assets/images/signup_img.png' %}"
+      alt="サインアップ画像"
+      class="mx-auto mb-2 w-36 h-36  object-cover block shrink-0"
+    >
+  </button>
+
+  <!-- formの外に置く場合は form="signup-form" を付ける -->
+  <input
+    id="profile-image-input"
+    form="signup-form"
+    type="file"
+    name="profile_image"
+    accept="image/jpeg,image/png,image/webp"
+    class="hidden"
+  >
+  <h3 class="text-xs font-bold text-black text-center">プロフィール写真をアップロードしてください</h3>
+</div>
 
   <div class="py-[50px] px-[clamp(16px,6vw,42px)] my-0 mx-auto w-full">
-      <form class="auth-form" method="post" action="{% url 'signup' %}">
+      <form id="signup-form" class="auth-form" method="post" action="{% url 'signup' %}" enctype="multipart/form-data" data-keep-image-cache="{{ form.errors|yesno:'true,false' }}">
           {% csrf_token %}
           <input type="text" id="name" name="username" class="input" value="{{ form.username.value|default_if_none:'' }}" placeholder="名前">
           <input type="email" id="email" name="email" class="input {% if form.errors.email %}border-red-500 ring-1 ring-red-400{% endif %}" value="{{ form.email.value|default_if_none:'' }}" placeholder="メールアドレス">
@@ -25,7 +42,7 @@
           <input type="password" id="confirm_password" name="password2" class="input" placeholder="確認用パスワード">
           {% for err in form.errors.password2 %}
   <p class="text-red-500 text-sm">{{ err }}</p>
-{% endfor %}
+          {% endfor %}
           {% for err in form.errors.email %}
                 <p class="text-red-500 text-sm">{{ err }}</p>
           {% endfor %}
@@ -38,5 +55,6 @@
       </form>
       
   </div>
+  <script type="module" src="{% static 'js/profileImg-change.js' %}" defer></script>
 
 {% endblock %}

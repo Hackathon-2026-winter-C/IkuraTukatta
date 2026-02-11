@@ -4,6 +4,13 @@ import calendar
 import json
 import re
 
+from django.conf import settings
+from django.db import transaction
+from botocore.exceptions import BotoCoreError, ClientError
+from PIL import UnidentifiedImageError
+
+from .profile_image_service import save_profile_image
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -51,19 +58,43 @@ def index_page(request):
 def signup_page(request):
     # POSTリクエスト
     if request.method == "POST":
+        # フォームのテキスト入力値
         form = EmailUserCreationForm(request.POST)
-        # バリデーションOKならユーザー作成
-        if form.is_valid():
-            user = form.save()
-            login(request,user)
-            # ログイン画面へリダイレクト
+        # 画像ファイル（未選択ならNone）
+        profile_image = request.FILES.get("profile_image")
 
-            return redirect("dashboard")
+        # ユーザー情報のバリデーションOKなら作成処理へ
+        if form.is_valid():
+            try:
+                # ユーザー作成と画像URL更新を同一トランザクションで実行
+                with transaction.atomic():
+                    # まずユーザー本体を保存（ここでuser.idが確定）
+                    user = form.save()
+
+                    # 画像が選択されている時だけS3保存してURLをDBに保存
+                    if profile_image:
+                        key = save_profile_image(user.id, profile_image)
+                        base_url = settings.AWS_S3_BASE_URL or (
+                            f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com"
+                        )
+                        user.image_url = f"{base_url.rstrip('/')}/{key.lstrip('/')}"
+                        user.save(update_fields=["image_url"])
+
+            # 画像処理またはS3保存に失敗したらフォームエラーとして返す
+            except (BotoCoreError, ClientError, OSError, UnidentifiedImageError):
+                form.add_error(None, "プロフィール画像の保存に失敗しました。時間をおいて再度お試しください。")
+            else:
+                # すべて成功した場合のみログインしてダッシュボードへ
+                login(request, user)
+                return redirect("dashboard")
     # GETリクエスト
     else:
+        # 初期表示用の空フォーム
         form = EmailUserCreationForm()
 
+    # バリデーションエラー時 / 画像保存失敗時は同画面を再表示
     return render(request, "accounts/signup.html", {"form": form})
+
 
 
 # ログイン
