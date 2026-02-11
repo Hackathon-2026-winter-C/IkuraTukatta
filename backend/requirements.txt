@@ -3,3 +3,5 @@ mysqlclient>=2.2
 python-dotenv>=1.0
 django-browser-reload>=1.12
 boto3
+Pillow
+pytesseract
