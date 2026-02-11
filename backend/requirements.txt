@@ -5,3 +5,5 @@ django-browser-reload>=1.12
 boto3
 Pillow
 pytesseract
+numpy
+opencv-python-headless
