@@ -15,6 +15,8 @@ from collections import defaultdict
 
 from PIL import Image 
 import pytesseract
+import cv2
+import numpy as np
 
 from .forms import EmailUserCreationForm, UserUpdateForm
 from .models import Category, MoneyFlow, User
@@ -442,7 +444,17 @@ def receipt_upload_api(request):
     if not image:
         return JsonResponse({"ok": False, "error": "image is required"}, status=400)
 
-    text = pytesseract.image_to_string(Image.open(image), lang="jpn")
+    img = Image.open(image)
+
+    # OpenCVで前処理をする
+    img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
+    img_cv = cv2.threshold(img_cv, 150, 255, cv2.THRESH_BINARY)[1]
+
+    text = pytesseract.image_to_string(img_cv, lang="jpn", config="--psm 6")
+
+    print("===== OCR TEXT =====")
+    print(text)
+    print("====================")
 
     # 合計金額抽出
     total_match = re.search(r"(合計|総計)[^\d]*([\d,]+)", text)
