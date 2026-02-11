@@ -13,28 +13,28 @@ urlpatterns = [
 
     # 開発
     path("", views.index_page, name="index"),
-    path("login", views.login_page, name="login"),
-    path("signup", views.signup_page, name="signup"),
+    path("login/", views.login_page, name="login"),
+    path("signup/", views.signup_page, name="signup"),
     path("logout", views.logout_view, name="logout"),
     path("dashboard/", views.dashboard_page, name="dashboard"),
-    path("dashboard/charts", views.charts_page, name="charts"),
-    path("dashboard/list", views.dashboard_list_page, name="dashboard_list"),
+    path("dashboard/charts/", views.charts_page, name="charts"),
+    path("dashboard/list/", views.dashboard_list_page, name="dashboard_list"),
     path(
-        "dashboard/moneyflow/form",
+        "dashboard/moneyflow/form/",
         views.dashboard_moneyflow_form_page,
         name="dashboard_moneyflow_form",
     ),
     path(
-        "dashboard/moneyflow/edit",
+        "dashboard/moneyflow/edit/",
         views.dashboard_moneyflow_edit_page,
         name="dashboard_moneyflow_edit",
     ),
     path(
-        "dashboard/moneyflow/category",
+        "dashboard/moneyflow/category/",
         views.dashboard_moneyflow_category_page,
         name="dashboard_moneyflow_category",
     ),
-    path("dashboard/account", views.account_page, name="account"),
+    path("dashboard/account/", views.account_page, name="account"),
     path("account/edit/", views.account_edit, name="account_edit"),
 
     # API
@@ -49,5 +49,5 @@ urlpatterns = [
         views.category_delete_api,
         name="category_delete_api",
     ),
-    path("api/users", views.users_api, name="users_api"),
+    path("api/users/", views.users_api, name="users_api"),
 ]
