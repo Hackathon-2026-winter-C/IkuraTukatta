@@ -432,6 +432,7 @@ def category_delete_api(request, category_id: int):
     cat.delete()
     return JsonResponse({"ok": True, "deleted_id": category_id})
 
+
 # レシートアップロードAPI
 @login_required(login_url="login")
 @require_POST
@@ -444,18 +445,23 @@ def receipt_upload_api(request):
     text = pytesseract.image_to_string(Image.open(image), lang="jpn")
 
     # 合計金額抽出
-    total_match = re.search(r"(合計|総計)[^\d]*(\d+)", text)
+    total_match = re.search(r"(合計|総計)[^\d]*([\d,]+)", text)
     # 日付抽出
-    date_match = re.search(r"(\d{4}[/-]\d{1,2}[/-]\d{1,2})", text)
+    date_match = re.search(r"(\d{4}[/-]\d{1,2}[/-]\d{1,2}|\d{4}年\d{1,2}月\d{1,2}日)", text)
 
     if not total_match or not date_match:
         return JsonResponse({"ok": False, "error": "日付または金額が取得できません"}, status=400)
     
-    total = int(total_match.group(2))
+    total = int(total_match.group(2).replace(",", ""))
 
-    date_str = date_match.group(1).replace("-", "/")
-    expense_date = datetime.strptime(date_str, "%Y/%m/%d").date()
+    date_raw = date_match.group(1)
 
+    if "年" in date_raw:
+        expense_date = datetime.strptime(date_raw, "%Y年%m月%d日").date()
+    else:
+        date_str = date_raw.replace("-", "/")
+        expense_date = datetime.strptime(date_str, "%Y/%m/%d").date()
+   
     # 支出カテゴリ
     category = Category.objects.filter(user=request.user, is_in_type=False).first()
     if not category:
