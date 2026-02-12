@@ -15,13 +15,14 @@ from collections import defaultdict
 
 from PIL import Image 
 import pytesseract
+import easyocr
 import cv2
 import numpy as np
 
 from .forms import EmailUserCreationForm, UserUpdateForm
 from .models import Category, MoneyFlow, User
 
-
+reader = easyocr.Reader(['ja', 'en'], gpu=False)
 
 MAX_EXPENSE_CATEGORIES = 16
 MAX_INCOME_CATEGORIES = 8
@@ -444,29 +445,72 @@ def receipt_upload_api(request):
     if not image:
         return JsonResponse({"ok": False, "error": "image is required"}, status=400)
 
-    img = Image.open(image)
+    img = Image.open(image).convert("RGB")
 
     # OpenCVで前処理をする
-    img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)
-    img_cv = cv2.threshold(img_cv, 150, 255, cv2.THRESH_BINARY)[1]
+    # すでにグレースケールなら変換しない
+    img_np = np.array(img)
 
-    text = pytesseract.image_to_string(img_cv, lang="jpn", config="--psm 6")
+    # サイズ補正
+    h, w = img_np.shape[:2]
+    if w < 500:
+        scale = 500 / w
+        img_np = cv2.resize(img_np, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+    # グレースケール
+    gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+
+    # 二値化
+    gray = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)[1]
+
+    # EasyOCR
+    results = reader.readtext(
+        gray,
+        detail=1,
+        paragraph=False,
+        text_threshold=0.6,
+        low_text=0.3
+    )
+
+    print("===== EASYOCR RESULTS =====")
+    print(results)
+    print("===========================")
+
+    text = "\n".join([r[1] for r in results])
 
     print("===== OCR TEXT =====")
     print(text)
     print("====================")
 
-    # 合計金額抽出
-    total_match = re.search(r"(合計|総計)[^\d]*([\d,]+)", text)
-    # 日付抽出
-    date_match = re.search(r"(\d{4}[/-]\d{1,2}[/-]\d{1,2}|\d{4}年\d{1,2}月\d{1,2}日)", text)
+    print("IMG SHAPE:", img_np.shape)
+    print("IMG DTYPE:", img_np.dtype)
 
-    if not total_match or not date_match:
-        return JsonResponse({"ok": False, "error": "日付または金額が取得できません"}, status=400)
+    # 合計金額抽出(行単位)
+    lines = text.splitlines()
+
+    total_str = None
+    for i, line in enumerate(lines):
+        if "合計" in line or "総計" in line:
+            # 同じ行に数字がある場合
+            m = re.search(r"([\d, ]+)", line)
+            if m:
+                total_str = m.group(1)
+            # なければ次の行を見る
+            elif i + 1 < len(lines):
+                total_str = lines[i+1]
+            break
+
+    if not total_str:
+        return JsonResponse({"ok": False, "error": "金額が取得できません"}, status=400)
     
-    total = int(total_match.group(2).replace(",", ""))
+    total = int(re.sub(r"[^\d]", "", total_str))
+    
+    # 日付抽出
+    date_match = re.search(r"(\d{4}年\d{1,2}月\d{1,2}日)", text)
 
-    date_raw = date_match.group(1)
+    if not date_match:
+        return JsonResponse({"ok": False, "error": "日付が取得できません"}, status=400)
+    
+    date_raw = date_match.group()
 
     if "年" in date_raw:
         expense_date = datetime.strptime(date_raw, "%Y年%m月%d日").date()
