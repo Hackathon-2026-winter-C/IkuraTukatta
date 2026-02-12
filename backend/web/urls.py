@@ -30,6 +30,12 @@ urlpatterns = [
         name="dashboard_moneyflow_edit",
     ),
     path(
+    "dashboard/moneyflow/delete/",
+    views.dashboard_moneyflow_delete_page,
+    name="dashboard_moneyflow_delete",
+    ),
+
+    path(
         "dashboard/moneyflow/category/",
         views.dashboard_moneyflow_category_page,
         name="dashboard_moneyflow_category",

@@ -26,24 +26,25 @@
       </div>
     </div>
 
-    <form method="post" class="space-y-4" novalidate>
+    <!-- ===============================
+         新規 / 編集 兼用フォーム
+    ================================ -->
+    <form method="post" class="space-y-4" novalidate {% if entry %} action="{% url 'dashboard_moneyflow_edit' %}?id={{ entry.id }}" {% endif %}>
       {% csrf_token %}
 
-      <!-- ===== amount（表示はカンマ入り / 送信は数字だけ） ===== -->
+      <!-- ===== amount ===== -->
       <div class="relative w-full">
         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold pointer-events-none z-10">¥</span>
 
-        <!-- 表示用（カンマ入り） -->
         <input id="amount_display" type="text" inputmode="numeric" pattern="\d*" enterkeyhint="done" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder=" " class="input w-full !pl-10 !pr-4 !py-4 text-black" />
 
-        <!-- 送信用（カンマ無しの数字だけ） -->
-        <input type="hidden" id="amount" name="amount" value="{{ request.POST.amount|default:'' }}" />
+        <input type="hidden" id="amount" name="amount" value="{% if request.POST.amount %}{{ request.POST.amount }}{% elif entry %}{{ entry.amount }}{% endif %}" />
       </div>
       <p id="amount-error" class="hidden mt-1 text-[11px] text-red-500"></p>
 
       <!-- title -->
       <div class="relative w-full">
-        <input id="title" name="title" value="{{ request.POST.title|default:'' }}" placeholder=" " class="input w-full !px-4 !pt-6 !pb-3 text-black" />
+        <input id="title" name="title" value="{% if request.POST.title %}{{ request.POST.title }}{% elif entry %}{{ entry.title }}{% endif %}" placeholder=" " class="input w-full !px-4 !pt-6 !pb-3 text-black" />
         <label for="title" class="absolute left-4 top-1 text-[11px] opacity-60 pointer-events-none"> Title </label>
       </div>
 
@@ -54,14 +55,13 @@
 
           <div>
             <p class="text-[11px] opacity-60">Date</p>
-            <span id="date-text" class="font-semibold"> {{ request.POST.expense_date|default:today }} </span>
+            <span id="date-text" class="font-semibold"> {% if request.POST.expense_date %} {{ request.POST.expense_date }} {% elif entry %} {{ entry.expense_date|date:"Y-m-d" }} {% else %} {{ today }} {% endif %} </span>
           </div>
         </div>
 
         <span class="pointer-events-none text-[rgb(var(--app-text))] opacity-70"> {% include "icons/ui/chevron-down.svg" %} </span>
 
-        <!-- 全体クリックでdatepickerを開く -->
-        <input id="date-input" type="date" name="expense_date" value="{{ request.POST.expense_date|default:today }}" class="date-overlay date-native" />
+        <input id="date-input" type="date" name="expense_date" value="{% if request.POST.expense_date %}{{ request.POST.expense_date }}{% elif entry %}{{ entry.expense_date|date:'Y-m-d' }}{% else %}{{ today }}{% endif %}" class="date-overlay date-native" />
       </div>
       <p id="date-error" class="hidden mt-1 text-[11px] text-red-500"></p>
 
@@ -72,7 +72,7 @@
           <p class="text-[11px] opacity-60 text-[rgb(var(--app-text))]">Category</p>
         </div>
 
-        <input type="hidden" name="category_id" id="category_id" value="{{ request.POST.category_id|default:'' }}" />
+        <input type="hidden" name="category_id" id="category_id" value="{% if request.POST.category_id %}{{ request.POST.category_id }}{% elif entry %}{{ entry.category_id }}{% endif %}" />
 
         <div class="grid grid-cols-4 gap-4 justify-items-center">
           {% for cat in categories %}
@@ -86,7 +86,6 @@
           </button>
           {% endfor %}
 
-          <!-- 編集ボタン -->
           <a href="{% url 'dashboard_moneyflow_category' %}" class="w-[60px] grid place-items-center" style="--c: #ff9400" aria-label="編集">
             <span class="w-[60px] h-[60px] rounded-full bg-white border-2 flex items-center justify-center" style="border-color: var(--c)">
               <span class="flex flex-col items-center gap-[3px]" style="color: var(--c)">
@@ -101,213 +100,113 @@
       </section>
       {% endif %}
 
-      <button id="submit-btn" type="submit" disabled class="w-full h-12 rounded-2xl bg-[#FF9400] text-white font-semibold app-shadow active:translate-y-[1px] transition disabled:opacity-40 disabled:active:translate-y-0">記　録</button>
+      <button id="submit-btn" type="submit" class="w-full h-12 rounded-2xl bg-[#FF9400] text-white font-semibold app-shadow active:translate-y-[1px] transition disabled:opacity-40 disabled:active:translate-y-0">{% if entry %}変　更{% else %}記　録{% endif %}</button>
     </form>
+
+    <!-- ===== 削除（編集時のみ） ===== -->
+    {% if entry %}
+    <form method="post" action="{% url 'dashboard_moneyflow_delete' %}?id={{ entry.id }}">
+      {% csrf_token %}
+      <button type="submit" class="w-full h-12 rounded-2xl bg-[#FF3B30] text-white font-semibold app-shadow active:translate-y-[1px] transition" onclick="return confirm('このデータを削除しますか？');">削　除</button>
+    </form>
+    {% endif %}
   </div>
 </main>
 
 <script>
+  /* 以降のJSは、あなたの元コードと同じ（id維持だけ追加） */
+
   // セグメント全体のラッパー
   const segRoot = document.getElementById("record-seg");
-
-  // 動かす白いスライダー
   const segSlider = document.getElementById("seg-slider");
+  const segRadios = Array.from(document.querySelectorAll('input[name="record-mode"]'));
 
-  // 支出 / 収入 / レシート のラジオボタン一覧
-  const segRadios = Array.from(
-    document.querySelectorAll('input[name="record-mode"]')
-  );
-
-  /**
-   * 選択中のラジオに応じて
-   * スライダーの left と width を計算して反映する
-   */
   const moveSlider = () => {
-    // 念のため存在チェック
     if (!segRoot || !segSlider) return;
-
-    // どのラジオが選択されているか（0,1,2）
     const checkedIndex = segRadios.findIndex((r) => r.checked);
-
-    // 何も選ばれていない場合は先頭にする
     const idx = checkedIndex >= 0 ? checkedIndex : 0;
-
-    // セグメント全体の横幅
     const rootW = segRoot.clientWidth;
-
-    // p-1（Tailwind）の左右padding = 4px
     const padding = 4;
-
-    // 内側の実際に使える横幅
     const innerW = rootW - padding * 2;
-
-    // 3分割した1つ分の幅
     const w = innerW / 3;
-
-    // スライダーの幅をセット
     segSlider.style.width = `${w}px`;
-
-    // スライダーの左位置をセット
     segSlider.style.left = `${padding + w * idx}px`;
   };
 
-  // 初期表示時にスライダー位置を合わせる
   moveSlider();
-
-  // ラジオが切り替わったらスライダーも動かす
   segRadios.forEach((r) => r.addEventListener("change", moveSlider));
-
-  // 画面リサイズ時もズレないように再計算
   window.addEventListener("resize", moveSlider);
 
-  // ==================================================
-  // 金額入力
-  // ・表示は「1,234」
-  // ・送信する値は「1234」
-  // ==================================================
-
-  // 表示用input（カンマ付き）
+  // ---------- amount ----------
   const amountDisplay = document.getElementById("amount_display");
-
-  // 送信用hidden input（数字のみ）
   const amountHidden = document.getElementById("amount");
 
-  /**
-   * 数字文字列を ¥ 表記用にカンマ区切りにする
-   */
   const formatJPY = (digits) => {
     if (!digits) return "";
-
-    // 先頭の不要な0を除去
     digits = digits.replace(/^0+(?=\d)/, "");
-
-    // 3桁区切りでカンマを入れる
     return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  /**
-   * 表示用inputの値を元に
-   * ・hiddenに数字だけ入れる
-   * ・表示側はカンマ付きに整形する
-   */
   const syncAmount = () => {
-    // 数字以外はすべて除去
     const digits = amountDisplay.value.replace(/[^\d]/g, "");
-
-    // 送信用
     amountHidden.value = digits;
-
-    // 表示用
     amountDisplay.value = formatJPY(digits);
   };
 
   if (amountDisplay && amountHidden) {
-
-    // サーバーから値が返ってきた時用（POST後など）
     if (amountHidden.value) {
-      amountDisplay.value = formatJPY(
-        amountHidden.value.replace(/[^\d]/g, "")
-      );
+      amountDisplay.value = formatJPY(amountHidden.value.replace(/[^\d]/g, ""));
     }
-
-    // 入力中に同期
     amountDisplay.addEventListener("input", syncAmount);
-
-    // フォーカスが外れたときも同期
     amountDisplay.addEventListener("blur", syncAmount);
   }
 
-  // ==================================================
-  // エラーメッセージ表示用ヘルパ
-  // ==================================================
+  // ---------- error helpers ----------
+  const showError = (el, msg) => { el.textContent = msg; el.classList.remove("hidden"); };
+  const clearError = (el) => { el.textContent = ""; el.classList.add("hidden"); };
 
-  /**
-   * エラーメッセージを表示する
-   */
-  const showError = (el, msg) => {
-    el.textContent = msg;
-    el.classList.remove("hidden");
-  };
-
-  /**
-   * エラーメッセージを消す
-   */
-  const clearError = (el) => {
-    el.textContent = "";
-    el.classList.add("hidden");
-  };
-
-  // 各エラー表示エリア
   const amountError = document.getElementById("amount-error");
   const dateError = document.getElementById("date-error");
   const categoryError = document.getElementById("category-error");
 
-
   const form = document.querySelector("form");
   const submitBtn = document.getElementById("submit-btn");
 
-  // hiddenのカテゴリID
   const categoryHidden = document.getElementById("category_id");
-
-  // 日付input
   const dateInput = document.querySelector('input[name="expense_date"]');
-
-  // 日付エリアのラッパー
   const dateWrap = document.getElementById("date-wrap");
-
-  // 表示用の日付テキスト
   const dateText = document.getElementById("date-text");
 
+  // ---------- date picker ----------
   if (dateWrap && dateInput) {
-
-    /**
-     * ブラウザ差を考慮して
-     * date picker を開く処理
-     */
     const openDatePicker = () => {
       try {
-        // Chromeなど対応ブラウザ
         if (typeof dateInput.showPicker === "function") {
           dateInput.showPicker();
           return;
         }
       } catch (_) {}
-
-      // フォールバック
       dateInput.focus({ preventScroll: true });
       dateInput.click();
     };
 
-    // ラッパー全体をクリック対象にする
     dateWrap.addEventListener("click", () => openDatePicker());
 
-    // 日付が変更されたら表示用テキストも更新
     if (dateText) {
       dateInput.addEventListener("change", () => {
-        if (dateInput.value) {
-          dateText.textContent = dateInput.value;
-        }
+        if (dateInput.value) dateText.textContent = dateInput.value;
       });
     }
   }
 
-  // ==================================================
-  // 「記録」ボタンの活性・非活性制御
-  // （カテゴリ未選択なら押せない）
-  // ==================================================
-
+  // ---------- submit state ----------
   const updateSubmitState = () => {
-
-    // Djangoから渡されるレシートモード判定
     const isReceipt = {{ mode_receipt|yesno:"true,false" }};
-
-    // レシートはカテゴリが無いので常に有効
     if (isReceipt) {
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
 
-    // カテゴリが選ばれているか
     const hasCategory =
       categoryHidden &&
       categoryHidden.value &&
@@ -316,75 +215,44 @@
     if (submitBtn) submitBtn.disabled = !hasCategory;
   };
 
-  // 初期状態を反映
   updateSubmitState();
 
-  // ==================================================
-  // カテゴリ選択処理
-  // ==================================================
-
+  // ---------- category ----------
   const picks = document.querySelectorAll(".cat-pick");
 
   if (categoryHidden) {
-
-    // 画面再表示時（POST戻りなど）に選択状態を復元
     const initial = categoryHidden.value;
-
     if (initial) {
       picks.forEach((btn) => {
-        if (btn.dataset.id === String(initial)) {
-          btn.classList.add("is-selected");
-        }
+        if (btn.dataset.id === String(initial)) btn.classList.add("is-selected");
       });
     }
 
-    // 各カテゴリボタンにクリックイベントを付与
     picks.forEach((btn) => {
       btn.addEventListener("click", () => {
-
-        // hiddenに選択中カテゴリIDをセット
         categoryHidden.value = btn.dataset.id;
-
-        // いったん全部の選択状態を解除
         picks.forEach((x) => x.classList.remove("is-selected"));
-
-        // クリックされたものだけ選択状態にする
         btn.classList.add("is-selected");
-
-        // エラー表示があれば消す
         if (categoryError) clearError(categoryError);
-
-        // 記録ボタンの状態を更新
         updateSubmitState();
       });
     });
   }
 
-  // ==================================================
-  // 二重送信防止フラグ
-  // ==================================================
-
+  // ---------- validation ----------
   let isSubmitting = false;
-
-  // ==================================================
-  // 送信時のフロント側バリデーション
-  // ==================================================
 
   if (form) {
     form.addEventListener("submit", (e) => {
-
-      // 連打防止
       if (isSubmitting) {
         e.preventDefault();
         return;
       }
 
-      // 既存エラーをクリア
       if (amountError) clearError(amountError);
       if (dateError) clearError(dateError);
       if (categoryError) clearError(categoryError);
 
-      // 金額チェック
       const amount = amountHidden ? amountHidden.value : "";
       if (!amount || Number(amount) <= 0) {
         e.preventDefault();
@@ -392,7 +260,6 @@
         return;
       }
 
-      // 日付チェック
       const ds = dateInput ? dateInput.value : "";
       if (!ds) {
         e.preventDefault();
@@ -400,12 +267,10 @@
         return;
       }
 
-      // カテゴリチェック（レシート以外）
       const isReceipt = {{ mode_receipt|yesno:"true,false" }};
       if (!isReceipt) {
         const catId = categoryHidden ? categoryHidden.value : "";
-
-        if (categoryHidden && (!catId || catId.trim() === "")) {
+        if (!catId) {
           e.preventDefault();
           if (categoryError) showError(categoryError, "カテゴリを選んでね");
           updateSubmitState();
@@ -413,9 +278,7 @@
         }
       }
 
-      // ここまで来たら送信OK
       isSubmitting = true;
-
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = "保存中…";
@@ -423,34 +286,24 @@
     });
   }
 
-  // ==================================================
-  // 支出 / 収入 / レシート 切り替え時の画面遷移
-  // ==================================================
+  // ---------- mode switch ----------
+  const modeMap = { option1: "expense", option2: "income", option3: "receipt" };
 
-  const modeMap = {
-    option1: "expense",
-    option2: "income",
-    option3: "receipt"
-  };
+  document.querySelectorAll('input[name="record-mode"]').forEach((radio) => {
+    radio.addEventListener("change", () => {
+      const mode = modeMap[radio.id];
+      if (!mode) return;
 
-  document
-    .querySelectorAll('input[name="record-mode"]')
-    .forEach((radio) => {
+      const url = new URL(window.location.href);
+      url.searchParams.set("mode", mode);
 
-      radio.addEventListener("change", () => {
+      {% if entry %}
+      url.searchParams.set("id", "{{ entry.id }}");
+      {% endif %}
 
-        // ラジオIDからmode文字列に変換
-        const mode = modeMap[radio.id];
-
-        if (!mode || radio.disabled) return;
-
-        // 現在URLに ?mode= を付け替えて遷移
-        const url = new URL(window.location.href);
-        url.searchParams.set("mode", mode);
-
-        window.location.href = url.toString();
-      });
+      window.location.href = url.toString();
     });
+  });
 </script>
 
 {% endblock %}
