@@ -39,7 +39,8 @@ services:
         condition: service_healthy
     command: ["bash","scripts/entrypoint.sh"]
     ports:
-      - "8000"
+      - "8000:8000" 
+      # - "8000" 本番用
  
   nginx:
     image: nginx:1.27-alpine
