@@ -49,7 +49,8 @@ IMMUTABLE_CATEGORY_NAMES = {"支出その他", "収入その他", "その他"}
 # /にアクセスがあった時
 @ensure_csrf_cookie
 def index_page(request):
-    return redirect("login")
+    # return redirect("login")
+    return render(request, "accounts/darkmode-modal.html",{})
 
 
 # サインアップ
@@ -281,7 +282,7 @@ def dashboard_page(request):
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_list_page(request):
-    user_email = "demo@example.com" # または request.user.email
+    user_email = request.user.email
     qs = (
         MoneyFlow.objects.select_related("category__user", "category")
         .filter(category__user__email=user_email)
@@ -291,10 +292,11 @@ def dashboard_list_page(request):
     grouped_expenses = defaultdict(list)
     for e in qs:
         grouped_expenses[e.expense_date].append({
-            "id": e.id,
             "amount": e.amount,
+            "amount_sign": "+" if e.category.is_in_type else "-",
             "category": e.category.name,
             "categoryColor": e.category.color,
+            "icon_key": e.category.icon_key,
             "memo": e.memo,
             "user": e.category.user.username,
         })
