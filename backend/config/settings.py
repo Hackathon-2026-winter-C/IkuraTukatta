@@ -105,6 +105,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 #google認証に必要なコード
 SITE_ID = 1       # 1=localhost:8000
 AUTHENTICATION_BACKENDS = [
-    "django.contib.auth.backends.ModelBackend", #djangoの標準認証
+    "django.contrib.auth.backends.ModelBackend", #djangoの標準認証
     "allauth.account.auth_backends.AuthenticationBackend", #外部認証を認める
+
 ]
+SOCIALACCOUNT_LOGIN_ON_GET = True

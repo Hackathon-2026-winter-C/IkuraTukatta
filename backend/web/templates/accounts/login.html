@@ -1,5 +1,7 @@
 {% extends 'accounts/base.html' %} {% load static %} {% block title %}ログイン{% endblock title %} {% block content %}
 {% comment %} <h2 class="text-[rgb(var(--app-text))]">ログインページ</h2> {% endcomment %}
+{% load socialaccount %}
+
 
 <main class="bg-black flex flex-col items-center min-h-[100dvh] w-full justify-end gap-6">
   {% comment %} ロゴ画像 {% endcomment %}
@@ -18,10 +20,10 @@
 
       <div class="text-center text-black my-2">OR</div>
 
-      <button type="button" class="btn btn-sub flex items-center justify-center gap-2">
+      <a href="{% provider_login_url 'google' process='login' %}" class="btn btn-sub flex items-center justify-center gap-2">
         <img src="{% static 'assets/images/google.svg' %}" alt="Google" class="w-4 h-4" />
         <span>Continue with Google</span>
-      </button>
+      </a>
       {% if error %}
     <p class="text-red-500 text-sm">{{ error }}</p>
   {% endif %}
