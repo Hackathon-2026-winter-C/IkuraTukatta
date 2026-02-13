@@ -43,7 +43,8 @@ IMMUTABLE_CATEGORY_NAMES = {"支出その他", "収入その他", "その他"}
 # /にアクセスがあった時
 @ensure_csrf_cookie
 def index_page(request):
-    return redirect("login")
+    # return redirect("login")
+    return render(request, "accounts/darkmode-modal.html",{})
 
 
 # サインアップ
@@ -251,7 +252,31 @@ def dashboard_page(request):
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_list_page(request):
-    return render(request, "dashboard/list/list.html")
+    user_email = request.user.email
+    qs = (
+        MoneyFlow.objects.select_related("category__user", "category")
+        .filter(category__user__email=user_email)
+        .order_by("-expense_date", "-id")
+    )   
+    # 日付ごとに支出をグループ化する
+    grouped_expenses = defaultdict(list)
+    for e in qs:
+        grouped_expenses[e.expense_date].append({
+            "amount": e.amount,
+            "category": e.category.name,
+            "categoryColor": e.category.color,
+            "memo": e.memo,
+            "user": e.category.user.username,
+        })
+    # 日付の新しい順にソートされたリストにする
+    sorted_grouped_expenses = sorted(grouped_expenses.items(), key=lambda item: item[0], reverse=True)
+    # user_name を準備
+    user_name = request.user.username if request.user.username else user_email
+    return render(
+        request,
+        'dashboard/list/list.html',
+        {"grouped_expenses": sorted_grouped_expenses, "user_name": user_name} # ここで渡すデータを変更！
+    )
 
 
 @login_required(login_url="login")
