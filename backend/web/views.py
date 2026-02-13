@@ -15,14 +15,13 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 from collections import defaultdict
 
 from .forms import EmailUserCreationForm, UserUpdateForm
 from .models import Category, MoneyFlow, User
-
 
 MAX_EXPENSE_CATEGORIES = 16
 MAX_INCOME_CATEGORIES = 8
@@ -282,14 +281,173 @@ def dashboard_page(request):
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_list_page(request):
-    return render(request, "dashboard/list/list.html")
-
+    user_email = "demo@example.com" # または request.user.email
+    qs = (
+        MoneyFlow.objects.select_related("category__user", "category")
+        .filter(category__user__email=user_email)
+        .order_by("-expense_date", "-id")
+    )   
+    # 日付ごとに支出をグループ化する
+    grouped_expenses = defaultdict(list)
+    for e in qs:
+        grouped_expenses[e.expense_date].append({
+            "id": e.id,
+            "amount": e.amount,
+            "category": e.category.name,
+            "categoryColor": e.category.color,
+            "memo": e.memo,
+            "user": e.category.user.username,
+        })
+    # 日付の新しい順にソートされたリストにする
+    sorted_grouped_expenses = sorted(grouped_expenses.items(), key=lambda item: item[0], reverse=True)
+    # user_name を準備
+    user_name = request.user.username if request.user.username else user_email
+    return render(
+        request,
+        'dashboard/list/list.html',
+        {"grouped_expenses": sorted_grouped_expenses, "user_name": user_name} # ここで渡すデータを変更！
+    )
 
 @login_required(login_url="login")
-@ensure_csrf_cookie
 def dashboard_moneyflow_form_page(request):
-    return render(request, "dashboard/moneyflow/moneyflow_form.html")
+    # クエリパラメータ ?mode=expense / income / receipt を取得
+    # 未指定 or 変な値のときは expense にする
+    mode = (request.GET.get("mode") or "expense").strip()
+    if mode not in ("expense", "income", "receipt"):
+        mode = "expense"
 
+    # ログインユーザー用のカテゴリ絞り込み条件（user / groupなど）
+    query = _category_query_for_user(request.user)
+
+    # Categoryモデルを
+    # フロントで使いやすいdict形式に整形する関数
+    def normalize_category(cat: Category):
+        # icon_key が想定外なら default にフォールバック
+        icon_key = cat.icon_key if cat.icon_key in CATEGORY_ICON_KEYS else "default"
+
+        # color が #RRGGBB 形式でなければグレーにする
+        color = cat.color if CATEGORY_COLOR_RE.match(cat.color or "") else "#999999"
+
+        return {
+            "id": cat.id,
+            "name": cat.name,
+            "icon_key": icon_key,
+            "color": color,
+            "is_in_type": bool(cat.is_in_type),   # 収入カテゴリかどうか
+            "is_builtin": bool(cat.is_builtin), # 標準カテゴリかどうか
+        }
+
+    categories = []
+
+    # 支出 / 収入モードのときだけカテゴリ一覧を取得
+    if mode in ("expense", "income"):
+        # income のときだけ True
+        is_in_type = (mode == "income")
+
+        # ログインユーザーのカテゴリ＋支出 or 収入で絞る
+        qs = Category.objects.filter(query, is_in_type=is_in_type).order_by("id")
+
+        # フロント用に整形
+        categories = [normalize_category(cat) for cat in qs]
+
+    # -------------------------
+    # 登録処理（POST）
+    # -------------------------
+    if request.method == "POST":
+
+        # レシート登録はまだ未実装
+        if mode == "receipt":
+            return JsonResponse(
+                {"ok": False, "error": "receiptはまだ未実装だよ"},
+                status=400
+            )
+
+        # フォームから値を取得
+        amount_raw = (request.POST.get("amount") or "").strip()
+        title = (request.POST.get("title") or "").strip()
+        expense_date = (request.POST.get("expense_date") or "").strip()
+        category_id_raw = (request.POST.get("category_id") or "").strip()
+
+        # 全角数字を半角に変換
+        amount_raw = amount_raw.translate(
+            str.maketrans("０１２３４５６７８９", "0123456789")
+        )
+
+        # 数字以外の文字をすべて除去
+        amount_digits = re.sub(r"[^\d]", "", amount_raw)
+
+        try:
+            # 金額とカテゴリIDを数値に変換
+            amount = int(amount_digits)
+            category_id = int(category_id_raw)
+        except Exception:
+            return JsonResponse(
+                {"ok": False, "error": "金額/カテゴリが不正だよ"},
+                status=400
+            )
+
+        # 0円以下は禁止
+        if amount <= 0:
+            return JsonResponse(
+                {"ok": False, "error": "金額は1円以上にしてね"},
+                status=400
+            )
+
+        # 日付未入力チェック
+        if not expense_date:
+            return JsonResponse(
+                {"ok": False, "error": "日付を入れてね"},
+                status=400
+            )
+
+        # 自分のカテゴリかどうかも含めて取得
+        try:
+            cat = Category.objects.get(query, id=category_id)
+        except Category.DoesNotExist:
+            return JsonResponse(
+                {"ok": False, "error": "カテゴリが見つからないよ"},
+                status=404
+            )
+
+        # 支出タブなのに収入カテゴリを選んでいないかチェック
+        if mode == "expense" and cat.is_in_type:
+            return JsonResponse(
+                {"ok": False, "error": "支出タブでは収入カテゴリは選べないよ"},
+                status=400
+            )
+
+        # 収入タブなのに支出カテゴリを選んでいないかチェック
+        if mode == "income" and (not cat.is_in_type):
+            return JsonResponse(
+                {"ok": False, "error": "収入タブでは支出カテゴリは選べないよ"},
+                status=400
+            )
+
+        # 収支データを作成
+        created = MoneyFlow.objects.create(
+            category=cat,
+            amount=amount,
+            expense_date=expense_date,
+            memo=title,
+        )
+
+        # 一覧画面にリダイレクトして、作成した行をフォーカスさせる
+        return redirect(f"{redirect('dashboard_list').url}?focus={created.id}")
+
+    # -------------------------
+    # 画面表示（GET）
+    # -------------------------
+    return render(
+        request,
+        "dashboard/moneyflow/moneyflow_form.html",
+        {
+            "today": date.today().isoformat(),   # デフォルト日付用
+            "categories": categories,            # 表示用カテゴリ一覧
+            "mode_expense": (mode == "expense"),
+            "mode_income": (mode == "income"),
+            "mode_receipt": (mode == "receipt"),
+        },
+    )
 
 @login_required(login_url="login")
 @ensure_csrf_cookie
@@ -459,11 +617,132 @@ def category_delete_api(request, category_id: int):
     cat.delete()
     return JsonResponse({"ok": True, "deleted_id": category_id})
 
-
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_moneyflow_edit_page(request):
-    return render(request, "dashboard/moneyflow/moneyflow_edit.html")
+
+    entry_id = (request.GET.get("id") or "").strip()
+    if not entry_id.isdigit():
+        # idが無い/不正なら新規ページへ戻す
+        return redirect("dashboard_moneyflow_form")
+
+    # 自分の明細だけ編集できる（category__user で所有者チェック）
+    entry = get_object_or_404(
+        MoneyFlow.objects.select_related("category"),
+        id=int(entry_id),
+        category__user=request.user,
+    )
+
+    # mode：指定があれば尊重、無ければ entry のカテゴリから自動判定
+    mode = (request.GET.get("mode") or "").strip()
+    if mode not in ("expense", "income", "receipt"):
+        # receiptは未実装想定なので、基本は expense/income に寄せる
+        mode = "income" if entry.category.is_in_type else "expense"
+
+    # ログインユーザー用のカテゴリ絞り込み条件
+    query = _category_query_for_user(request.user)
+
+    def normalize_category(cat: Category):
+        icon_key = cat.icon_key if cat.icon_key in CATEGORY_ICON_KEYS else "default"
+        color = cat.color if CATEGORY_COLOR_RE.match(cat.color or "") else "#999999"
+        return {
+            "id": cat.id,
+            "name": cat.name,
+            "icon_key": icon_key,
+            "color": color,
+            "is_in_type": bool(cat.is_in_type),
+            "is_builtin": bool(cat.is_builtin),
+        }
+
+    categories = []
+    if mode in ("expense", "income"):
+        is_in_type = (mode == "income")
+        qs = Category.objects.filter(query, is_in_type=is_in_type).order_by("id")
+        categories = [normalize_category(cat) for cat in qs]
+
+    # -------------------------
+    # 更新処理（POST）
+    # -------------------------
+    if request.method == "POST":
+        if mode == "receipt":
+            return JsonResponse({"ok": False, "error": "receiptはまだ未実装だよ"}, status=400)
+
+        amount_raw = (request.POST.get("amount") or "").strip()
+        title = (request.POST.get("title") or "").strip()
+        expense_date = (request.POST.get("expense_date") or "").strip()
+        category_id_raw = (request.POST.get("category_id") or "").strip()
+
+        amount_raw = amount_raw.translate(str.maketrans("０１２３４５６７８９", "0123456789"))
+        amount_digits = re.sub(r"[^\d]", "", amount_raw)
+
+        try:
+            amount = int(amount_digits)
+            category_id = int(category_id_raw)
+        except Exception:
+            return JsonResponse({"ok": False, "error": "金額/カテゴリが不正だよ"}, status=400)
+
+        if amount <= 0:
+            return JsonResponse({"ok": False, "error": "金額は1円以上にしてね"}, status=400)
+
+        if not expense_date:
+            return JsonResponse({"ok": False, "error": "日付を入れてね"}, status=400)
+
+        # 自分のカテゴリかどうかも含めて取得
+        try:
+            cat = Category.objects.get(query, id=category_id)
+        except Category.DoesNotExist:
+            return JsonResponse({"ok": False, "error": "カテゴリが見つからないよ"}, status=404)
+
+        # タブとカテゴリ整合チェック
+        if mode == "expense" and cat.is_in_type:
+            return JsonResponse({"ok": False, "error": "支出タブでは収入カテゴリは選べないよ"}, status=400)
+        if mode == "income" and (not cat.is_in_type):
+            return JsonResponse({"ok": False, "error": "収入タブでは支出カテゴリは選べないよ"}, status=400)
+
+        # 更新
+        entry.category = cat
+        entry.amount = amount
+        entry.expense_date = expense_date
+        entry.memo = title
+        entry.save(update_fields=["category", "amount", "expense_date", "memo"])
+
+        return redirect(f"{redirect('dashboard_list').url}?focus={entry.id}")
+
+    # -------------------------
+    # 画面表示（GET）
+    # -------------------------
+    return render(
+        request,
+        "dashboard/moneyflow/moneyflow_form.html",
+        {
+            "entry": entry,  # ★これがあるとテンプレが編集モードになる
+            "today": date.today().isoformat(),
+            "categories": categories,
+            "mode_expense": (mode == "expense"),
+            "mode_income": (mode == "income"),
+            "mode_receipt": (mode == "receipt"),
+        },
+    )
+
+
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def dashboard_moneyflow_delete_page(request):
+    """
+    /dashboard/moneyflow/delete/?id=<MoneyFlow.id>
+    """
+    entry_id = (request.GET.get("id") or "").strip()
+    if not entry_id.isdigit():
+        return redirect("dashboard_list")
+
+    entry = get_object_or_404(
+        MoneyFlow,
+        id=int(entry_id),
+        category__user=request.user,
+    )
+    entry.delete()
+    return redirect("dashboard_list")
 
 
 @login_required(login_url="login")

@@ -15,7 +15,7 @@ urlpatterns = [
     path("", views.index_page, name="index"),
     path("login/", views.login_page, name="login"),
     path("signup/", views.signup_page, name="signup"),
-    path("logout", views.logout_view, name="logout"),
+    path("logout/", views.logout_view, name="logout"),
     path("dashboard/", views.dashboard_page, name="dashboard"),
     path("dashboard/charts/", views.charts_page, name="charts"),
     path("dashboard/list/", views.dashboard_list_page, name="dashboard_list"),
@@ -29,6 +29,12 @@ urlpatterns = [
         views.dashboard_moneyflow_edit_page,
         name="dashboard_moneyflow_edit",
     ),
+    path(
+    "dashboard/moneyflow/delete/",
+    views.dashboard_moneyflow_delete_page,
+    name="dashboard_moneyflow_delete",
+    ),
+
     path(
         "dashboard/moneyflow/category/",
         views.dashboard_moneyflow_category_page,

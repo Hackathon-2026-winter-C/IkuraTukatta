@@ -6,7 +6,7 @@
     --app-text: 0 0 0;
     --app-leftshadow: -6px -6px 12px rgba(255, 255, 255, 1);
     --app-rightshadow: 6px 6px 12px rgba(197, 197, 197, 1);
-    --app-footer-basecircle-shadow:0 -6px 8px -2px rgba(255, 255, 255, 1);
+    --app-footer-basecircle-shadow: 0 -6px 8px -2px rgba(255, 255, 255, 1);
     --app-footer-circle-top-shadow: 0 -4px 8px rgba(255, 255, 255, 1);
     --app-footer-circle-bottom-shadow: 0 4px 10px rgba(197, 197, 197, 1);
     --app-mainbutton-shadow: 6px 6px 12px rgba(197, 197, 197, 1),
@@ -19,7 +19,7 @@ html[data-theme="dark"] {
     --app-text: 255 255 255;
     --app-leftshadow: -6px -6px 12px rgba(47, 47, 47, 1);
     --app-rightshadow: 6px 6px 12px rgba(0, 0, 0, 1);
-    --app-footer-basecircle-shadow:0 -6px 8px -2px rgba(47, 47, 47, 1);
+    --app-footer-basecircle-shadow: 0 -6px 8px -2px rgba(47, 47, 47, 1);
     --app-footer-circle-top-shadow: 0 -4px 8px rgba(47, 47, 47, 1);
     --app-footer-circle-bottom-shadow: 0 4px 12px rgba(0, 0, 0, 1);
 }
@@ -368,4 +368,58 @@ html[data-theme="dark"] .btn-red:active {
 /* チェック時：雲を出す */
 .switch input:checked~.slider .cloud {
     opacity: 1;
+}
+
+/* ===== Category: 選択中の見た目 ===== */
+
+/* 選択中：丸を塗りつぶし */
+.cat-pick.is-selected .cat-pick-circle {
+    background: var(--c);
+    border-color: var(--c);
+}
+
+/* 選択中：文字は白（style="color: var(--c)" に勝つ） */
+.cat-pick.is-selected .cat-inner {
+    color: #fff !important;
+}
+
+/* SVGは fill/stroke を触らず、見た目だけ白化 */
+.cat-pick.is-selected .cat-inner svg {
+    filter: brightness(0) invert(1);
+}
+
+
+/* ===== date input：標準UIを消して、透明overlayでクリック受ける ===== */
+
+/* Chrome / Safari */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    cursor: pointer;
+}
+
+input[type="date"]::-webkit-clear-button {
+    display: none;
+}
+
+/* Firefox */
+input[type="date"] {
+    appearance: none;
+    -moz-appearance: textfield;
+}
+
+.date-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    opacity: 0.001;
+    /* 0だとOSによって反応しない時ある */
+    cursor: pointer;
+}
+
+.date-native {
+    appearance: auto;
+    -webkit-appearance: auto;
+    -moz-appearance: auto;
 }
