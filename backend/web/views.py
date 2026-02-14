@@ -49,8 +49,7 @@ IMMUTABLE_CATEGORY_NAMES = {"支出その他", "収入その他", "その他"}
 # /にアクセスがあった時
 @ensure_csrf_cookie
 def index_page(request):
-    # return redirect("login")
-    return render(request, "accounts/darkmode-modal.html",{})
+    return redirect("login")
 
 
 # サインアップ
@@ -805,6 +804,45 @@ def account_edit(request):
         form = UserUpdateForm(instance=request.user)
 
     return render(request, "accounts/account_edit.html", {"form": form})
+
+
+@login_required(login_url="login")
+@require_POST
+def profile_image_update_api(request):
+    # form-data の "profile_image" を受け取る（未選択なら400）
+    profile_image = request.FILES.get("profile_image")
+    if not profile_image:
+        return JsonResponse({"ok": False, "error": "画像が未選択です"}, status=400)
+
+    # content-type を最低限チェック（画像以外は受け付けない）
+    content_type = profile_image.content_type or ""
+    if not content_type.startswith("image/"):
+        return JsonResponse({"ok": False, "error": "画像ファイルのみアップロード可能です"}, status=400)
+
+    try:
+        # 既存サービスを再利用して
+        # 1) 3MB超なら圧縮 2) S3アップロード 3) 保存キー返却
+        key = save_profile_image(request.user.id, profile_image)
+
+        # 返却キーから公開URLを組み立てる
+        base_url = settings.AWS_S3_BASE_URL or (
+            f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com"
+        )
+        image_url = f"{base_url.rstrip('/')}/{key.lstrip('/')}"
+
+        # users.image_url を最新URLに更新
+        request.user.image_url = image_url
+        request.user.save(update_fields=["image_url"])
+    except (BotoCoreError, ClientError, OSError, UnidentifiedImageError):
+        # S3接続失敗 / 画像変換失敗などは500で返す
+        return JsonResponse(
+            {"ok": False, "error": "プロフィール画像の保存に失敗しました"},
+            status=500,
+        )
+
+    # 成功時はフロントが即時反映できるようURLを返す
+    return JsonResponse({"ok": True, "image_url": image_url})
+
 
 
 @require_GET

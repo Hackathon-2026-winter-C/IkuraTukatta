@@ -55,5 +55,6 @@ urlpatterns = [
         views.category_delete_api,
         name="category_delete_api",
     ),
+    path("api/account/profile-image/", views.profile_image_update_api, name="profile_image_update_api"),
     path("api/users/", views.users_api, name="users_api"),
 ]
