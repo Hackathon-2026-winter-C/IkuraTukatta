@@ -448,7 +448,6 @@ def receipt_upload_api(request):
     img = Image.open(image).convert("RGB")
 
     # OpenCVで前処理をする
-    # すでにグレースケールなら変換しない
     img_np = np.array(img)
 
     # サイズ補正
@@ -456,12 +455,20 @@ def receipt_upload_api(request):
     if w < 500:
         scale = 500 / w
         img_np = cv2.resize(img_np, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+    
     # グレースケール
     gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
 
-    # 二値化
-    gray = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)[1]
-
+    # 自動二値化(Adaptive)
+    gray = cv2.adaptiveThreshold(
+        gray,
+        255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY,
+        15,
+        5
+    )
+    
     # EasyOCR
     results = reader.readtext(
         gray,
@@ -489,34 +496,56 @@ def receipt_upload_api(request):
 
     total_str = None
     for i, line in enumerate(lines):
-        if "合計" in line or "総計" in line:
+        if re.search(r"(合計|総計|税込|お会計)", line):
             # 同じ行に数字がある場合
-            m = re.search(r"([\d, ]+)", line)
+            m = re.search(r"(\d{1,3}(?:,\d{3})+|\d+)", line)
             if m:
                 total_str = m.group(1)
             # なければ次の行を見る
             elif i + 1 < len(lines):
-                total_str = lines[i+1]
+                m2 = re.search(r"(\d{1,3}(?:,\d{3})+|\d+)", lines[i+1])
+                if m2:
+                    total_str = m2.group(1)
             break
 
     if not total_str:
         return JsonResponse({"ok": False, "error": "金額が取得できません"}, status=400)
     
-    total = int(re.sub(r"[^\d]", "", total_str))
+    num = re.sub(r"[^\d]", "", total_str)
+    if not num:
+        return JsonResponse({"ok": False, "error": "金額の数値化に失敗しました"}, status=400)
+    total = int(num)
     
-    # 日付抽出
-    date_match = re.search(r"(\d{4}年\d{1,2}月\d{1,2}日)", text)
+    # 日付抽出(OCR誤認補正あり)
+    text_for_date = text \
+        .replace("村", "月") \
+        .replace('"', "日") \
+        .replace("'", "日")
+    
+    date_match = re.search(
+        r"(\d{2,4}年\d{1,2}月\d{1,2}日)",
+        text_for_date
+    )
 
     if not date_match:
-        return JsonResponse({"ok": False, "error": "日付が取得できません"}, status=400)
-    
-    date_raw = date_match.group()
-
-    if "年" in date_raw:
-        expense_date = datetime.strptime(date_raw, "%Y年%m月%d日").date()
+        print("⚠️ 日付がOCRから取得できませんでした。今日の日付を使用します。")
+        expense_date = datetime.today().date()
+        date_warning = "日付は自動取得できなかったため今日の日付を設定しました"
     else:
-        date_str = date_raw.replace("-", "/")
-        expense_date = datetime.strptime(date_str, "%Y/%m/%d").date()
+        date_raw = date_match.group()
+
+        date_str = date_raw.replace("年", "/").replace("月", "/").replace("日", "")
+        parts = date_str.split("/")
+
+        if len(parts[0]) == 2: # 26年　→　2026年
+            parts[0] = "20" + parts[0]
+
+        try:
+            expense_date = datetime.strptime("/".join(parts), "%Y/%m/%d").date()
+            date_warning= None
+        except ValueError:
+            expense_date = datetime.today().date()
+            date_warning = "日付の解析に失敗したため今日の日付を設定しました"
    
     # 支出カテゴリ
     category = Category.objects.filter(user=request.user, is_in_type=False).first()
@@ -530,7 +559,12 @@ def receipt_upload_api(request):
         memo="レシートから自動登録"
     )
 
-    return JsonResponse({"ok": True, "amount": total, "date": expense_date.strftime("%Y-%m-%d")})
+    return JsonResponse({
+        "ok": True, 
+        "amount": total, 
+        "date": expense_date.strftime("%Y-%m-%d"),
+        "warning": date_warning
+    })
 
 
 @login_required(login_url="login")
