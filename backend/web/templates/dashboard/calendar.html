@@ -3,8 +3,12 @@
 {% load humanize %} {% block title %}Calendar{% endblock %} {% block content %}
 
 <!-- ページ全体のラッパー -->
-<main class="w-full flex flex-col items-center px-4 pt-28
- pb-10">
+<main class="w-full flex flex-col items-center px-4 pt-28 pb-10">
+  <!-- user_name -->
+  <div class="w-full max-w-[420px] mx-auto mb-2.5 bg-[rgb(var(--app-bg))] app-shadow rounded-full h-10 flex items-center">
+    <h2 class="text-base text-[rgb(var(--app-text))] pl-5">{{ user_name }}</h2>
+  </div>
+
   <!-- カレンダー全体のカード -->
   <section class="w-full max-w-[420px] mt-3 p-4 rounded-3xl bg-[rgb(var(--app-bg))] app-shadow">
     <!-- ================= 月移動ナビ ================= -->

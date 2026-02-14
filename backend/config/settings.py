@@ -8,8 +8,15 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 DEBUG = os.getenv("DEBUG", "1") == "1"
 
-# "localhost,127.0.0.1" みたいに env で渡したのを分割
-ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
+def split_csv_env(name: str, default: str) -> list[str]:
+    return [v.strip() for v in os.getenv(name, default).split(",") if v.strip()]
+
+# "localhost,127.0.0.1" のような CSV を env で渡す
+ALLOWED_HOSTS = split_csv_env("ALLOWED_HOSTS", "localhost,127.0.0.1")
+CSRF_TRUSTED_ORIGINS = split_csv_env(
+    "CSRF_TRUSTED_ORIGINS",
+    "http://localhost:8080,http://127.0.0.1:8080,http://localhost:8000,http://127.0.0.1:8000",
+)
 
 AUTH_USER_MODEL = "web.User"
 

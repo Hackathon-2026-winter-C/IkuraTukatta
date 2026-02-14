@@ -120,6 +120,20 @@ html[data-theme="light"] .btn-red {
     box-shadow: var(--app-mainbutton-shadow);
 }
 
+/* black */
+html[data-theme="light"] .btn-black {
+    background: #111;
+    color: #fff;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
+/* gray ダークモードの適用なし */
+.btn-nodark-sub {
+    background: #e8e8e8;
+    color: #111;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
 /* light　押下 */
 /* orange */
 html[data-theme="light"] .btn-main:active {
@@ -386,6 +400,40 @@ html[data-theme="dark"] .btn-red:active {
 /* SVGは fill/stroke を触らず、見た目だけ白化 */
 .cat-pick.is-selected .cat-inner svg {
     filter: brightness(0) invert(1);
+}
+
+/* ===== List: Category Icon ===== */
+.list-category-icon {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+}
+
+.list-category-icon svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+.list-category-label {
+    height: 14px;
+    display: grid;
+    place-items: center;
+    /* 文字を箱の中央に */
+    line-height: 1;
+    /* これは残してOK */
+    text-align: center;
+}
+
+/* アイコン＋文字の塊を固定2段にする */
+.cat-col {
+    width: 40px;
+    display: grid;
+    grid-template-rows: 24px 14px;
+    justify-items: center;
+    align-items: center;
+    row-gap: 4px;
 }
 
 

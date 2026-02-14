@@ -49,7 +49,8 @@ IMMUTABLE_CATEGORY_NAMES = {"支出その他", "収入その他", "その他"}
 # /にアクセスがあった時
 @ensure_csrf_cookie
 def index_page(request):
-    return redirect("login")
+    # return redirect("login")
+    return render(request, "accounts/darkmode-modal.html",{})
 
 
 # サインアップ
@@ -262,6 +263,12 @@ def dashboard_page(request):
             })
         weeks_view.append(row)
 
+    user_name = (
+        request.user.get_full_name().strip()
+        or request.user.username
+        or request.user.email
+    )
+
     # テンプレートにデータを渡して描画
     return render(
         request,
@@ -273,6 +280,7 @@ def dashboard_page(request):
             "prev_ym": f"{prev_y:04d}-{prev_m:02d}",       # 前月リンク用（年4桁・月2桁ゼロ埋め）
             "next_ym": f"{next_y:04d}-{next_m:02d}",       # 次月リンク用（年4桁・月2桁ゼロ埋め）
             "today": today,
+            "user_name": user_name,
         },
     )
 
@@ -281,7 +289,7 @@ def dashboard_page(request):
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_list_page(request):
-    user_email = "demo@example.com" # または request.user.email
+    user_email = request.user.email
     qs = (
         MoneyFlow.objects.select_related("category__user", "category")
         .filter(category__user__email=user_email)
@@ -293,8 +301,11 @@ def dashboard_list_page(request):
         grouped_expenses[e.expense_date].append({
             "id": e.id,
             "amount": e.amount,
+            "amount_sign": "+" if e.category.is_in_type else "-",
+            "mode": "income" if e.category.is_in_type else "expense",
             "category": e.category.name,
             "categoryColor": e.category.color,
+            "icon_key": e.category.icon_key,
             "memo": e.memo,
             "user": e.category.user.username,
         })
@@ -437,6 +448,11 @@ def dashboard_moneyflow_form_page(request):
     # -------------------------
     # 画面表示（GET）
     # -------------------------
+    user_name = (
+    request.user.get_full_name().strip()
+    or request.user.username
+    or request.user.email
+    )
     return render(
         request,
         "dashboard/moneyflow/moneyflow_form.html",
@@ -446,6 +462,7 @@ def dashboard_moneyflow_form_page(request):
             "mode_expense": (mode == "expense"),
             "mode_income": (mode == "income"),
             "mode_receipt": (mode == "receipt"),
+            "user_name": user_name,
         },
     )
 
@@ -634,10 +651,10 @@ def dashboard_moneyflow_edit_page(request):
     )
 
     # mode：指定があれば尊重、無ければ entry のカテゴリから自動判定
-    mode = (request.GET.get("mode") or "").strip()
+    mode = (request.GET.get("mode") or request.POST.get("mode") or "").strip()
     if mode not in ("expense", "income", "receipt"):
-        # receiptは未実装想定なので、基本は expense/income に寄せる
         mode = "income" if entry.category.is_in_type else "expense"
+
 
     # ログインユーザー用のカテゴリ絞り込み条件
     query = _category_query_for_user(request.user)
@@ -711,6 +728,12 @@ def dashboard_moneyflow_edit_page(request):
     # -------------------------
     # 画面表示（GET）
     # -------------------------
+    user_name = (
+    request.user.get_full_name().strip()
+    or request.user.username
+    or request.user.email
+    )
+
     return render(
         request,
         "dashboard/moneyflow/moneyflow_form.html",
@@ -721,6 +744,7 @@ def dashboard_moneyflow_edit_page(request):
             "mode_expense": (mode == "expense"),
             "mode_income": (mode == "income"),
             "mode_receipt": (mode == "receipt"),
+            "user_name": user_name,
         },
     )
 

@@ -1,35 +1,35 @@
 {% extends "base.html" %} {% load static %} {% block title %}Record{% endblock %} {% block content %}
 
-<main class="w-full flex flex-col items-center px-4 pb-28 pt-4">
+<main class="w-full flex flex-col items-center px-4 pb-28 pt-16">
   <div class="w-full max-w-[420px] space-y-4">
-    <!-- ===== 支出 / 収入 / レシート　===== -->
+    <!-- ===== 支出 / 収入 / レシート ===== -->
     <div id="record-seg" class="relative flex w-full h-10 rounded-full p-1 border border-white/25 bg-white/15 backdrop-blur-lg app-shadow">
       <!-- slider -->
       <div id="seg-slider" class="absolute top-1 bottom-1 left-1 rounded-full bg-white shadow-[0_3px_12px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.08)] transition-[left,width] duration-300"></div>
 
       <!-- 支出 -->
       <div class="relative z-10 flex-1">
-        <input type="radio" name="record-mode" id="option1" class="peer absolute inset-0 opacity-0 cursor-pointer" {% if mode_expense %}checked{% endif %} />
-        <label for="option1" class="flex h-full items-center justify-center rounded-full px-3 text-[13px] font-semibold text-white/80 select-none cursor-pointer transition-colors hover:text-white/95 peer-checked:text-[#FF9400]">支出</label>
+        <input type="radio" name="record-mode" id="rec-exp" class="peer absolute inset-0 opacity-0 cursor-pointer" {% if mode_expense %}checked{% endif %} />
+        <label for="rec-exp" class="flex h-full items-center justify-center rounded-full px-3 text-[13px] font-semibold text-white/80 select-none cursor-pointer transition-colors hover:text-white/95 peer-checked:text-[#FF9400]">支出</label>
       </div>
 
       <!-- 収入 -->
       <div class="relative z-10 flex-1">
-        <input type="radio" name="record-mode" id="option2" class="peer absolute inset-0 opacity-0 cursor-pointer" {% if mode_income %}checked{% endif %} />
-        <label for="option2" class="flex h-full items-center justify-center rounded-full px-3 text-[13px] font-semibold text-white/80 select-none cursor-pointer transition-colors hover:text-white/95 peer-checked:text-[#FF9400]">収入</label>
+        <input type="radio" name="record-mode" id="rec-inc" class="peer absolute inset-0 opacity-0 cursor-pointer" {% if mode_income %}checked{% endif %} />
+        <label for="rec-inc" class="flex h-full items-center justify-center rounded-full px-3 text-[13px] font-semibold text-white/80 select-none cursor-pointer transition-colors hover:text-white/95 peer-checked:text-[#FF9400]">収入</label>
       </div>
 
       <!-- レシート -->
       <div class="relative z-10 flex-1">
-        <input type="radio" name="record-mode" id="option3" class="peer absolute inset-0 opacity-0 cursor-pointer" {% if mode_receipt %}checked{% endif %} />
-        <label for="option3" class="flex h-full items-center justify-center rounded-full px-3 text-[13px] font-semibold text-white/80 select-none cursor-pointer transition-colors hover:text-white/95 peer-checked:text-[#FF9400]">レシート</label>
+        <input type="radio" name="record-mode" id="rec-receipt" class="peer absolute inset-0 opacity-0 cursor-pointer" {% if mode_receipt %}checked{% endif %} />
+        <label for="rec-receipt" class="flex h-full items-center justify-center rounded-full px-3 text-[13px] font-semibold text-white/80 select-none cursor-pointer transition-colors hover:text-white/95 peer-checked:text-[#FF9400]">レシート</label>
       </div>
     </div>
 
     <!-- ===============================
          新規 / 編集 兼用フォーム
     ================================ -->
-    <form method="post" class="space-y-4" novalidate {% if entry %} action="{% url 'dashboard_moneyflow_edit' %}?id={{ entry.id }}" {% endif %}>
+    <form id="record-form" method="post" class="space-y-4" novalidate {% if entry %}action="{% url 'dashboard_moneyflow_edit' %}?id={{ entry.id }}" {% endif %}>
       {% csrf_token %}
 
       <!-- ===== amount ===== -->
@@ -45,7 +45,7 @@
       <!-- title -->
       <div class="relative w-full">
         <input id="title" name="title" value="{% if request.POST.title %}{{ request.POST.title }}{% elif entry %}{{ entry.title }}{% endif %}" placeholder=" " class="input w-full !px-4 !pt-6 !pb-3 text-black" />
-        <label for="title" class="absolute left-4 top-1 text-[11px] opacity-60 pointer-events-none"> Title </label>
+        <label for="title" class="absolute left-4 top-1 text-[11px] opacity-60 pointer-events-none">Title</label>
       </div>
 
       <!-- date -->
@@ -80,7 +80,7 @@
             <span class="cat-pick-circle w-[60px] h-[60px] rounded-full bg-white border-2 flex items-center justify-center" style="border-color: var(--c)">
               <span class="cat-inner flex flex-col items-center gap-[3px]" style="color: var(--c)">
                 <span class="w-6 h-6 flex items-center justify-center [&_svg]:w-6 [&_svg]:h-6 [&_svg]:block"> {% include "icons/category/"|add:cat.icon_key|add:".svg" %} </span>
-                <span class="text-[9px] font-semibold leading-none max-w-[52px] truncate"> {{ cat.name }} </span>
+                <span class="text-[9px] font-semibold leading-none max-w-[52px] truncate">{{ cat.name }}</span>
               </span>
             </span>
           </button>
@@ -113,29 +113,15 @@
   </div>
 </main>
 
+<script src="{% static 'js/segmented.js' %}"></script>
+
 <script>
-  /* 以降のJSは、あなたの元コードと同じ（id維持だけ追加） */
-
-  // セグメント全体のラッパー
-  const segRoot = document.getElementById("record-seg");
-  const segSlider = document.getElementById("seg-slider");
-  const segRadios = Array.from(document.querySelectorAll('input[name="record-mode"]'));
-
-  const moveSlider = () => {
-    if (!segRoot || !segSlider) return;
-    const checkedIndex = segRadios.findIndex((r) => r.checked);
-    const idx = checkedIndex >= 0 ? checkedIndex : 0;
-    const rootW = segRoot.clientWidth;
-    const padding = 4;
-    const innerW = rootW - padding * 2;
-    const w = innerW / 3;
-    segSlider.style.width = `${w}px`;
-    segSlider.style.left = `${padding + w * idx}px`;
-  };
-
-  moveSlider();
-  segRadios.forEach((r) => r.addEventListener("change", moveSlider));
-  window.addEventListener("resize", moveSlider);
+  // ----- segmented (Record) -----
+  initSegmented({
+    rootId: "record-seg",
+    sliderId: "seg-slider",
+    radioName: "record-mode",
+  });
 
   // ---------- amount ----------
   const amountDisplay = document.getElementById("amount_display");
@@ -162,18 +148,27 @@
   }
 
   // ---------- error helpers ----------
-  const showError = (el, msg) => { el.textContent = msg; el.classList.remove("hidden"); };
-  const clearError = (el) => { el.textContent = ""; el.classList.add("hidden"); };
+  const showError = (el, msg) => {
+    el.textContent = msg;
+    el.classList.remove("hidden");
+  };
+  const clearError = (el) => {
+    el.textContent = "";
+    el.classList.add("hidden");
+  };
 
   const amountError = document.getElementById("amount-error");
   const dateError = document.getElementById("date-error");
   const categoryError = document.getElementById("category-error");
 
-  const form = document.querySelector("form");
+  // ✅ FIX: メインフォームをidで取得（削除フォームに誤爆しない）
+  const form = document.getElementById("record-form");
   const submitBtn = document.getElementById("submit-btn");
 
   const categoryHidden = document.getElementById("category_id");
-  const dateInput = document.querySelector('input[name="expense_date"]');
+
+  // ✅ FIX: date inputもidで取得（安全）
+  const dateInput = document.getElementById("date-input");
   const dateWrap = document.getElementById("date-wrap");
   const dateText = document.getElementById("date-text");
 
@@ -206,12 +201,7 @@
       if (submitBtn) submitBtn.disabled = false;
       return;
     }
-
-    const hasCategory =
-      categoryHidden &&
-      categoryHidden.value &&
-      categoryHidden.value.trim() !== "";
-
+    const hasCategory = categoryHidden && categoryHidden.value && categoryHidden.value.trim() !== "";
     if (submitBtn) submitBtn.disabled = !hasCategory;
   };
 
@@ -287,7 +277,11 @@
   }
 
   // ---------- mode switch ----------
-  const modeMap = { option1: "expense", option2: "income", option3: "receipt" };
+  const modeMap = {
+    "rec-exp": "expense",
+    "rec-inc": "income",
+    "rec-receipt": "receipt",
+  };
 
   document.querySelectorAll('input[name="record-mode"]').forEach((radio) => {
     radio.addEventListener("change", () => {
