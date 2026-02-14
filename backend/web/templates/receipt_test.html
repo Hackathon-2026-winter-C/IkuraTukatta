@@ -1,36 +1,74 @@
 <h2>レシートOCRテスト</h2>
 
-<form id="form">
-  <input type="file" name="image" id="image">
-  <button type="submit">送信</button>     
+<form id="upload-form">
+  <input type="file" name="image" id="image" accept="image/*" required>
+  <button type="submit">アップロード</button>     
 </form>
 
-<pre id="result"></pre>
+<hr>
+
+<form id="confirm-form">
+  <label>
+    金額:
+    <input type="number" id="amount" name="amount">
+  </label><br>
+
+  <label>
+    日付:
+    <input type="date" id="date" name="date">
+  </label><br>
+
+  <button type="submit">保存</button>
+</form>
+
+<div id="warning"></div>
 
 <script>
-const form = document.getElementById("form");
-const result = document.getElementById("result");
+  const uploadForm = document.getElementById("upload-form");
+  const confirmForm = document.getElementById("confirm-form");
 
-function getCookie(name) {
-  return document.cookie.split("; ")
-    .find(row => row.startsWith(name + "="))
-    ?.split("=")[1];
-}
+  uploadForm.addEventListener("submit", function(e) {
+    e.preventDefault();
 
-form.onsubmit = async (e) => {
-  e.preventDefault();
+    const formData = new FormData(uploadForm);
 
-  const formData = new FormData(form);
+    fetch("/receipt_upload_api", {
+      method: "POST",
+      body: formData,
+      headers: {
+        "X-CSRFToken": getCookie("csrftoken")
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) {
+        alert("保存しました");
+        return;
+      }
 
-  const res = await fetch("/receipt_upload_api", {
-    method: "POST",
-    body: formData,
-    headers: {
-      "X-CSRFToken": getCookie("csrftoken")
-    }
+      document.getElementById("amount").value = data.amount;
+      document.getElementById("date").value = data.date;
+
+      if (data.warning || data.confidence < 0.7) {
+        document.getElementById("warning").innerText =
+          "⚠️ 読み取り精度が低いため確認してください";
+      } else {
+        document.getElementById("warning").innerText = "";
+      }
+    });
   });
 
-  const data = await res.json();
-  result.textContent = JSON.stringify(data, null, 2);
-};
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let c of cookies) {
+        c = c.trim();
+        if (c.startsWith(name + "=")) {
+          cookieValue = decodeURIComponent(c.substring(name.length + 1));
+        }
+      }
+    }
+    return cookieValue;
+  }
 </script>
