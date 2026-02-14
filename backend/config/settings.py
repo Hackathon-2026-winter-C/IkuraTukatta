@@ -84,6 +84,19 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
 
+# ---- AWS S3 (profile image upload) ----
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "ap-northeast-1")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+AWS_S3_BASE_URL = os.getenv(
+    "AWS_S3_BASE_URL",
+    f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+    if AWS_STORAGE_BUCKET_NAME
+    else "",
+)
+PROFILE_IMAGE_MAX_BYTES = 3 * 1024 * 1024
+
 # ---- Static ----
 STATIC_URL = "/static/"
 # 本番で collectstatic する時の出力先
