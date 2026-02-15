@@ -24,6 +24,48 @@ from .models import Category, MoneyFlow, User
 
 reader = easyocr.Reader(['ja', 'en'], gpu=False)
 
+# OCRをカード, キャッシュレス対応にする
+def extract_total_amount(text):
+    lines = text.splitlines()
+
+    exclude_words = [
+        "お預かり", "お釣り", "釣",
+        "クレジット", "カード", "VISA", "MASTER", "JCB",
+        "PayPay", "Suica", "PASMO", "ICOCA", "ID", "QUICPay"
+    ]
+
+    amount_pattern = r"(\d{1,3}(?:,\d{3})+|\d+)"
+
+    # ① 合計キーワード優先
+    for i, line in enumerate(lines):
+        if re.search(r"(合計|総計|税込|お会計)", line):
+            m = re.search(amount_pattern, line)
+            if m:
+                return int(m.group(1).replace(",", "")), None, 0.95
+            elif i + 1 < len(lines):
+                m2 = re.search(amount_pattern, lines[i+1])
+                if m2:
+                    return int(m2/group(1).replace(",", "")), None, 0.9
+                
+    # ② 最大フォールバック
+    candidates = []                
+    for line in lines:
+        if any (word in line for word in exclude_words):
+            continue
+
+        for m in re.finditer(amount_pattern, line):
+            val = int(m.group(1).replace(",". ""))
+            if 50 <= val <= 100000:
+                candidates.append(val)
+
+    if candidates:
+        return max(candidates), "合計行が取得できなかったため金額から推定しました", 0.6
+
+    # ③ 失敗
+    return None, "金額を取得できませんでした", 0.0
+
+
+
 MAX_EXPENSE_CATEGORIES = 16
 MAX_INCOME_CATEGORIES = 8
 CATEGORY_COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
@@ -491,30 +533,17 @@ def receipt_upload_api(request):
     print("IMG SHAPE:", img_np.shape)
     print("IMG DTYPE:", img_np.dtype)
 
-    # 合計金額抽出(行単位)
-    lines = text.splitlines()
+    # 合計金額抽出
+    total, amount_warning, confidence = extract_total_amount(text)
 
-    total_str = None
-    for i, line in enumerate(lines):
-        if re.search(r"(合計|総計|税込|お会計)", line):
-            # 同じ行に数字がある場合
-            m = re.search(r"(\d{1,3}(?:,\d{3})+|\d+)", line)
-            if m:
-                total_str = m.group(1)
-            # なければ次の行を見る
-            elif i + 1 < len(lines):
-                m2 = re.search(r"(\d{1,3}(?:,\d{3})+|\d+)", lines[i+1])
-                if m2:
-                    total_str = m2.group(1)
-            break
-
-    if not total_str:
-        return JsonResponse({"ok": False, "error": "金額が取得できません"}, status=400)
-    
-    num = re.sub(r"[^\d]", "", total_str)
-    if not num:
-        return JsonResponse({"ok": False, "error": "金額の数値化に失敗しました"}, status=400)
-    total = int(num)
+    if total is None:
+        return JsonResponse({
+            "ok":True,
+            "amount": total,
+            "date": expense_date.strftime("%Y-%m-%d"),
+            "warning": amount_warning or date_warning,
+            "confidence": confidence
+        })
     
     # 日付抽出(OCR誤認補正あり)
     text_for_date = text \
