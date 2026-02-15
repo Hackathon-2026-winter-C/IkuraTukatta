@@ -102,6 +102,7 @@ STATICFILES_DIRS = [
 ]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 #google認証に必要なコード
 SITE_ID = 1       # 1=localhost:8000
 AUTHENTICATION_BACKENDS = [
@@ -110,3 +111,8 @@ AUTHENTICATION_BACKENDS = [
 
 ]
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# 画像をアップロード
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+

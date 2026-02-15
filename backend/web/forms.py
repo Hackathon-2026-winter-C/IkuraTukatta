@@ -6,10 +6,9 @@ class EmailUserCreationForm(UserCreationForm):
         model = User
         fields = ["email", "password1", "password2"]  
 
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.email = (self.cleaned_data["email"] or "").strip().lower()
-        user.username = user.email  
-        if commit:
-            user.save()
-        return user
+
+# UserUpdateForm
+class UserUpdateForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["name", "icon"]
