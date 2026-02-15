@@ -63,7 +63,7 @@
           <span class="setting-text tracking-widest">•••••</span>
         </span>
         <span class="setting-right">
-          <span class="setting-action app-shadow">
+          <span class="setting-action app-shadow" id="open-user-password-modal">
             {% include "accounts/account_icons/refresh-cw.svg" with class="w-5 h-5" %}
           </span>
         </span>
@@ -118,7 +118,7 @@
           <span class="setting-text">ログアウト</span>
         </span>
         <span class="setting-right">
-          <span class="setting-next app-shadow">
+          <span class="setting-next app-shadow" id="open-user-logout-modal">
             {% include "accounts/account_icons/chevron-right.svg" with class="w-5 h-5" %}
           </span>
         </span>
@@ -154,10 +154,26 @@
       {% include 'components/modal/useremail-update-modal.html' %}
     </div>
   </div>
-  <script src="{% static 'js/logout.js' %}" defer="defer"></script>
+
+  <!--パスワード編集モーダル -->
+  <div id="user-password-modal" class="fixed inset-0 z-50 hidden ">
+    <button id="user-password-modal-bg" type="button" class="absolute inset-0 bg-[rgb(var(--app-text)/0.5)]"></button>
+    <div class="absolute inset-x-0 bottom-0 ">
+      {% include 'components/modal/userpassword-update-modal.html' %}
+    </div>
+  </div>
+  <!--ログアウトモーダル -->
+  <div id="user-logout-modal" class="fixed inset-0 z-50 hidden ">
+    <button id="user-logout-modal-bg" type="button" class="absolute inset-0 bg-[rgb(var(--app-text)/0.5)]"></button>
+    <div class="absolute inset-x-0 bottom-0 ">
+      {% include 'components/modal/user-logout-modal.html' %}
+    </div>
+  </div>
+  <script src="{% static 'js/account-logout-modal.js' %}" defer></script>
   <script src="{% static 'js/account-icon-modal.js' %}" defer></script>
   <script src="{% static 'js/account-profile-image.js' %}" defer></script>
   <script src="{% static 'js/account-username-modal.js' %}" defer></script>
   <script src="{% static 'js/account-user_email-modal.js' %}" defer></script>
+  <script src="{% static 'js/account-password-modal.js' %}" defer></script>
 
 {% endblock %}

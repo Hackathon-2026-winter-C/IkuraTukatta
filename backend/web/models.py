@@ -5,6 +5,7 @@ from django.db import models
 class User(AbstractUser):
     id = models.BigAutoField(primary_key=True)
     email = models.EmailField(unique=True)
+    username = models.CharField(max_length=150,unique=False)
     group = models.ForeignKey(
         "ShareGroup",
         on_delete=models.SET_NULL,
