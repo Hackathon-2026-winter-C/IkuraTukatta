@@ -61,7 +61,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []   # ← ここが重要
+    REQUIRED_FIELDS = ["username"]   # ← ここが重要
 
     class Meta:
         db_table = "USERS"

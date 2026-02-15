@@ -1,6 +1,9 @@
 from django.urls import path
 from . import views
 
+from django.contrib import admin
+from django.urls import path, include
+
 urlpatterns = [
     # テスト
     # path("", views.index_page, name="index"),
@@ -25,8 +28,11 @@ urlpatterns = [
     path("dashboard/account/share", views.share_page, name="share"),
     path("group/create/", views.group_create, name="group_create"),
 
- path("dashboard/date/", views.dashboard_date_page, name="dashboard_date"), #
+    path("dashboard/date/", views.dashboard_date_page, name="dashboard_date"), #
 
+    
+
+    
     # テストAPI
     # path("api/users", views.users_api, name="users_api")
 ]
