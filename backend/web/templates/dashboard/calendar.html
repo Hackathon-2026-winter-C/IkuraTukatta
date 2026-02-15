@@ -4,9 +4,20 @@
 
 <!-- ページ全体のラッパー -->
 <main class="w-full flex flex-col items-center px-4 pt-28 pb-10">
-  <!-- user_name -->
-  <div class="w-full max-w-[420px] mx-auto mb-2.5 bg-[rgb(var(--app-bg))] app-shadow rounded-full h-10 flex items-center">
-    <h2 class="text-base text-[rgb(var(--app-text))] pl-5">{{ user_name }}</h2>
+  <!-- ===== Ledger Switcher ===== -->
+  <div id="ledger-switcher" class="relative w-full">
+    <button type="button" id="ledger-switcher-btn" class="w-full mx-auto mb-2.5 bg-[rgb(var(--app-bg))] app-shadow rounded-full h-10 flex items-center justify-between px-5">
+      <div class="flex flex-col items-start leading-tight">
+        <span id="ledger-switcher-label" class="text-base text-[rgb(var(--app-text))]">読み込み中…</span>
+        <span id="ledger-switcher-sub" class="text-[10px] opacity-60 text-[rgb(var(--app-text))]"></span>
+      </div>
+
+      <span id="ledger-switcher-chevron" class="transition-transform duration-200"> {% include "icons/ui/chevron-down.svg" %} </span>
+    </button>
+
+    <div id="ledger-switcher-menu" class="hidden absolute left-0 right-0 top-[44px] z-40 rounded-3xl bg-[rgb(var(--app-bg))] app-shadow p-3 space-y-3">
+      <!-- JSで埋まる -->
+    </div>
   </div>
 
   <!-- カレンダー全体のカード -->
@@ -70,6 +81,7 @@
 
   <!-- ダッシュボード用JS（後で日付選択演出とか入れられる） -->
   <script type="module" src="{% static 'js/dashboard.js' %}"></script>
+  <script src="{% static 'js/ledger-switcher.js' %}" defer></script>
 </main>
 
 {% endblock %}

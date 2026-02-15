@@ -1,18 +1,17 @@
 {% extends "base.html" %} {% load static %} {% block title %}アカウント{% endblock %} {% block content %}
+
 <main class="w-full flex flex-col items-center gap-4 px-4 pt-[84px] pb-10">
   <!-- ================= アイコン ================= -->
   <div class="relative mt-2">
     <div class="w-[120px] h-[120px] rounded-[18px] overflow-hidden bg-[rgb(var(--app-bg))] app-shadow">
       {% if request.user.image_url %}
-      <!-- ユーザーが登録したアイコンがある場合 -->
       <img src="{{ request.user.image_url }}" alt="avatar" class="w-full h-full object-cover" />
       {% else %}
-      <!-- 無い場合はデフォルト画像 -->
       <img src="{% static 'assets/images/default-avatar.png' %}" alt="avatar" class="w-full h-full object-cover" />
       {% endif %}
     </div>
 
-    <!-- アイコン変更ボタン -->
+    <!-- アイコン変更ボタン（※まだ未実装なら今はボタンだけでもOK） -->
     <button type="button" class="absolute -top-[10px] -right-[10px] w-[44px] h-[44px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] grid place-items-center border-none app-shadow" aria-label="change icon">{% include "accounts/account_icons/refresh-cw.svg" with class="w-6 h-6" %}</button>
   </div>
 
@@ -20,13 +19,10 @@
   <section class="w-full max-w-[420px] flex flex-col gap-3 mt-2">
     <!-- 名前 -->
     <button type="button" class="setting-btn app-shadow">
-      <!-- 左側（アイコン＋テキスト） -->
       <span class="setting-left">
         <span class="setting-icon"> {% include "accounts/account_icons/user.svg" with class="w-6 h-6" %} </span>
-        <!-- ユーザー名表示（長いと … になる） -->
         <span class="setting-text">{{ request.user.username }}</span>
       </span>
-      <!-- 右側（丸ボタン） -->
       <span class="setting-right">
         <span class="setting-action app-shadow"> {% include "accounts/account_icons/refresh-cw.svg" with class="w-5 h-5" %} </span>
       </span>
@@ -54,8 +50,8 @@
       </span>
     </button>
 
-    <!-- 共有　-->
-    <button type="button" class="setting-btn app-shadow">
+    <!-- 共有 -->
+    <button type="button" id="open-share-modal" class="setting-btn app-shadow">
       <span class="setting-left">
         <span class="setting-icon"> {% include "accounts/account_icons/user.svg" with class="w-6 h-6" %} </span>
         <span class="setting-text">共有する</span>
@@ -72,15 +68,13 @@
         <span class="setting-text">カラーテーマ</span>
       </span>
 
-      <!-- トグル -->
       <label class="switch">
-        <input id="checkbox" type="checkbox"  data-theme-toggle/>
+        <input id="checkbox" type="checkbox" data-theme-toggle />
         <span class="slider">
-          <!-- 夜用の星 -->
           <div class="star star_1"></div>
           <div class="star star_2"></div>
           <div class="star star_3"></div>
-          <!-- 昼用の雲 -->
+
           <svg viewBox="0 0 16 16" class="cloud_1 cloud">
             <path transform="matrix(.77976 0 0 .78395-299.99-418.63)" fill="#fff" d="m391.84 540.91c-.421-.329-.949-.524-1.523-.524-1.351 0-2.451 1.084-2.485 2.435-1.395.526-2.388 1.88-2.388 3.466 0 1.874 1.385 3.423 3.182 3.667v.034h12.73v-.006c1.775-.104 3.182-1.584 3.182-3.395 0-1.747-1.309-3.186-2.994-3.379.007-.106.011-.214.011-.322 0-2.707-2.271-4.901-5.072-4.901-2.073 0-3.856 1.202-4.643 2.925" />
           </svg>
@@ -106,5 +100,66 @@
     </p>
   </section>
 </main>
+
+<!-- ================= 共有モーダル（ライト固定） ================= -->
+<div id="share-modal" class="fixed inset-0 hidden bg-black/30 z-50">
+  <button type="button" id="share-modal-bg" class="absolute inset-0 w-full h-full"></button>
+
+  <div class="absolute left-0 right-0 bottom-0 px-0 pb-0">
+    <div class="neu-panel mx-auto w-full max-w-[420px] rounded-t-[80px] pt-[18px] bg-[#E8E8E8] text-black" data-theme="light">
+      <p class="text-[11px] text-[#888] ml-[26px] mt-2">家計簿を共有する</p>
+
+      <!-- 入力 -->
+      <div class="px-6 mt-6">
+        <input id="share-email" type="email" class="input w-full" placeholder="メールアドレス" />
+        <p id="share-error" class="text-xs text-red-500 hidden mt-2"></p>
+        <p id="share-ok" class="text-xs text-emerald-600 hidden mt-2"></p>
+      </div>
+
+      <!-- 追加 -->
+      <div class="px-6 mt-5">
+        <button type="button" id="share-add" class="btn btn-main" style="background: #ff9400; color: #fff; border: none; box-shadow: var(--app-mainbutton-shadow)">追　加</button>
+      </div>
+
+      <!-- 共有中リスト -->
+      <div class="px-6 mt-6">
+        <p class="text-[11px] text-black/50 mb-3">共有メンバー</p>
+        <div id="share-list" class="space-y-3">
+          <p class="text-xs text-black/50">読み込み中…</p>
+        </div>
+      </div>
+
+      <!-- キャンセル（JSは share-cancel を見てる） -->
+      <div class="px-6 mt-6 pb-8">
+        <button type="button" id="share-cancel" class="btn btn-sub" style="background: #e8e8e8; color: #111; border: none; box-shadow: var(--app-mainbutton-shadow)">キャンセル</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 削除確認モーダル（ライト固定） ================= -->
+<div id="share-remove-modal" class="fixed inset-0 hidden bg-black/30 z-50">
+  <button type="button" id="share-remove-bg" class="absolute inset-0 w-full h-full"></button>
+
+  <div class="absolute left-0 right-0 bottom-0 px-4 pb-6">
+    <div class="neu-panel mx-auto w-full max-w-[420px] rounded-t-[80px] pt-[18px] bg-[#E8E8E8] text-black" data-theme="light">
+      <p class="text-[11px] text-[#888] ml-[26px] mt-2">共有メンバー削除</p>
+
+      <div class="px-6 mt-5">
+        <p id="share-remove-title" class="text-sm text-[#111]">このユーザーを削除しますか？</p>
+        <p class="text-[11px] text-black/50 mt-2">削除すると、このユーザーはあなたの家計簿を見れなくなります。</p>
+      </div>
+
+      <div class="px-6 mt-6 space-y-3 pb-8">
+        <button type="button" id="share-remove-confirm" class="btn btn-main" style="background: #ff383c; color: #fff; border: none; box-shadow: var(--app-mainbutton-shadow)">削除する</button>
+
+        <button type="button" id="share-remove-cancel" class="btn btn-sub" style="background: #e8e8e8; color: #111; border: none; box-shadow: var(--app-mainbutton-shadow)">キャンセル</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="{% static 'js/logout.js' %}" defer></script>
+<script src="{% static 'js/share-ledger.js' %}" defer></script>
+
 {% endblock %}

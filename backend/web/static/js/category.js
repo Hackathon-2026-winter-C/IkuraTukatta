@@ -2,11 +2,7 @@ console.log("category.js loaded ✅");
 
 document.addEventListener("DOMContentLoaded", () => {
   // Cookie から指定した名前の値を取得する（CSRFトークン取得用）
-  function getCookie(name) {
-    const v = `; ${document.cookie}`;
-    const p = v.split(`; ${name}=`);
-    if (p.length === 2) return p.pop().split(";").shift();
-  }
+  const csrftoken = window.appUtils.getCookie("csrftoken");
   const csrftoken = getCookie("csrftoken");
 
   // モーダル関連のDOM要素
