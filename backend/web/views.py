@@ -579,7 +579,7 @@ def receipt_upload_api(request):
         "ok": True, 
         "amount": total, 
         "date": expense_date.strftime("%Y-%m-%d"),
-        "warning": date_warning,
+        "warning": amount_warning or date_warning,
         "confidence": confidence,
     })
 
@@ -603,9 +603,15 @@ def receipt_save_api(request):
     except Exception:
         return JsonResponse({"ok": False, "error": "入力値が不正です"}, status=400)
 
-    category = Category.objects.filter(user=request.user, is_in_type=False).order_by("id").first()
-    if not category:
-        return JsonResponse({"ok": False, "error": "カテゴリが存在しません"}, status=400)
+    category_name = data.get("category")
+    if not category_name:
+        return JsonResponse({"ok": False, "error": "カテゴリがありません"}, status=400)
+    
+    category, _ = Category.objects.get_or_create(
+        user=request.user,
+        is_in_type=False,
+        name=category_name
+    )
 
     mf = MoneyFlow.objects.create(
         category=category,
@@ -693,7 +699,10 @@ def users_api(request):
 # テスト用　画面ビュー
 @login_required(login_url="login")
 def receipt_test_page(request):
-    return render(request, "receipt_test.html")
+    categories = Category.objects.filter(user=request.user, is_in_type=False)
+    return render(request, "receipt_test.html", {
+        "categories": categories
+    })
 
 
 # サインアップ

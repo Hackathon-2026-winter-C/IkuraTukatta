@@ -10,12 +10,17 @@
 <form id="confirm-form">
   <label>
     金額:
-    <input type="number" id="amount" name="amount">
+    <input type="number" id="amount" name="amount" required>
   </label><br>
 
   <label>
     日付:
-    <input type="date" id="date" name="date">
+    <input type="date" id="date" name="date" required>
+  </label><br>
+
+  <label>
+    カテゴリ:
+    <input type="text" id="category" name="category" required placeholder="例:食費" required>
   </label><br>
 
   <button type="submit">保存</button>
@@ -42,7 +47,7 @@
     .then(r => r.json())
     .then(data => {
       if (!data.ok) {
-        alert("OCR失敗");
+        alert("OCRに失敗しました");
         return;
       }
 
@@ -55,6 +60,37 @@
       } else {
         document.getElementById("warning").innerText = "";
       }
+    });
+  });
+
+  // 保存処理を追加
+  confirmForm.addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const amount = document.getElementById("amount").value;
+    const date = document.getElementById("date").value;
+    const category = document.getElementById("category").value;
+
+    fetch("/receipt_save_api", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: JSON.stringify({
+        amount: amount,
+        date: date,
+        category: category
+      })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) {
+      alert(data.error);
+      return;
+      }
+
+      alert("保存しました！");
     });
   });
 
