@@ -447,6 +447,7 @@ def category_rename_api(request, category_id: int):
     )
     if exists:
         return JsonResponse({"ok": False, "error": "同じ名前のカテゴリが既にあるよ"}, status=409)
+    me = request.user #自分のメールアドレス
 
     cat.name = name
     cat.save(update_fields=["name"])

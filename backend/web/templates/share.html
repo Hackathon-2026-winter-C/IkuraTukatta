@@ -4,7 +4,7 @@
     <h1>共有ページ</h1>
 
     {# 未所属の場合の作成動線 #}
-    {% if not user.group %}
+    {% if not user.group %}  <!--user=自分 user.group=グループにユーザーが紐付いているか-->
     <p style="color:red">共有するには先に共有グループを作成してください</p>
 
     <form method="post" action="{% url 'group_create' %}">

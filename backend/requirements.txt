@@ -4,7 +4,15 @@ python-dotenv>=1.0
 django-browser-reload>=1.12
 boto3
 Pillow
-pytesseract
 numpy
 opencv-python-headless
 easyocr
+
+
+django-allauth>=0.60
+requests
+PyJWT
+cryptography
+
+
+
