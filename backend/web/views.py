@@ -14,7 +14,6 @@ from django.views.decorators.http import require_GET, require_POST
 from collections import defaultdict
 
 from PIL import Image 
-import pytesseract
 import easyocr
 import cv2
 import numpy as np
@@ -24,7 +23,7 @@ from .models import Category, MoneyFlow, User
 
 reader = easyocr.Reader(['ja', 'en'], gpu=False)
 
-# OCRをカード, キャッシュレス対応にする
+# ===== OCRをカード, キャッシュレス対応にする =====
 def extract_total_amount(text):
     lines = text.splitlines()
 
@@ -45,7 +44,7 @@ def extract_total_amount(text):
             elif i + 1 < len(lines):
                 m2 = re.search(amount_pattern, lines[i+1])
                 if m2:
-                    return int(m2/group(1).replace(",", "")), None, 0.9
+                    return int(m2.group(1).replace(",", "")), None, 0.9
                 
     # ② 最大フォールバック
     candidates = []                
@@ -54,7 +53,7 @@ def extract_total_amount(text):
             continue
 
         for m in re.finditer(amount_pattern, line):
-            val = int(m.group(1).replace(",". ""))
+            val = int(m.group(1).replace(",", ""))
             if 50 <= val <= 100000:
                 candidates.append(val)
 
@@ -478,7 +477,7 @@ def category_delete_api(request, category_id: int):
     return JsonResponse({"ok": True, "deleted_id": category_id})
 
 
-# レシートアップロードAPI
+# ===== レシートアップロードAPI(解析のみ) =====
 @login_required(login_url="login")
 @require_POST
 @csrf_protect
@@ -537,19 +536,18 @@ def receipt_upload_api(request):
     total, amount_warning, confidence = extract_total_amount(text)
 
     if total is None:
+        expense_date = datetime.today().date()
         return JsonResponse({
             "ok":True,
-            "amount": total,
+            "amount": 0,
             "date": expense_date.strftime("%Y-%m-%d"),
-            "warning": amount_warning or date_warning,
+            "warning": amount_warning,
             "confidence": confidence
         })
     
     # 日付抽出(OCR誤認補正あり)
-    text_for_date = text \
-        .replace("村", "月") \
-        .replace('"', "日") \
-        .replace("'", "日")
+    date_warning = None
+    text_for_date = text.replace("村", "月").replace('"', "日").replace("'", "日")
     
     date_match = re.search(
         r"(\d{2,4}年\d{1,2}月\d{1,2}日)",
@@ -576,24 +574,49 @@ def receipt_upload_api(request):
             expense_date = datetime.today().date()
             date_warning = "日付の解析に失敗したため今日の日付を設定しました"
    
-    # 支出カテゴリ
-    category = Category.objects.filter(user=request.user, is_in_type=False).first()
-    if not category:
-        return JsonResponse({"ok": False, "error": "カテゴリが存在しません"}, status=400)
-    
-    MoneyFlow.objects.create(
-        category=category,
-        amount=total,
-        expense_date=expense_date,
-        memo="レシートから自動登録"
-    )
 
     return JsonResponse({
         "ok": True, 
         "amount": total, 
         "date": expense_date.strftime("%Y-%m-%d"),
-        "warning": date_warning
+        "warning": date_warning,
+        "confidence": confidence,
     })
+
+# ===== 保存用API =====
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def receipt_save_api(request):
+    data = json.loads(request.body.decode("utf-8"))
+
+    try:
+        amount = int(data.get("amount"))
+        if amount <= 0:
+            return JsonResponse({"ok": False, "error": "金額が不正です"}, status=400)
+        
+        date_str = data.get("date")
+        if not date_str:
+            return JsonResponse({"ok": False, "error": "日付がありません"}, status=400)
+        
+        expense_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except Exception:
+        return JsonResponse({"ok": False, "error": "入力値が不正です"}, status=400)
+
+    category = Category.objects.filter(user=request.user, is_in_type=False).order_by("id").first()
+    if not category:
+        return JsonResponse({"ok": False, "error": "カテゴリが存在しません"}, status=400)
+
+    mf = MoneyFlow.objects.create(
+        category=category,
+        amount=amount,
+        expense_date=expense_date,
+        memo="レシートから自動登録"
+    )
+
+    return JsonResponse({"ok": True, "id": mf.id})
+
+
 
 
 @login_required(login_url="login")
