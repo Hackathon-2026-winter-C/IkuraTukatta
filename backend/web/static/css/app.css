@@ -56,6 +56,14 @@ html[data-theme="dark"] {
     margin: 0 auto;
 }
 
+/* card 共通 */
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--rounded-box, 1rem)
+}
+
 /* 認証フォーム共通 */
 .auth-form {
     display: flex;
@@ -131,6 +139,13 @@ html[data-theme="light"] .btn-black {
 .btn-nodark-sub {
     background: #e8e8e8;
     color: #111;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
+/* orange ダークモードの適用なし */
+.btn-nodark-orange {
+    background: #FF9400;
+    color: #fff;
     box-shadow: var(--app-mainbutton-shadow);
 }
 
