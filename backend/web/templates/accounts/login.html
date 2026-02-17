@@ -4,12 +4,11 @@
 
 
 <main class="bg-black flex flex-col items-center min-h-[100dvh] w-full justify-end gap-6">
-  {% comment %} ロゴ画像 {% endcomment %}
+  {# ロゴ画像 #}
   <div class="pt-8 pb-4">
     <img src="{% static 'assets/images/login.png' %}" alt="いくらつかった？" class="w-[80vw] max-w-[380px]" />
   </div>
 
-  {% comment %} ログインフォーム {% endcomment %}
   <div class="neu-panel w-full">
     <form class="auth-form" method="post" action="{% url 'login' %}">
       {% csrf_token %}
@@ -18,7 +17,6 @@
 
       <button type="submit" class="btn btn-main">Login</button>
 
-      <div class="text-center text-black my-2">OR</div>
 
       <a href="{% provider_login_url 'google' process='login' %}" class="btn btn-sub flex items-center justify-center gap-2">
         <img src="{% static 'assets/images/google.svg' %}" alt="Google" class="w-4 h-4" />
@@ -27,12 +25,19 @@
       {% if error %}
     <p class="text-red-500 text-sm">{{ error }}</p>
   {% endif %}
-
-      <div class="text-center text-black my-2">
-        アカウントをお持ちでない方は
-        <a href="{% url 'signup' %}" class="text-[#FF9400] font-bold">こちら</a>
-      </div>
     </form>
+
+    <div class="text-center text-black my-2">OR</div>
+
+    <button type="button" class="btn btn-sub flex items-center justify-center gap-2">
+      <img src="{% static 'assets/images/google.svg' %}" alt="Google" class="w-4 h-4" />
+      <span>Continue with Google</span>
+    </button>
+
+    <div class="text-center text-black my-2">
+      アカウントをお持ちでない方は
+      <a href="{% url 'signup' %}" class="text-[#FF9400] font-bold">こちら</a>
+    </div>
   </div>
 </main>
-{% endblock %}
+{% endblock content %}
