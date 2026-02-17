@@ -21,6 +21,7 @@
       <ul class="space-y-2">
         {% for expense in expenses_for_date %}
         <li class="border-b border-gray-200/60 dark:border-gray-700/60 last:border-b-0">
+          {% if expense.can_edit %}
           <a id="mf-{{ expense.id }}" href="{% url 'dashboard_moneyflow_edit' %}?id={{ expense.id }}&mode={{ expense.mode }}&focus={{ expense.id }}" class="grid grid-cols-[auto_1fr] items-center py-2 rounded-2xl transition active:scale-[0.99] hover:bg-black/5">
             <!-- 日付 -->
             <div class="flex flex-col items-center mr-2 text-center space-y-0">
@@ -55,6 +56,43 @@
               </div>
             </div>
           </a>
+          {% else %}
+          <div id="mf-{{ expense.id }}" class="grid grid-cols-[auto_1fr] items-center py-2 rounded-2xl">
+            <!-- 日付 -->
+            <div class="flex flex-col items-center mr-2 text-center space-y-0">
+              {% language 'en' %}
+              <span class="text-xs text-[rgb(var(--app-text))] leading-snug">{{ expense_date|date:"M" }}</span>
+              <span class="text-lg font-bold text-[rgb(var(--app-text))] leading-snug">{{ expense_date|date:"d" }}</span>
+              <span class="text-xs text-[rgb(var(--app-text))] leading-snug">{{ expense_date|date:"D" }}</span>
+              {% endlanguage %}
+            </div>
+
+            <!-- ✅ ここが差し替えポイント：内容行（左 + 右アバター） -->
+            <div class="flex items-center justify-between w-full gap-3 pl-2">
+              <!-- 左：カテゴリ等 -->
+              <div class="flex items-center justify-start gap-3 min-w-0">
+                <div class="flex flex-col items-center w-12 shrink-0">
+                  <div class="text-[{{ expense.categoryColor }}]">{% include "icons/category/"|add:expense.icon_key|add:".svg" %}</div>
+                  <span class="text-[{{ expense.categoryColor }}] text-[11px] leading-tight"> {{ expense.category }} </span>
+                </div>
+
+                <div class="flex flex-col space-y-0.5 min-w-0">
+                  <span class="text-xl text-[rgb(var(--app-text))] font-medium"> {{ expense.amount_sign }}{{ expense.amount|floatformat:0|intcomma }} </span>
+                  <span class="text-sm text-[rgb(var(--app-text))] opacity-80 truncate"> {{ expense.memo }} </span>
+                </div>
+              </div>
+
+              <!-- 右：アバター -->
+              <div class="shrink-0">
+                {% if expense.owner_image_url %}
+                <img src="{{ expense.owner_image_url }}" alt="avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-white/40" />
+                {% else %}
+                <div class="w-9 h-9 rounded-full bg-white/40 grid place-items-center text-xs font-bold">?</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
         </li>
         {% endfor %}
       </ul>

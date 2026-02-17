@@ -23,18 +23,17 @@
         <input type="email" id="email" name="email" class="input {% if form.errors.email %}border-red-500 ring-1 ring-red-400{% endif %}" value="{{ form.email.value|default_if_none:'' }}" placeholder="メールアドレス" />
         <input type="password" id="password" name="password1" class="input" placeholder="パスワード" />
         <input type="password" id="confirm_password" name="password2" class="input" placeholder="確認用パスワード" />
-        {% for err in form.errors.password2 %} <<<<<<< Updated upstream
+        {% for err in form.errors.password2 %}
         <p class="text-red-500 text-sm">{{ err }}</p>
         {% endfor %} {% for err in form.errors.email %}
         <p class="text-red-500 text-sm">{{ err }}</p>
         {% endfor %}
-        <button type="submit" class="btn btn-main">登録</button>
+        <button type="submit" class="btn btn-main">登　録</button>
 
         <div class="text-center text-black my-2">
           アカウントをお持ちの方は
           <a href="{% url 'login' %}" class="text-[#FF9400] font-bold">ログイン</a>
         </div>
-        <<<<<<< Updated upstream
       </form>
     </div>
     <script type="module" src="{% static 'js/profileImg-change.js' %}" defer></script>

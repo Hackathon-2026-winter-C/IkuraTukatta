@@ -1,4 +1,4 @@
-<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" class="other-exp-icon">
   <g transform="translate(-0.51 0.51)">
     <!-- 右上キラッ -->
     <path d="M23.5126 7.81247H25.2126C24.9746 7.47497 24.7246 7.16247 24.4626 6.84997L23.5126 7.81247Z" fill="currentColor"/>
@@ -14,7 +14,7 @@
     />
 
     <!-- ￥：確実に見える白（中心合わせ済み） -->
-    <g transform="translate(11.05 9.66) scale(0.03)" fill="#FFFFFF">
+    <g class="yen-mark" transform="translate(11.05 9.66) scale(0.03)" fill="#FFFFFF">
       <path d="M237.305 174.805V216.064H18.5547V174.805H237.305ZM237.305 245.605V286.621H18.5547V245.605H237.305ZM114.502 182.373L186.279 0H262.207L163.33 218.506H123.047L114.502 182.373ZM75.9277 0L149.17 184.57L139.648 218.506H99.1211L0 0H75.9277ZM166.748 170.166V355.469H93.75V170.166H166.748Z"/>
     </g>
   </g>

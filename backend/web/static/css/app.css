@@ -488,6 +488,14 @@ html[data-theme="dark"] .btn-red:active {
     filter: brightness(0) invert(1);
 }
 
+/* other_exp の ￥ は選択時も見えるように調整 */
+.cat-pick.is-selected .cat-inner svg.other-exp-icon {
+    filter: none;
+}
+.cat-pick.is-selected .cat-inner svg.other-exp-icon .yen-mark {
+    fill: var(--c) !important;
+}
+
 /* ===== List: Category Icon ===== */
 .list-category-icon {
     width: 24px;

@@ -1,0 +1,29 @@
+{% load static %}
+
+<div class="px-6 mt-6 flex flex-col items-center gap-4">
+  <button id="pick-profile-image" type="button" class="mx-auto block">
+      {% if request.user.image_url %}
+      <img id="profile-image-preview" src="{{ request.user.image_url }}" data-initial-src="{{ request.user.image_url }}" alt="preview" class="w-36 h-36 rounded-[18px] object-cover" />
+      {% else %}
+      <img id="profile-image-preview" src="{% static 'assets/images/default-avatar.png' %}" data-initial-src="{% static 'assets/images/default-avatar.png' %}" alt="preview" class="w-36 h-36 rounded-[18px] object-cover" />
+      {% endif %}
+  </button>
+
+  <input
+    id="profile-image-input"
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+    class="hidden"
+  />
+</div>
+
+<div class="px-6 mt-5">
+  <button
+    id="submit-profile-image"
+    type="button"
+    class="btn btn-main"
+    style="background: #ff9400; color: #fff; border: none; box-shadow: var(--app-mainbutton-shadow)"
+  >
+    変更する
+  </button>
+</div>

@@ -53,6 +53,71 @@ CATEGORY_ICON_KEYS = {
 IMMUTABLE_CATEGORY_NAMES = {"支出その他", "収入その他", "その他"}
 
 
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def account_profile_image_api(request):
+    profile_image = request.FILES.get("profile_image")
+    if not profile_image:
+        return JsonResponse({"ok": False, "error": "profile_image_required"}, status=400)
+
+    try:
+        key = save_profile_image(request.user.id, profile_image)
+        base_url = settings.AWS_S3_BASE_URL or (
+            f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com"
+        )
+        image_url = f"{base_url.rstrip('/')}/{key.lstrip('/')}"
+        request.user.image_url = image_url
+        request.user.save(update_fields=["image_url"])
+    except (BotoCoreError, ClientError, OSError, UnidentifiedImageError):
+        return JsonResponse({"ok": False, "error": "upload_failed"}, status=400)
+
+    return JsonResponse({"ok": True, "image_url": image_url})
+
+
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def account_username_api(request):
+    data = _json(request)
+    username = (data.get("username") or "").strip()
+    if not username:
+        return JsonResponse({"ok": False, "error": "username_required"}, status=400)
+
+    request.user.username = username
+    request.user.save(update_fields=["username"])
+    return JsonResponse({"ok": True, "username": username})
+
+
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def account_email_api(request):
+    data = _json(request)
+    email = (data.get("email") or "").strip().lower()
+    if not email:
+        return JsonResponse({"ok": False, "error": "email_required"}, status=400)
+
+    exists = User.objects.filter(email__iexact=email).exclude(id=request.user.id).exists()
+    if exists:
+        return JsonResponse({"ok": False, "error": "email_already_used"}, status=409)
+
+    request.user.email = email
+    request.user.save(update_fields=["email"])
+    return JsonResponse({"ok": True, "email": email})
+
+
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def account_delete_api(request):
+    user = request.user
+    ShareGroup.objects.filter(created_by_user=user).delete()
+    user.delete()
+    logout(request)
+    return JsonResponse({"ok": True})
+
+
 def _json(request):
     try:
         return json.loads(request.body.decode("utf-8"))
@@ -93,13 +158,30 @@ def signup_page(request):
                 form.add_error(None, "プロフィール画像の保存に失敗しました。時間をおいて再度お試しください。")
             else:
                 login(request, user)
-                return redirect("dashboard")
+                request.session["show_theme_choice"] = True
+                return redirect("signup_theme_choice")
 
     # GETリクエスト
     else:
         form = EmailUserCreationForm()
 
     return render(request, "accounts/signup.html", {"form": form})
+
+
+@login_required(login_url="login")
+@ensure_csrf_cookie
+def signup_theme_choice_page(request):
+    if not request.session.get("show_theme_choice"):
+        return redirect("dashboard")
+    return render(request, "accounts/theme-choice.html")
+
+
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def signup_theme_choice_complete_api(request):
+    request.session.pop("show_theme_choice", None)
+    return JsonResponse({"ok": True})
 
 
 # ログイン
@@ -322,6 +404,7 @@ def dashboard_list_page(request):
     grouped_expenses = defaultdict(list)
     for e in qs:
         u = e.category.user
+        can_edit = bool(u and u.id == request.user.id)
         grouped_expenses[e.expense_date].append(
             {
                 "id": e.id,
@@ -332,6 +415,7 @@ def dashboard_list_page(request):
                 "categoryColor": e.category.color,
                 "icon_key": e.category.icon_key,
                 "memo": e.memo,
+                "can_edit": can_edit,
                 "owner_username": (u.username if u else ""),
                 "owner_email": (u.email if u else ""),
                 "owner_image_url": (u.image_url if u else None),
@@ -765,6 +849,45 @@ def account_edit(request):
         form = UserUpdateForm(instance=request.user)
 
     return render(request, "accounts/account_edit.html", {"form": form})
+
+
+@login_required(login_url="login")
+@require_POST
+def profile_image_update_api(request):
+    # form-data の "profile_image" を受け取る（未選択なら400）
+    profile_image = request.FILES.get("profile_image")
+    if not profile_image:
+        return JsonResponse({"ok": False, "error": "画像が未選択です"}, status=400)
+
+    # content-type を最低限チェック（画像以外は受け付けない）
+    content_type = profile_image.content_type or ""
+    if not content_type.startswith("image/"):
+        return JsonResponse({"ok": False, "error": "画像ファイルのみアップロード可能です"}, status=400)
+
+    try:
+        # 既存サービスを再利用して
+        # 1) 3MB超なら圧縮 2) S3アップロード 3) 保存キー返却
+        key = save_profile_image(request.user.id, profile_image)
+
+        # 返却キーから公開URLを組み立てる
+        base_url = settings.AWS_S3_BASE_URL or (
+            f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com"
+        )
+        image_url = f"{base_url.rstrip('/')}/{key.lstrip('/')}"
+
+        # users.image_url を最新URLに更新
+        request.user.image_url = image_url
+        request.user.save(update_fields=["image_url"])
+    except (BotoCoreError, ClientError, OSError, UnidentifiedImageError):
+        # S3接続失敗 / 画像変換失敗などは500で返す
+        return JsonResponse(
+            {"ok": False, "error": "プロフィール画像の保存に失敗しました"},
+            status=500,
+        )
+
+    # 成功時はフロントが即時反映できるようURLを返す
+    return JsonResponse({"ok": True, "image_url": image_url})
+
 
 
 @require_GET
