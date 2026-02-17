@@ -1,52 +1,69 @@
 # backend/web/ledger_utils.py
-from django.contrib.auth import get_user_model
 
-from .models import LedgerShare
+from django.contrib.auth import get_user_model
+from .models import ShareGroupMember
 
 User = get_user_model()
 
-SESSION_KEY = "ledger_owner_id"
+# 現在選択中の共有グループIDを保存するためのセッションキー
+GROUP_SESSION_KEY = "current_share_group_id"
 
+# 共有グループの利用可否を判定する
+def can_use_group(group_id: int, user) -> bool:
 
-def can_view(owner_id: int, viewer) -> bool:
-    """
-    viewer(ログイン中ユーザー)が owner_id の家計簿を閲覧できるか
-    - 自分自身の家計簿はOK
-    - LedgerShare(owner=owner_id, viewer=viewer) があればOK
-    """
-    if not viewer or not getattr(viewer, "is_authenticated", False):
+    # 未ログインユーザーは利用不可
+    if not user or not getattr(user, "is_authenticated", False):
         return False
 
-    if int(owner_id) == int(viewer.id):
-        return True
+    # group_id と user.id の組み合わせが存在するか確認
+    return ShareGroupMember.objects.filter(
+        share_group_id=group_id,
+        user_id=user.id,
+    ).exists()
 
-    return LedgerShare.objects.filter(owner_id=owner_id, viewer_id=viewer.id).exists()
+# セッションから現在のグループIDを取得する
+def get_current_group_id(request):
 
+    user = request.user
 
-def get_ledger_owner(request):
-    """
-    セッションに選択中の家計簿ownerが入っていればそれを返す。
-    不正/権限なし/存在しない場合は自分に戻す。
-    """
-    viewer = request.user
-    owner_id = request.session.get(SESSION_KEY)
+    # セッションから現在のグループIDを取得
+    gid = request.session.get(GROUP_SESSION_KEY)
+    if not gid:
+        return None
 
-    if not owner_id:
-        return viewer
-
+    # int に変換できない場合は破棄
     try:
-        owner_id = int(owner_id)
+        gid = int(gid)
     except Exception:
-        request.session.pop(SESSION_KEY, None)
-        return viewer
+        request.session.pop(GROUP_SESSION_KEY, None)
+        return None
 
-    if not can_view(owner_id, viewer):
-        request.session.pop(SESSION_KEY, None)
-        return viewer
+    # ユーザーがそのグループを利用できるか確認
+    if not can_use_group(gid, user):
+        # 不正な値なのでセッションから削除
+        request.session.pop(GROUP_SESSION_KEY, None)
+        return None
 
-    owner = User.objects.filter(id=owner_id).first()
-    if not owner:
-        request.session.pop(SESSION_KEY, None)
-        return viewer
+    return gid
 
-    return owner
+# 現在の表示対象となる user_id のリストを返す
+def get_scope_user_ids(request):
+
+    user = request.user
+
+    # 現在有効なグループIDを取得
+    gid = get_current_group_id(request)
+
+    # グループ未選択の場合は自分のみ
+    if not gid:
+        return [user.id]
+
+    # グループメンバーの user_id 一覧を取得
+    member_ids = list(
+        ShareGroupMember.objects
+        .filter(share_group_id=gid)
+        .values_list("user_id", flat=True)
+    )
+
+    # 何らかの理由で空配列になった場合の保険
+    return member_ids or [user.id]

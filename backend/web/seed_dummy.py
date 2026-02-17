@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.db import transaction
 
 from web.models import Category, MoneyFlow, User
+from web.category_defaults import DEFAULT_CATEGORY_SPECS
 
 
 @transaction.atomic
@@ -16,24 +17,8 @@ def seed():
         user.set_password("demo1234")
         user.save(update_fields=["password"])
 
-    category_specs = [
-        # 支出（0）
-        ("食費", False, "food", "#FFB44F"),
-        ("住居費", False, "home", "#E1BFFF"),
-        ("交通費", False, "transport", "#62B2FD"),
-        ("光熱費", False, "utilities", "#9BDFC4"),
-        ("娯楽", False, "fun", "#F99BAB"),
-        ("洋服", False, "clothes", "#FFC6D7"),
-        ("医療費", False, "medical", "#9F97F7"),
-        ("日用品", False, "daily", "#AEE3F5"),
-        ("支出その他", False, "other_exp", "#86BE63"),
-        # 収入（1）
-        ("給料", True, "salary", "#FACC15"),
-        ("収入その他", True, "other_inc", "#FFD5D2"),
-    ]
-
     categories = {}
-    for name, is_in_type, icon_key, color_hex in category_specs:
+    for name, is_in_type, icon_key, color_hex in DEFAULT_CATEGORY_SPECS:
         cat, _ = Category.objects.update_or_create(
             user=user,
             group=None,
@@ -42,7 +27,7 @@ def seed():
                 "color": color_hex,
                 "is_in_type": is_in_type,
                 "icon_key": icon_key,
-                "is_builtin": False,
+                "is_builtin": True,
             },
         )
         categories[name] = cat

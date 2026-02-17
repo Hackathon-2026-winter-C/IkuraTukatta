@@ -1,153 +1,175 @@
 // backend/web/static/js/ledger-switcher.js
+(() => {
+  const escapeHtml = (s) =>
+    String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
 
-const csrftoken = window.appUtils.getCookie("csrftoken");
+  const getCookie = (name) => {
+    const m = document.cookie.match(new RegExp("(^|;\\s*)" + name + "=([^;]+)"));
+    return m ? decodeURIComponent(m[2]) : "";
+  };
 
-async function apiGet(url) {
-  const res = await fetch(url, { credentials: "same-origin" });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw { status: res.status, data };
-  return data;
-}
+  const apiGet = async (url) => {
+    const res = await fetch(url, { credentials: "same-origin" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw { status: res.status, data };
+    return data;
+  };
 
-async function apiPost(url, body) {
-  const csrftoken = getCookie("csrftoken");
-  const res = await fetch(url, {
-    method: "POST",
-    credentials: "same-origin",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrftoken || "",
-    },
-    body: JSON.stringify(body || {}),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw { status: res.status, data };
-  return data;
-}
+  const apiPost = async (url, body) => {
+    const csrftoken = getCookie("csrftoken");
+    const res = await fetch(url, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
+      body: JSON.stringify(body || {}),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw { status: res.status, data };
+    return data;
+  };
 
-function escapeHtml(s) {
-  return String(s ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
+  const onReady = (fn) => {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
+    else fn();
+  };
 
-document.addEventListener("DOMContentLoaded", () => {
-  const root = document.getElementById("ledger-switcher");
-  if (!root) return;
+  onReady(() => {
+    const root = document.getElementById("ledger-switcher");
+    if (!root) return;
 
-  const btn = document.getElementById("ledger-switcher-btn");
-  const menu = document.getElementById("ledger-switcher-menu");
-  const labelEl = document.getElementById("ledger-switcher-label");
-  const subEl = document.getElementById("ledger-switcher-sub");
-  const chevronEl = document.getElementById("ledger-switcher-chevron");
+    const btn = document.getElementById("ledger-switcher-btn");
+    const menu = document.getElementById("ledger-switcher-menu");
+    const labelEl = document.getElementById("ledger-switcher-label");
+    const badgeEl = document.getElementById("ledger-switcher-badge");
+    const chevron = document.getElementById("ledger-switcher-chevron");
 
-  let isOpen = false;
+    if (!btn || !menu || !labelEl) return;
 
-  function openMenu() {
-    isOpen = true;
-    menu.classList.remove("hidden");
-    chevronEl?.classList.add("rotate-180");
-  }
-  function closeMenu() {
-    isOpen = false;
-    menu.classList.add("hidden");
-    chevronEl?.classList.remove("rotate-180");
-  }
-  function toggleMenu() {
-    isOpen ? closeMenu() : openMenu();
-  }
+    let currentId = null;
+    let items = [];
 
-  // 外側クリックで閉じる
-  document.addEventListener("click", (e) => {
-    if (!isOpen) return;
-    if (!root.contains(e.target)) closeMenu();
-  });
+    const setLabel = (item) => {
+      if (!item) {
+        labelEl.textContent = "読み込み中…";
+        badgeEl?.classList.add("hidden");
+        return;
+      }
 
-  btn?.addEventListener("click", toggleMenu);
+      labelEl.textContent = item.name;
+      if (badgeEl) {
+        badgeEl.textContent = "表示中";
+        badgeEl.classList.remove("hidden");
+      }
+    };
 
-  async function loadOwners() {
-    // 初期状態
-    labelEl.textContent = "読み込み中…";
-    subEl.textContent = "";
+    const openMenu = () => {
+      root.classList.add("is-open");
+      btn.setAttribute("aria-expanded", "true");
+      menu.setAttribute("aria-hidden", "false");
+      chevron?.classList.add("rotate-180");
+    };
+    const closeMenu = () => {
+      root.classList.remove("is-open");
+      btn.setAttribute("aria-expanded", "false");
+      menu.setAttribute("aria-hidden", "true");
+      chevron?.classList.remove("rotate-180");
+    };
+    const toggleMenu = () => {
+      if (root.classList.contains("is-open")) closeMenu();
+      else openMenu();
+    };
 
-    try {
-      const data = await apiGet("/api/ledger/available/");
-      const owners = data.owners || [];
-      const currentOwnerId = data.current_owner_id;
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleMenu();
+    });
+    menu.addEventListener("click", (e) => e.stopPropagation());
+    document.addEventListener("click", closeMenu);
 
-      // 現在選択中表示
-      const current = owners.find((o) => o.id === currentOwnerId) || owners[0];
-      const currentName = (current?.username || "").trim() || current?.email || "My";
-      labelEl.textContent = currentName;
-      subEl.textContent = current && current.id !== currentOwnerId ? "" : "";
+    btn.setAttribute("aria-expanded", "false");
+    menu.setAttribute("aria-hidden", "true");
 
-      // 選択肢メニュー
-      menu.innerHTML = owners
-        .map((o) => {
-          const name = (o.username || "").trim() || o.email;
-          const isActive = o.id === currentOwnerId;
+    const renderMenu = () => {
+      if (!items.length) {
+        menu.innerHTML = `<p class="text-xs px-2 py-2" style="color: rgb(var(--app-text)); opacity: 0.6;">グループがありません</p>`;
+        return;
+      }
+
+      const activeId = currentId ?? 0;
+      const others = items.filter((it) => it.id !== activeId);
+      if (!others.length) {
+        menu.innerHTML = `<p class="text-xs px-2 py-2" style="color: rgb(var(--app-text)); opacity: 0.6;">他の選択肢がありません</p>`;
+        return;
+      }
+
+      menu.innerHTML = others
+        .map((it) => {
           return `
             <button type="button"
-              class="w-full text-left px-4 py-3 rounded-2xl bg-white/40 app-shadow flex items-center justify-between"
-              data-owner-id="${o.id}"
-              ${isActive ? 'aria-current="true"' : ""}
-            >
-              <span class="text-sm font-semibold text-[rgb(var(--app-text))]">${escapeHtml(name)}</span>
-              ${isActive ? `<span class="text-[11px] opacity-60 text-[rgb(var(--app-text))]">選択中</span>` : `<span class="text-[11px] opacity-60 text-[rgb(var(--app-text))]">${escapeHtml(o.email || "")}</span>`}
+              class="ledger-switcher__option"
+              style="color: rgb(var(--app-text));"
+              data-gid="${it.id}"
+              data-gname="${escapeHtml(it.name)}">
+              <span class="text-sm font-semibold">${escapeHtml(it.name)}</span>
             </button>
           `;
         })
         .join("");
 
-      // クリック時：owner切替 → session保存 → reload
-      menu.querySelectorAll("button[data-owner-id]").forEach((b) => {
+      menu.querySelectorAll("button[data-gid]").forEach((b) => {
         b.addEventListener("click", async () => {
-          const ownerId = parseInt(b.dataset.ownerId, 10);
-          if (!ownerId) return;
+          const gid = parseInt(b.dataset.gid, 10);
+          if (Number.isNaN(gid)) return;
 
-          // すでに選択中なら閉じるだけ
-          const cur = owners.find((x) => x.id === currentOwnerId);
-          if (cur && cur.id === ownerId) {
-            closeMenu();
+          try {
+            await apiPost("/api/groups/select/", { group_id: gid });
+          } catch (_) {
             return;
           }
 
-          // UI: 一時的に無効化
-          menu.querySelectorAll("button").forEach((x) => (x.disabled = true));
-          labelEl.textContent = "切替中…";
-
-          try {
-            await apiPost("/api/ledger/select/", { owner_id: ownerId });
+          const prevId = currentId ?? 0;
+          if (gid !== prevId) {
             window.location.reload();
-          } catch (e) {
-            // 失敗したら戻す
-            const fallbackName = (current?.username || "").trim() || current?.email || "My";
-            labelEl.textContent = fallbackName;
-            menu.querySelectorAll("button").forEach((x) => (x.disabled = false));
-            closeMenu();
-            alert("切替に失敗したよ（権限がない/通信エラー）");
+            return;
           }
+
+          currentId = gid === 0 ? null : gid;
+          const selected = items.find((it) => it.id === (currentId ?? 0)) || items[0];
+          setLabel(selected);
+          renderMenu();
+          closeMenu();
         });
       });
+    };
 
-      // 候補が1人しかいないなら、ボタン押せないように
-      if (owners.length <= 1) {
-        btn.disabled = true;
-        btn.classList.add("opacity-70");
-        chevronEl?.classList.add("opacity-40");
+    const refresh = async () => {
+      labelEl.textContent = "読み込み中…";
+      menu.innerHTML = `<p class="text-xs px-2 py-2" style="color: rgb(var(--app-text)); opacity: 0.6;">読み込み中…</p>`;
+
+      try {
+        const data = await apiGet("/api/groups/available/");
+        const personal = data.personal || { id: 0, name: "自分" };
+        const groups = data.groups || [];
+        currentId = data.current_group_id ?? null;
+
+        items = [{ id: 0, name: personal.name }, ...groups.map((g) => ({ id: g.id, name: g.name }))];
+
+        const selected = items.find((it) => it.id === (currentId ?? 0)) || items[0];
+        setLabel(selected);
+        renderMenu();
+      } catch (_) {
+        labelEl.textContent = "読み込み失敗";
+        badgeEl?.classList.add("hidden");
+        menu.innerHTML = `<p class="text-xs text-red-500 px-2 py-2">読み込みに失敗しました</p>`;
       }
-    } catch (e) {
-      labelEl.textContent = "読み込み失敗";
-      menu.innerHTML = `
-        <div class="px-4 py-3 text-sm text-red-500">
-          owner一覧の取得に失敗したよ
-        </div>
-      `;
-    }
-  }
+    };
 
-  loadOwners();
-});
+    refresh();
+  });
+})();
