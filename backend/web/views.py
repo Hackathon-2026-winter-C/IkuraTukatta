@@ -5,12 +5,15 @@ import json
 import re
 
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_http_methods
 from collections import defaultdict
 
 from PIL import Image 
@@ -20,6 +23,9 @@ import numpy as np
 
 from .forms import EmailUserCreationForm, UserUpdateForm
 from .models import Category, MoneyFlow, User
+from .models import ShareGroup
+
+User = get_user_model()
 
 reader = easyocr.Reader(['ja', 'en'], gpu=False)
 
@@ -97,21 +103,28 @@ def index_page(request):
 # サインアップ
 @ensure_csrf_cookie
 def signup_page(request):
-    # POSTリクエスト
     if request.method == "POST":
         form = EmailUserCreationForm(request.POST)
-        # バリデーションOKならユーザー作成
         if form.is_valid():
             user = form.save()
-            login(request,user)
-            # ログイン画面へリダイレクト
 
+            raw_password = form.cleaned_data.get("password1")
+           
+            authed = authenticate(request, username=user.email, password=raw_password)
+            if authed is None:
+                authed = authenticate(request, username=user.username, password=raw_password)
+
+            if authed is None:
+               
+                return redirect("login")
+
+            login(request, authed)  
             return redirect("dashboard")
-    # GETリクエスト
     else:
         form = EmailUserCreationForm()
 
     return render(request, "accounts/signup.html", {"form": form})
+
 
 
 # ログイン
@@ -369,6 +382,7 @@ def _json(request):
 @login_required(login_url="login")
 @require_POST
 @csrf_protect
+
 def category_create_api(request):
     data = _json(request)
     name = (data.get("name") or "").strip()
@@ -705,6 +719,69 @@ def receipt_test_page(request):
         "categories": categories
     })
 
+#アカウントの共有ボタンを押すと共有ページに移動
+@login_required
+@require_http_methods(["GET", "POST"])
+def share_page(request):
+    #グループがない場合　グループ作成を見せる
+    #グループがある場合　メール招待フォームを見せる
+    if request.method == "GET":
+        return render(request, "share.html")
+
+    me = request.user #相手のメールアドレス
+
+    #1
+    if not getattr(me, "group_id", None):
+        return render(request, "share.html", {"error": "共有するには先に共有グループを作成してください"})
+    
+    #2
+    email = (request.POST.get("email") or "").strip().lower()
+    if not email:
+        return render(request,"share.html", {"error": "メールアドレスを入力してください"})
+    try: #エラー処理
+        target = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return render(request, "share.html", {"error": "そのメールアドレスのユーザーはいません"})
+    
+    #自分自身の招待は禁止
+    if target.pk == me.pk:
+        return render(request, "share.html", {"error": "自分自身は追加できません"})
+    
+    #同じグループ
+    if getattr(target, "group_id", None) == me.group_id:
+        return render(request, "share.html", {"message": "すでに同じ共有グループです"})
+    
+    #同時更新に備えるための atomic(原子性)
+    with transaction.atomic():
+        target.group_id = me.group_id
+        target.save(update_fields=["group_id"])
+
+    return render(request, "share.html", {"message": f"{email}を共有グループに追加しました"})
+
+@login_required
+@require_http_methods(["POST"])
+def group_create(request):
+
+    me = request.user
+
+    #ユーザーがグループに所属しているなら作らない
+    if getattr(me, "group_id", None):
+        return redirect("share")
+    
+    name = (request.POST.get("name") or "").strip()
+    if not name:
+        name = f"{me.email}のグループ"
+
+    with transaction.atomic():
+        group = ShareGroup.objects.create(
+            name=name,
+            owner_user=me,
+            )
+
+        me.group = group
+        me.save(update_fields=["group"])
+
+    return redirect("share")
 
 # サインアップ
 # def signup(request):

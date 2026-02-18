@@ -58,8 +58,10 @@ urlpatterns = [
     path("receipt_test/", views.receipt_test_page),
     path("receipt_upload_api", views.receipt_upload_api),
     path("receipt_save_api", views.receipt_save_api),
-]
-    path("dashboard/date/", views.dashboard_date_page, name="dashboard_date"), #
+
+    # path("dashboard/date/", views.dashboard_date_page, name="dashboard_date"), #
+    path("account/share", views.share_page, name="share"),
+    path("account/group/create", views.group_create, name="group_create"),
 
     
 

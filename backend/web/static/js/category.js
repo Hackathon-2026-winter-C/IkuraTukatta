@@ -149,6 +149,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    if (!csrftoken) {
+    errEl.textContent = "CSRFトークンが取得できてないから（ページを再読み込み/ログインしてね）";
+    errEl.classList.remove("hidden");
+    return;
+  }
+
+
     try {
       if (mode === "create") {
         const res = await fetch("/api/categories/create/", {
