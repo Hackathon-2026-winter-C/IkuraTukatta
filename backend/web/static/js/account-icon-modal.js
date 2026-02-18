@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const openBtn = document.getElementById("open-icon-modal");
   const modal = document.getElementById("icon-modal");
   const bg = document.getElementById("icon-modal-bg");
+  const closeBtns = modal?.querySelectorAll("[data-close-icon-modal]") || [];
 
   // 要素が無いページでは処理しない
   if (!openBtn || !modal || !bg) return;
@@ -27,6 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     close();
   });
+  closeBtns.forEach((btn) => btn.addEventListener("click", close));
 
   // Escキーでも閉じる
   document.addEventListener("keydown", (e) => {

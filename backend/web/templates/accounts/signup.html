@@ -14,7 +14,7 @@
 
       <div class="mx-auto w-full">
         <button type="button" id="pick-profile-image" class="mx-auto block">
-          <img id="profile-image-preview" src="{% static 'assets/images/signup_img.png' %}" alt="サインアップ画像" class="mx-auto mb-2 w-36 h-36  object-cover block shrink-0">
+          <img id="profile-image-preview" src="https://hackathon-media-s3-bucket-20260207.s3.ap-northeast-1.amazonaws.com/signup_img.png" alt="サインアップ画像" class="mx-auto mb-2 w-36 h-36  object-cover block shrink-0">
         </button>
 
         <!-- formの外に置く場合は form="signup-form" を付ける -->
@@ -44,6 +44,6 @@
         </form>
 
       </div>
-      <script type="module" src="{% static 'js/profileImg-change.js' %}" defer="defer"></script>
+      <script type="module" src="{% static 'js/signup-icon-change.js' %}" defer="defer"></script>
 
     {% endblock %}
