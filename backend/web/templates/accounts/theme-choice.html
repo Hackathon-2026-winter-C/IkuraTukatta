@@ -1,10 +1,12 @@
 {% extends 'accounts/base.html' %} {% load static %} {% block title %}カラーモード{% endblock title %} {% block content %}
-<div id="theme-choice-modal" class="fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-black/50"></div>
-  <div class="absolute left-0 right-0 bottom-0 px-0 pb-0 relative z-10">
-    <div class="neu-panel mx-auto w-full max-w-[420px] rounded-t-[80px] pt-[18px] text-black" data-theme="light">
+<div id="theme-choice-modal" class="fixed inset-0 bg-black/30 z-50">
+  <div class="absolute left-0 right-0 bottom-0 px-0 pb-0">
+    <div class="neu-panel mx-auto w-full max-w-[420px] rounded-t-[80px] pt-[18px] bg-[#E8E8E8] text-black" data-theme="light">
       <p class="text-[11px] text-[#888] ml-[26px] mt-2">カラーモード</p>
       {% include "components/modal/darkmode-modal.html" %}
     </div>
   </div>
 </div>
+
+<script src="{% static 'js/theme-choice.js' %}" defer></script>
+{% endblock %}
