@@ -2,8 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const openBtn = document.getElementById("open-username-modal");
   const modal = document.getElementById("username-modal");
   const bg = document.getElementById("username-modal-bg");
-  const closeBtns =
-    modal?.querySelectorAll("[data-close-username-modal]") || [];
+  const closeBtns = modal?.querySelectorAll("[data-close-username-modal]") || [];
   const usernameInput = document.getElementById("username-input");
   const submitBtn = document.getElementById("submit-username");
 
@@ -56,15 +55,14 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ username }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         throw new Error(data.error || "ユーザーネームの更新に失敗しました");
       }
 
-      // 成功後はページを再読み込みして表示値を最新化
       window.location.reload();
     } catch (err) {
-      alert(err.message || "エラーが発生しました");
+      alert(err?.message || "エラーが発生しました");
     } finally {
       submitBtn.disabled = false;
     }

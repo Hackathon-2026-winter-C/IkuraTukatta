@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ダークモードモーダル{% endblock title %}
+
+{% block content %}
+  <div class="w-full flex flex-col items-center gap-4 px-4 pt-10">
+    <div class="neu-panel w-full max-w-[420px] flex flex-col gap-3">
+      <div class="mx-auto w-full ">
+            <img src="{% static 'assets/images/signup_img.png' %}" alt="アカウント画像" class="mx-auto mb-2 w-36 h-36 object-contain block shrink-0">              
+            <h3 class="text-xl font-bold text-black text-center mb-3">ダークモードに設定しますか？</h3>
+      </div>
+        <button type="submit" class="btn btn-black w-full h-14 p-0 text-[16px] text-[#fff] text-center flex justify-center items-center font-light mb-2 leading-none">ダークモードへ変更</button>
+        <button type="submit" class="btn btn-nodark-sub w-full h-14 p-0 text-[16px] flex justify-center items-center font-light leading-none hover:bg-[#e8e8e8]">ライトモードのまま</button>
+    </div>
+  </div>
+{% endblock %}

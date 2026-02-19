@@ -1,30 +1,98 @@
 {% extends 'base.html' %} {% load static %} {% load humanize %} {% load i18n %} {% block title %} 支出リスト {% endblock title %} {% block content %}
-<main class="w-full flex flex-col items-center gap-4 px-4 pt-10 pb-36">
-  <div class="w-full max-w-[420px] flex flex-col gap-3">
-    <div class="radio-group w-full mx-auto mb-2.5 bg-[rgb(var(--app-bg))] app-shadow">
-      <h2 class="text-base flex justify-start items-center text-[rgb(var(--app-text))] w-full pl-5">{{ user_name }}</h2>
-    </div>
-    {# 日付ごとにカードを生成 #} {% for expense_date, expenses_for_date in grouped_expenses %}
-    <div class="card w-full mb-2.5 p-4 bg-[rgb(var(--app-bg))] app-shadow overflow-auto">
-      <ul class="space-y-5">
-        {% for expense in expenses_for_date %}
-        <li class="grid grid-cols-[auto_1fr] items-center last:border-b-0 last:pb-0">
-          <div class="flex flex-col items-center mr-2 text-center space-y-0">
-            {% language 'en' %}
-            <span class="text-xs text-[rgb(var(--app-text))] dark:text-gray-400 leading-snug"> {{ expense_date|date:"M" }} {# Feb #} </span>
-            <span class="text-lg font-bold text-[rgb(var(--app-text))] dark:text-white leading-snug"> {{ expense_date|date:"d" }} {# 06 #} </span>
-            <span class="text-xs text-[rgb(var(--app-text))] dark:text-gray-400 leading-snug"> {{ expense_date|date:"D" }} {# Fri #} </span>
-            {% endlanguage %}
-          </div>
 
-          <div class="flex items-center justify-start gap-2">
-            {% comment %} <span class="inline-block w-3 h-3 rounded-full mr-4" style="background-color: {{ expense.categoryColor }};"></span> {# 🔴 #} {% endcomment %}
-            <div class="flex flex-col items-center w-10 h-full">
-              <div class="text-[{{ expense.categoryColor }}]">{% include "icons/category/"|add:expense.icon_key|add:".svg" %}</div>
-              <span class="text-[{{ expense.categoryColor }}] text-xs ">{{expense.category}}</span>
+<main class="w-full flex flex-col items-center gap-4 px-4 pt-10 pb-10">
+  <div class="w-full max-w-[420px] flex flex-col gap-3">
+    <!-- ===== 共有プルダウン ===== -->
+    <div id="ledger-switcher" class="ledger-switcher w-full mb-2.5">
+      <button type="button" id="ledger-switcher-btn" class="ledger-switcher__btn">
+        <div class="flex items-center gap-2">
+          <span id="ledger-switcher-label" class="text-base text-[rgb(var(--app-text))]">読み込み中…</span>
+          <span id="ledger-switcher-badge" class="ledger-switcher__badge">表示中</span>
+        </div>
+
+        <span id="ledger-switcher-chevron" class="transition-transform duration-200"> {% include "icons/ui/chevron-down.svg" %} </span>
+      </button>
+
+      <div id="ledger-switcher-menu" class="ledger-switcher__menu" aria-hidden="true"></div>
+    </div>
+
+    {# 日付ごとにカードを生成 #} {% for expense_date, expenses_for_date in grouped_expenses %}
+    <div class="card w-full mb-2.5 p-4 bg-[rgb(var(--app-bg))] app-shadow">
+      <ul class="space-y-2">
+        {% for expense in expenses_for_date %}
+        <li class="border-b border-gray-200/60 dark:border-gray-700/60 last:border-b-0">
+          {% if expense.can_edit %}
+          <a id="mf-{{ expense.id }}" href="{% url 'dashboard_moneyflow_edit' %}?id={{ expense.id }}&mode={{ expense.mode }}&focus={{ expense.id }}" class="grid grid-cols-[auto_1fr] items-center py-2 rounded-2xl transition active:scale-[0.99] hover:bg-black/5">
+            <!-- 日付 -->
+            <div class="flex flex-col items-center mr-2 text-center space-y-0">
+              {% language 'en' %}
+              <span class="text-xs text-[rgb(var(--app-text))] leading-snug">{{ expense_date|date:"M" }}</span>
+              <span class="text-lg font-bold text-[rgb(var(--app-text))] leading-snug">{{ expense_date|date:"d" }}</span>
+              <span class="text-xs text-[rgb(var(--app-text))] leading-snug">{{ expense_date|date:"D" }}</span>
+              {% endlanguage %}
             </div>
-            <div class="flex flex-col space-y-0.5"><span class="text-xl text-[rgb(var(--app-text))] font-medium">{{ expense.amount_sign }}{{ expense.amount|floatformat:0|intcomma }}</span> {# -1,084 #} <span class="text-xl text-[rgb(var(--app-text))] font-medium">{{ expense.amount_sign }}{{ expense.amount|floatformat:0|intcomma }}</span> {# -1,084 #} <span class="text-sm text-[rgb(var(--app-text))]">{{ expense.memo }}</span> {# 食費 #}</div>
+
+            <div class="flex items-center justify-between w-full gap-3 pl-2">
+              <!-- 左：カテゴリ等 -->
+              <div class="flex items-center justify-start gap-3 min-w-0">
+                <div class="flex flex-col items-center w-12 shrink-0">
+                  <div class="text-[{{ expense.categoryColor }}]">{% include "icons/category/"|add:expense.icon_key|add:".svg" %}</div>
+                  <span class="text-[{{ expense.categoryColor }}] text-[11px] leading-tight"> {{ expense.category }} </span>
+                </div>
+
+                <div class="flex flex-col space-y-0.5 min-w-0">
+                  <span class="text-xl text-[rgb(var(--app-text))] font-medium"> {{ expense.amount_sign }}{{ expense.amount|floatformat:0|intcomma }} </span>
+                  <span class="text-sm text-[rgb(var(--app-text))] opacity-80 truncate"> {{ expense.memo }} </span>
+                </div>
+              </div>
+
+              <!-- 右：アバター -->
+              <div class="shrink-0">
+                {% if expense.owner_image_url %}
+                <img src="{{ expense.owner_image_url }}" alt="avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-white/40" />
+                {% else %}
+                <div class="w-9 h-9 rounded-full bg-white/40 grid place-items-center text-xs font-bold">?</div>
+                {% endif %}
+              </div>
+            </div>
+          </a>
+          {% else %}
+          <div id="mf-{{ expense.id }}" class="grid grid-cols-[auto_1fr] items-center py-2 rounded-2xl">
+            <!-- 日付 -->
+            <div class="flex flex-col items-center mr-2 text-center space-y-0">
+              {% language 'en' %}
+              <span class="text-xs text-[rgb(var(--app-text))] leading-snug">{{ expense_date|date:"M" }}</span>
+              <span class="text-lg font-bold text-[rgb(var(--app-text))] leading-snug">{{ expense_date|date:"d" }}</span>
+              <span class="text-xs text-[rgb(var(--app-text))] leading-snug">{{ expense_date|date:"D" }}</span>
+              {% endlanguage %}
+            </div>
+
+            <!-- ✅ ここが差し替えポイント：内容行（左 + 右アバター） -->
+            <div class="flex items-center justify-between w-full gap-3 pl-2">
+              <!-- 左：カテゴリ等 -->
+              <div class="flex items-center justify-start gap-3 min-w-0">
+                <div class="flex flex-col items-center w-12 shrink-0">
+                  <div class="text-[{{ expense.categoryColor }}]">{% include "icons/category/"|add:expense.icon_key|add:".svg" %}</div>
+                  <span class="text-[{{ expense.categoryColor }}] text-[11px] leading-tight"> {{ expense.category }} </span>
+                </div>
+
+                <div class="flex flex-col space-y-0.5 min-w-0">
+                  <span class="text-xl text-[rgb(var(--app-text))] font-medium"> {{ expense.amount_sign }}{{ expense.amount|floatformat:0|intcomma }} </span>
+                  <span class="text-sm text-[rgb(var(--app-text))] opacity-80 truncate"> {{ expense.memo }} </span>
+                </div>
+              </div>
+
+              <!-- 右：アバター -->
+              <div class="shrink-0">
+                {% if expense.owner_image_url %}
+                <img src="{{ expense.owner_image_url }}" alt="avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-white/40" />
+                {% else %}
+                <div class="w-9 h-9 rounded-full bg-white/40 grid place-items-center text-xs font-bold">?</div>
+                {% endif %}
+              </div>
+            </div>
           </div>
+          {% endif %}
         </li>
         {% endfor %}
       </ul>
@@ -33,5 +101,29 @@
     <p class="text-center text-gray-500 dark:text-gray-400">支出データがありません。</p>
     {% endfor %}
   </div>
+
+  <script src="{% static 'js/ledger-switcher.js' %}" defer></script>
 </main>
-{% endblock content%}
+
+<script>
+  (() => {
+    const url = new URL(window.location.href);
+    const focus = url.searchParams.get("focus");
+    if (!focus) return;
+
+    const el = document.getElementById(`mf-${focus}`);
+    if (!el) return;
+
+    el.style.scrollMarginTop = "96px";
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    el.classList.add("ring-2", "ring-[#FF9400]", "rounded-xl");
+    setTimeout(() => {
+      el.classList.remove("ring-2", "ring-[#FF9400]", "rounded-xl");
+    }, 1200);
+
+    url.searchParams.delete("focus");
+    history.replaceState(null, "", url.toString());
+  })();
+</script>
+{% endblock content %}

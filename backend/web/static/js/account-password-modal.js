@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         throw new Error(data.error || "パスワードの更新に失敗しました");
       }

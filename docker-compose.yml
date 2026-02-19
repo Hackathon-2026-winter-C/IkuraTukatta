@@ -11,7 +11,7 @@ services:
       - mysql_data:/var/lib/mysql
       # - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD","mysqladmin","ping","-h","127.0.0.1","-u","root","-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -37,19 +37,19 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: ["bash","scripts/entrypoint.sh"]
+    command: ["bash", "scripts/entrypoint.sh"]
     ports:
-      - "8000:8000" 
+      - "8000:8000"
       # - "8000" 本番用
- 
+
   nginx:
     image: nginx:1.27-alpine
     depends_on:
-     - backend
+      - backend
     ports:
       - "80:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
-      
+
 volumes:
   mysql_data:
