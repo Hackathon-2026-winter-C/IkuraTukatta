@@ -6,9 +6,17 @@ import re
 from collections import defaultdict
 
 from django.conf import settings
-from django.db import transaction
-from django.contrib.auth import authenticate, login, logout
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.db import IntegrityError, transaction
+from botocore.exceptions import BotoCoreError, ClientError
+from PIL import UnidentifiedImageError
+
+from .profile_image_service import save_profile_image
+
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.password_validation import validate_password
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
@@ -395,6 +403,7 @@ def dashboard_page(request):
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def dashboard_list_page(request):
+    user_email = request.user.email
     scope_user_ids = get_scope_user_ids(request)
 
     qs = (
@@ -852,7 +861,7 @@ def account_edit(request):
 
     return render(request, "accounts/account_edit.html", {"form": form})
 
-
+# ユーザーのプロフィール画像の更新API
 @login_required(login_url="login")
 @require_POST
 def profile_image_update_api(request):
@@ -889,6 +898,124 @@ def profile_image_update_api(request):
 
     # 成功時はフロントが即時反映できるようURLを返す
     return JsonResponse({"ok": True, "image_url": image_url})
+
+# ユーザーネームの変更API
+@login_required(login_url="login")
+@require_POST
+def account_username_update_api(request):
+    # 期待フォーマット: {"username": "new_name"}
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return JsonResponse({"ok": False, "error": "リクエスト形式が不正です"}, status=400)
+
+    # username を取り出し、前後の空白を除去して正規化する
+    username = (payload.get("username") or "").strip()
+
+    # 入力チェック（空文字・長すぎる値を拒否）
+    if not username:
+        return JsonResponse({"ok": False, "error": "ユーザーネームを入力してください"}, status=400)
+    if len(username) > 150:
+        return JsonResponse({"ok": False, "error": "ユーザーネームは150文字以内で入力してください"}, status=400)
+
+    # 同値更新はDB更新せず成功を返す
+    if request.user.username == username:
+        return JsonResponse({"ok": True, "username": username, "updated": False})
+
+    # username を保存する
+    request.user.username = username
+    request.user.save(update_fields=["username"])
+
+    # 成功レスポンス（最新値を返す）
+    return JsonResponse({"ok": True, "username": request.user.username, "updated": True})
+
+
+# メールアドレスの変更API
+@login_required(login_url="login")
+@require_POST
+def account_user_email_update_api(request):
+    # 期待フォーマット: {"email": "new@example.com"}
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return JsonResponse({"ok": False, "error": "リクエスト形式が不正です"}, status=400)
+
+    #　email を取り出して正規化（空白除去 + 小文字化）
+    email = (payload.get("email") or "").strip().lower()
+
+    #　入力チェック
+    if not email:
+        return JsonResponse({"ok": False, "error": "メールアドレスを入力してください"}, status=400)
+    try:
+        validate_email(email)
+    except ValidationError:
+        return JsonResponse({"ok": False, "error": "メールアドレスの形式が不正です"}, status=400)
+
+    #　同値更新はDB更新せず成功を返す
+    if request.user.email == email:
+        return JsonResponse({"ok": True, "email": email, "updated": False})
+
+    #　先に重複確認を行う
+    if User.objects.exclude(pk=request.user.pk).filter(email=email).exists():
+        return JsonResponse({"ok": False, "error": "このメールアドレスは使用されています"}, status=409)
+
+    #　email を保存する
+    request.user.email = email
+    try:
+        request.user.save(update_fields=["email"])
+    except IntegrityError:
+        # 競合が同時に起きた場合の最終防衛
+        return JsonResponse({"ok": False, "error": "このメールアドレスは使用されています"}, status=409)
+
+    # 成功レスポンス（最新値を返す）
+    return JsonResponse({"ok": True, "email": request.user.email, "updated": True})
+
+
+# パスワードの変更API
+@login_required(login_url="login")
+@require_POST
+def account_user_password_update_api(request):
+    # 期待フォーマット:
+    # {
+    #   "current_password": "現在のパスワード",
+    #   "new_password": "新しいパスワード",
+    #   "new_password_confirm": "新しいパスワード(確認)"
+    # }
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return JsonResponse({"ok": False, "error": "リクエスト形式が不正です"}, status=400)
+
+    current_password = payload.get("current_password") or ""
+    new_password = payload.get("new_password") or ""
+    new_password_confirm = payload.get("new_password_confirm") or ""
+
+    if not current_password or not new_password or not new_password_confirm:
+        return JsonResponse({"ok": False, "error": "すべての項目を入力してください"}, status=400)
+
+    if new_password != new_password_confirm:
+        return JsonResponse({"ok": False, "error": "新しいパスワードが一致しません"}, status=400)
+
+    if not request.user.check_password(current_password):
+        return JsonResponse({"ok": False, "error": "現在のパスワードが正しくありません"}, status=400)
+
+    if current_password == new_password:
+        return JsonResponse({"ok": False, "error": "現在と異なるパスワードを設定してください"}, status=400)
+
+    try:
+        # Django標準のパスワードバリデータを適用
+        validate_password(new_password, user=request.user)
+    except ValidationError as e:
+        return JsonResponse({"ok": False, "error": " ".join(e.messages)}, status=400)
+
+    # ハッシュ化して保存
+    request.user.set_password(new_password)
+    request.user.save(update_fields=["password"])
+
+    # パスワード変更後もログイン状態を維持する
+    update_session_auth_hash(request, request.user)
+
+    return JsonResponse({"ok": True, "updated": True})
 
 
 

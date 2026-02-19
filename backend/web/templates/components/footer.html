@@ -1,5 +1,5 @@
 {% with request.resolver_match.url_name as url_name %}
-<div class="fixed bottom-0 left-0 w-full h-32 z-10 bg-[rgb(var(--app-bg))]">
+<div class="fixed bottom-0 left-0 w-full h-32 z-10 bg-transparent">
   <div class="absolute w-full h-full z-40 grid grid-cols-5 px-6 pointer-events-none">
     {% if url_name == "dashboard" %}
       <div class="col-start-1 flex items-center justify-center relative pointer-events-auto">

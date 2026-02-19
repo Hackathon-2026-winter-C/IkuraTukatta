@@ -1,29 +1,29 @@
 {% load static %}
 
-<div class="px-6 mt-6 flex flex-col items-center gap-4">
-  <button id="pick-profile-image" type="button" class="mx-auto block">
-      {% if request.user.image_url %}
-      <img id="profile-image-preview" src="{{ request.user.image_url }}" data-initial-src="{{ request.user.image_url }}" alt="preview" class="w-36 h-36 rounded-[18px] object-cover" />
-      {% else %}
-      <img id="profile-image-preview" src="{% static 'assets/images/default-avatar.png' %}" data-initial-src="{% static 'assets/images/default-avatar.png' %}" alt="preview" class="w-36 h-36 rounded-[18px] object-cover" />
-      {% endif %}
-  </button>
+<div class="w-full flex flex-col items-center gap-4 pt-10">
+  <div class="neu-panel w-full flex flex-col gap-4">
+    <h3 class="text-xl font-bold text-black text-center mb-3">写真を変更しますか？</h3>
 
-  <input
-    id="profile-image-input"
-    type="file"
-    accept="image/jpeg,image/png,image/webp"
-    class="hidden"
-  />
-</div>
+    <button id="pick-profile-image" type="button" class="mx-auto block">
+        <img id="profile-image-preview" src="{{ request.user.image_url }}" data-initial-src="{{ request.user.image_url }}" alt="preview" class="w-36 h-36 rounded-[18px] object-cover" />
+    </button>
 
-<div class="px-6 mt-5">
-  <button
-    id="submit-profile-image"
-    type="button"
-    class="btn btn-main"
-    style="background: #ff9400; color: #fff; border: none; box-shadow: var(--app-mainbutton-shadow)"
-  >
-    変更する
-  </button>
+    <input
+      id="profile-image-input"
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      class="hidden"
+    />
+
+    <button
+      id="submit-profile-image"
+      type="button"
+      class="btn btn-nodark-sub bg-[#FF9400] w-full p-0 text-[16px] mt-3 flex justify-center items-center font-light "
+    >
+      変更する
+    </button>
+        <button class="btn btn-nodark-sub font-light" data-close-icon-modal>
+      キャンセル
+    </button>
+  </div>
 </div>

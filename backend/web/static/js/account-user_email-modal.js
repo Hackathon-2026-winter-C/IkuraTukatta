@@ -4,31 +4,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const bg = document.getElementById("user-email-modal-bg");
   const closeBtns =
     modal?.querySelectorAll("[data-close-user-email-modal]") || [];
-  const input = document.getElementById("user-email-input");
-  const submitBtn = document.getElementById("user-email-submit");
-  const errEl = document.getElementById("user-email-error");
-  const displayEl = document.getElementById("account-user-email-text");
+  const emailInput = document.getElementById("user-email-input");
+  const submitBtn = document.getElementById("submit-user-email");
+  const errorEl = document.getElementById("user-email-error");
 
-  if (!openBtn || !modal || !bg || !input || !submitBtn || !errEl) return;
-
-  const open = () => {
-    modal.classList.remove("hidden");
-    document.body.classList.add("overflow-hidden");
-    errEl.classList.add("hidden");
-    input.focus();
-  };
-
-  const close = () => {
-    modal.classList.add("hidden");
-    document.body.classList.remove("overflow-hidden");
-    modal.dispatchEvent(new CustomEvent("user-email-modal:closed"));
-  };
+  if (!openBtn || !modal || !bg || !emailInput || !submitBtn) return;
 
   const getCookie = (name) => {
     const v = `; ${document.cookie}`;
     const p = v.split(`; ${name}=`);
     if (p.length === 2) return p.pop().split(";").shift();
     return "";
+  };
+
+  const open = () => {
+    modal.classList.remove("hidden");
+    document.body.classList.add("overflow-hidden");
+    emailInput.focus();
+  };
+
+  const close = () => {
+    modal.classList.add("hidden");
+    document.body.classList.remove("overflow-hidden");
+    modal.dispatchEvent(new CustomEvent("user-email-modal:closed"));
   };
 
   openBtn.addEventListener("click", open);
@@ -42,14 +40,18 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   submitBtn.addEventListener("click", async () => {
-    errEl.classList.add("hidden");
-    const email = (input.value || "").trim();
+    const email = emailInput.value.trim();
     if (!email) {
-      errEl.textContent = "メールアドレスを入力してください";
-      errEl.classList.remove("hidden");
+      if (errorEl) {
+        errorEl.textContent = "メールアドレスを入力してください";
+        errorEl.classList.remove("hidden");
+      } else {
+        alert("メールアドレスを入力してください");
+      }
       return;
     }
 
+    if (errorEl) errorEl.classList.add("hidden");
     submitBtn.disabled = true;
     try {
       const res = await fetch("/api/account/email/", {
@@ -60,16 +62,21 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json().catch(() => ({}));
+
+      const data = await res.json();
       if (!res.ok || !data.ok) {
-        throw new Error(data.error || "更新に失敗しました");
+        throw new Error(data.error || "メールアドレスの更新に失敗しました");
       }
 
-      if (displayEl) displayEl.textContent = email;
-      close();
+      // 成功後はページを再読み込みして表示値を最新化
+      window.location.reload();
     } catch (err) {
-      errEl.textContent = err?.message || "エラーが発生しました";
-      errEl.classList.remove("hidden");
+      if (errorEl) {
+        errorEl.textContent = err.message || "エラーが発生しました";
+        errorEl.classList.remove("hidden");
+      } else {
+        alert(err.message || "エラーが発生しました");
+      }
     } finally {
       submitBtn.disabled = false;
     }

@@ -10,8 +10,15 @@ class User(AbstractUser):
 
     # email login（AbstractUserの username ログインを使わず email をログインIDにする）
     email = models.EmailField(unique=True)
-
-    # profile（S3などのURLを保存する）
+    username = models.CharField(max_length=150,unique=False)
+    group = models.ForeignKey(
+        "ShareGroup",
+        on_delete=models.SET_NULL,
+        db_column="group_id",
+        null=True,
+        blank=True,
+        related_name="members",
+    )
     image_url = models.CharField(max_length=2048, null=True, blank=True)
 
     # Googleログイン用のUID（Google連携しない場合はNULL）
