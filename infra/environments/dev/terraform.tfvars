@@ -18,3 +18,7 @@ rds_multi_az = false # prodでtrue
 rds_backup_retention_period = 0 # prodで7
 rds_skip_final_snapshot = true # prodでfalse
 
+# ec2
+ec2_instance_type = "t3.micro"
+aws_s3_bucket = "hackathon-media-s3-bucket-20260207"
+

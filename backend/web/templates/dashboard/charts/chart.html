@@ -1,41 +1,46 @@
+<!-- prettier-ignore -->
 {% extends "base.html" %} 
 {% load static %} 
 {% block title %}Charts{% endblock %} 
 {% block content %}
-
-<main class="mx-auto max-w-xl p-6">
-   <div class="radio-group w-full mx-auto mb-5">
-        <h2 class="text-base flex justify-center items-center text-[rgb(var(--app-text))] w-full">
-          {{ user_name }}
-        </h2>
-   </div>
-  <div class="radio-group w-full mx-auto mb-5">
-    <div class="slider"></div>
-    <div class="radio-option">
-        <input type="radio" name="option" id="option1" checked="" />
-        <label for="option1" class="radio-label">Year</label>
+<main class="w-full flex flex-col items-center gap-4 px-4 pt-10">
+  <div class="w-full max-w-[420px] flex flex-col gap-3 ">
+    <div class="radio-group w-full mx-auto mb-2.5 bg-[rgb(var(--app-bg))] app-shadow">
+          <h2 class="text-base flex justify-start items-center text-[rgb(var(--app-text))] w-full pl-5">
+            {{ user_name }}
+          </h2>
     </div>
-    <div class="radio-option">
-        <input type="radio" name="option" id="option2" />
-        <label for="option2" class="radio-label">Month</label>
-    </div>
-  </div>
 
-  <div class="card w-full mb-5">    
-      <div class="p-4 h-64 shadow flex justify-center items-center rounded-[30px] bg-transparent">
-        <canvas id="expense-chart" class="w-52 h-52"></canvas>
-        <div id="chart-empty" class="mt-2 text-sm text-black" hidden>
-          No data
-        </div>
+    <div class="radio-group w-full mx-auto mb-2.5 bg-[rgb(var(--app-bg))] app-shadow">
+      <div class="slider"></div>
+      <div class="radio-option">
+          <input type="radio" name="option" id="option1" value="year" checked="" />
+          <label for="option1" class="radio-label">Year</label>
       </div>
-  </div>
-   <div class="card w-full h-64"> 
-        <div id="chart-categories" class="mt-4 p-6 text-2xl text-slate-700"></div>
-   </div>  
+      <div class="radio-option">
+          <input type="radio" name="option" id="option2" value="month"/>
+          <label for="option2" class="radio-label">Month</label>
+      </div>
+    </div>
+
+    <div class="card w-full mb-2.5 bg-[rgb(var(--app-bg))] app-shadow">    
+        <div class="p-4 h-64 shadow flex justify-center items-center rounded-[30px] bg-transparent">
+          <canvas id="expense-chart" class="w-48 h-48"></canvas>
+          <div id="chart-empty" class="mt-2 text-sm text-[rgb(var(--app-text))]" hidden>
+            No data
+          </div>
+        </div>
+    </div>
+
+    <div class="card w-full bg-[rgb(var(--app-bg))] app-shadow h-[350px] overflow-scroll "> 
+          <div id="chart-categories" class="mt-2.5 p-5 text-xl text-[rgb(var(--app-text))]"></div>
+    </div>
+  </div>  
 </main>
 
 {{ expense_data|json_script:"expense-data" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="{% static 'js/charts.js' %}"></script>
- <script src="{% static 'js/charts_categorys.js' %}"></script> 
+<script src="{% static 'js/charts_categorys.js' %}"></script> 
+<script src="{% static 'js/charts_period_switcher.js' %}"></script> {# 新しいファイルを追加 #}
 {% endblock %}

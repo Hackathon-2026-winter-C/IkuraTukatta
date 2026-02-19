@@ -10,7 +10,7 @@ from web.models import Category, MoneyFlow, User
 def seed():
     user, created = User.objects.get_or_create(
         email="demo@example.com",
-        defaults={"username": "demo", "image_url":"https://hackathon-media-s3-bucket-20260207.s3.ap-northeast-1.amazonaws.com/Demo+User.png"},
+        defaults={"username": "demo", "image_url":"https://hackathon-media-s3-bucket-20260207.s3.ap-northeast-1.amazonaws.com/default-avatar.png"},
     )
     if created or not user.has_usable_password():
         user.set_password("demo1234")

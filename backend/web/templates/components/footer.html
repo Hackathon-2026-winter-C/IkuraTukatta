@@ -1,5 +1,5 @@
 {% with request.resolver_match.url_name as url_name %}
-<div class="fixed bottom-0 left-0 w-full h-32 z-10 bg-[rgb(var(--app-bg))]">
+<div class="fixed bottom-0 left-0 w-full h-32 z-10 bg-transparent">
   <div class="absolute w-full h-full z-40 grid grid-cols-5 px-6 pointer-events-none">
     {% if url_name == "dashboard" %}
       <div class="col-start-1 flex items-center justify-center relative pointer-events-auto">
@@ -42,16 +42,23 @@
         </div>
       </div>
     {% elif url_name == "account" %}
-      <div class="col-start-5 flex items-center justify-center relative pointer-events-auto">
-        <div class="flex items-center justify-center absolute z-20 bg-[rgb(var(--app-bg))] rounded-full bottom-10 w-24 h-24 footer-circle-shadow">
-          <div class="z-40 h-16 w-16 bg-orange-400 rounded-full footer-circle-button-shadow"></div>
-        </div>
-        <div class="flex flex-col items-center justify-center gap-7 z-40 relative">
-          <span class="material-icons text-white scale-125">account_circle</span>
-          <p class="text-orange-400">Account</p>
-        </div>
+  <div class="col-start-5 flex items-center justify-center relative pointer-events-auto">
+    <div class="flex items-center justify-center absolute z-20 bg-[rgb(var(--app-bg))] rounded-full bottom-10 w-24 h-24 footer-circle-shadow">
+      <div class="z-40 h-16 w-16 bg-orange-400 rounded-full footer-circle-button-shadow flex items-center justify-center">
+          <img
+            src="{{ request.user.image_url }}"
+            alt="account"
+            class="w-[56px] h-[56px] rounded-full object-cover "
+          />
       </div>
-    {% endif %}
+    </div>
+
+    <div class="flex flex-col items-center z-40 relative">
+      <div class="size-11"></div>
+      <p class="text-orange-400">Account</p>
+    </div>
+  </div>
+{% endif %}
   </div>
 
   <footer class="z-30 flex items-center justify-around bg-[rgb(var(--app-bg))] app-shadow fixed bottom-0 left-0 w-full h-24 px-6 rounded-t-2xl">
@@ -68,17 +75,8 @@
       <span class="material-icons text-white scale-125 hover:text-orange-400 transition  hover:scale-150 cursor-pointer {% if url_name == 'charts' %}invisible{% endif %}">access_time</span>
     </a>
     <a href="{% url 'account' %}" class="pointer-events-auto">
-      
-      {% if request.user.is_authenticated and request.user.image_url %}
-        <img src="{{ request.user.image_url }}" alt="account" class="w-[25px] h-[25px] rounded-full  object-cover transition hover:scale-150 cursor-pointer {% if url_name == 'account' %}invisible{% endif %}">
-        {% else %}
-      <span class="material-icons text-white scale-125 hover:text-orange-400 transition  hover:scale-150 cursor-pointer {% if url_name == 'account' %}invisible{% endif %}">account_circle</span>
-
-      {% endif %}
+        <img src="{{ request.user.image_url}}" alt="account" class="w-[25px] h-[25px] scale-125 rounded-full  object-cover transition hover:scale-150 cursor-pointer {% if url_name == 'account' %}invisible{% endif %}">
     </a>
-    {% comment %} <a href="{% url 'account' %}" class="pointer-events-auto">
-      <span class="material-icons text-white scale-125 hover:text-orange-400 transition  hover:scale-150 cursor-pointer {% if url_name == 'account' %}invisible{% endif %}">account_circle</span>
-    </a> {% endcomment %}
   </footer>
 </div>
 {% endwith %}
