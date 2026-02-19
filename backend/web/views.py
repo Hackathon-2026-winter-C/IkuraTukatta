@@ -52,7 +52,9 @@ IMMUTABLE_CATEGORY_NAMES = {"支出その他", "収入その他", "その他"}
 # /にアクセスがあった時
 @ensure_csrf_cookie
 def index_page(request):
-    return redirect("login")
+    # return redirect("login")
+    # return render(request, "accounts/darkmode-modal.html",{})
+    return render(request, "accounts/error-page500.html",{})
 
 
 # サインアップ
@@ -776,24 +778,28 @@ def charts_page(request):
     expense_list = list(qs)
 
     # 画面表示名は「氏名 -> ユーザー名 -> メール」の優先で決める
-    user_name = (
-        request.user.get_full_name().strip()
-        or request.user.username
-        or request.user.email
-    )
+    if request.user.get_full_name().strip():
+        user_name = request.user.get_full_name().strip()
+    elif request.user.username:
+        user_name = request.user.username
+    else:
+        user_name = request.user.email
+
 
     # chart.html / charts.js で使うJSONデータを整形
-    expense_data = [
-        {
-            "date": e.expense_date.isoformat(),  # "YYYY-MM-DD"
-            "amount": e.amount,                  # 金額
-            "category": e.category.name,         # カテゴリ名
-            "categoryColor": e.category.color,   # カテゴリ色（#RRGGBB）
-            "memo": e.memo,                      # メモ
-            "user": user_name,                   # 表示用ユーザー名
+    expense_data = []   # まず空のリストを準備する
+    for e in expense_list:  # expense_listの各要素を一つずつ取り出す
+        # 各要素 'e' から辞書を作成する
+        item = {
+            "date": e.expense_date.isoformat(),    # "YYYY-MM-DD"
+            "amount": e.amount,                    # 金額
+            "category": e.category.name,           # カテゴリ名
+            "categoryColor": e.category.color,     # カテゴリ色（#RRGGBB）
+            "memo": e.memo,                        # メモ
+            "user": user_name,                     # 表示用ユーザー名
         }
-        for e in expense_list
-    ]
+        expense_data.append(item)  # 作成した辞書をリストに追加する
+
 
     # チャート画面へデータを渡して描画
     return render(
