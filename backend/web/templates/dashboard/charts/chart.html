@@ -39,8 +39,23 @@
 </main>
 
 {{ expense_data|json_script:"expense-data" }}
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="{% static 'js/charts.js' %}"></script>
-<script src="{% static 'js/charts_categorys.js' %}"></script> 
-<script src="{% static 'js/charts_period_switcher.js' %}"></script> {# 新しいファイルを追加 #}
+<script src="{% static 'js/charts_categorys.js' %}"></script>
+
+<!-- 共通スライダー -->
+<script src="{% static 'js/segmented.js' %}"></script>
+
+<!-- period switch -->
+<script src="{% static 'js/charts_period_switcher.js' %}"></script>
+
+<script>
+  initSegmented({
+    rootId: "charts-seg",
+    sliderId: "charts-slider",
+    radioName: "chart-period",
+  });
+</script>
+
 {% endblock %}

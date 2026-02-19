@@ -1,16 +1,15 @@
-@import "tailwindcss";
-
 /* lightモードの時 */
 :root {
     --app-bg: 232 232 232;
     --app-text: 0 0 0;
     --app-leftshadow: -6px -6px 12px rgba(255, 255, 255, 1);
     --app-rightshadow: 6px 6px 12px rgba(197, 197, 197, 1);
-    --app-footer-basecircle-shadow:0 -6px 8px -2px rgba(255, 255, 255, 1);
+    --app-footer-basecircle-shadow: 0 -6px 8px -2px rgba(255, 255, 255, 1);
     --app-footer-circle-top-shadow: 0 -4px 8px rgba(255, 255, 255, 1);
     --app-footer-circle-bottom-shadow: 0 4px 10px rgba(197, 197, 197, 1);
     --app-mainbutton-shadow: 6px 6px 12px rgba(197, 197, 197, 1),
         -6px -6px 12px rgba(255, 255, 255, 1);
+    --app-footer-safe-space: 128px;
 }
 
 /* ダークモードの時 */
@@ -19,9 +18,13 @@ html[data-theme="dark"] {
     --app-text: 255 255 255;
     --app-leftshadow: -6px -6px 12px rgba(47, 47, 47, 1);
     --app-rightshadow: 6px 6px 12px rgba(0, 0, 0, 1);
-    --app-footer-basecircle-shadow:0 -6px 8px -2px rgba(47, 47, 47, 1);
+    --app-footer-basecircle-shadow: 0 -6px 8px -2px rgba(47, 47, 47, 1);
     --app-footer-circle-top-shadow: 0 -4px 8px rgba(47, 47, 47, 1);
     --app-footer-circle-bottom-shadow: 0 4px 12px rgba(0, 0, 0, 1);
+}
+
+body {
+    padding-bottom: calc(var(--app-footer-safe-space) + env(safe-area-inset-bottom));
 }
 
 /* shadow共通 */
@@ -35,6 +38,89 @@ html[data-theme="dark"] {
 
 .footer-circle-button-shadow {
     box-shadow: var(--app-footer-circle-top-shadow), var(--app-footer-circle-bottom-shadow);
+}
+
+/* =========================
+   Ledger Switcher
+========================= */
+.ledger-switcher {
+    background: rgb(var(--app-bg));
+    color: rgb(var(--app-text));
+    border-radius: 22px;
+    box-shadow: var(--app-leftshadow), var(--app-rightshadow);
+    overflow: hidden;
+}
+
+.ledger-switcher__btn {
+    width: 100%;
+    min-height: 44px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    background: transparent;
+    color: inherit;
+    border: none;
+}
+
+.ledger-switcher__btn:active {
+    transform: translateY(1px);
+    filter: brightness(0.985);
+}
+
+.ledger-switcher__badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: rgb(var(--app-text));
+    opacity: 0.7;
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    white-space: nowrap;
+}
+
+html[data-theme="dark"] .ledger-switcher__badge {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ledger-switcher__menu {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: max-height 200ms ease, padding 200ms ease, opacity 120ms ease;
+}
+
+.ledger-switcher__option {
+    width: 100%;
+    text-align: left;
+    padding: 10px 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.ledger-switcher__option:hover {
+    opacity: 0.75;
+}
+
+.ledger-switcher.is-open .ledger-switcher__menu {
+    max-height: 420px;
+    padding: 8px 12px 12px;
+    opacity: 1;
+    pointer-events: auto;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+html[data-theme="dark"] .ledger-switcher.is-open .ledger-switcher__menu {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* ニューモーフィズムパネル */
@@ -397,4 +483,98 @@ html[data-theme="dark"] .btn-red:active {
 /* チェック時：雲を出す */
 .switch input:checked~.slider .cloud {
     opacity: 1;
+}
+
+/* ===== Category: 選択中の見た目 ===== */
+
+/* 選択中：丸を塗りつぶし */
+.cat-pick.is-selected .cat-pick-circle {
+    background: var(--c);
+    border-color: var(--c);
+}
+
+/* 選択中：文字は白（style="color: var(--c)" に勝つ） */
+.cat-pick.is-selected .cat-inner {
+    color: #fff !important;
+}
+
+/* SVGは fill/stroke を触らず、見た目だけ白化 */
+.cat-pick.is-selected .cat-inner svg {
+    filter: brightness(0) invert(1);
+}
+
+/* other_exp の ￥ は選択時も見えるように調整 */
+.cat-pick.is-selected .cat-inner svg.other-exp-icon {
+    filter: none;
+}
+.cat-pick.is-selected .cat-inner svg.other-exp-icon .yen-mark {
+    fill: var(--c) !important;
+}
+
+/* ===== List: Category Icon ===== */
+.list-category-icon {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+}
+
+.list-category-icon svg {
+    width: 24px;
+    height: 24px;
+    display: block;
+}
+
+.list-category-label {
+    height: 14px;
+    display: grid;
+    place-items: center;
+    /* 文字を箱の中央に */
+    line-height: 1;
+    /* これは残してOK */
+    text-align: center;
+}
+
+/* アイコン＋文字の塊を固定2段にする */
+.cat-col {
+    width: 40px;
+    display: grid;
+    grid-template-rows: 24px 14px;
+    justify-items: center;
+    align-items: center;
+    row-gap: 4px;
+}
+
+
+/* Chrome / Safari */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    cursor: pointer;
+}
+
+input[type="date"]::-webkit-clear-button {
+    display: none;
+}
+
+/* Firefox */
+input[type="date"] {
+    appearance: none;
+    -moz-appearance: textfield;
+}
+
+.date-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    opacity: 0.001;
+    /* 0だとOSによって反応しない時ある */
+    cursor: pointer;
+}
+
+.date-native {
+    appearance: auto;
+    -webkit-appearance: auto;
+    -moz-appearance: auto;
 }
