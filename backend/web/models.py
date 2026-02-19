@@ -1,146 +1,110 @@
-# backend/web/models.py
+from django.core.validators import RegexValidator
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-
-class AppUser(models.Model):
+class User(AbstractUser):
+    id = models.BigAutoField(primary_key=True)
+    email = models.EmailField(unique=True)
     group = models.ForeignKey(
         "ShareGroup",
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         db_column="group_id",
-        related_name="users",
-        blank=True,
         null=True,
+        blank=True,
+        related_name="members",
     )
-    email = models.EmailField(unique=True)
-    password_hash = models.CharField(max_length=255)
-    name = models.CharField(max_length=255, blank=True, null=True)
-    google_uid = models.CharField(max_length=255, unique=True, blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True)
-    updated_at = models.DateTimeField(blank=True, null=True)
+    image_url = models.CharField(max_length=2048, null=True, blank=True)
+    google_uid = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    USERNAME_FIELD="email"
+    REQUIRED_FIELDS = ["username"]
 
     class Meta:
         db_table = "USERS"
-        managed = False
 
 
 class ShareGroup(models.Model):
+    id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=255)
     owner_user = models.ForeignKey(
-        AppUser,
-        on_delete=models.DO_NOTHING,
+        "User",
+        on_delete=models.PROTECT,
         db_column="owner_user_id",
         related_name="owned_groups",
     )
-    created_at = models.DateTimeField(blank=True, null=True)
-    updated_at = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "SHARE_GROUPS"
-        managed = False
+        constraints = [
+            models.UniqueConstraint(
+                fields=["owner_user", "name"],
+                name="uq_sharegroup_owner_name",
+            ),
+        ]
 
 
 class Category(models.Model):
+    id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(
-        AppUser,
-        on_delete=models.DO_NOTHING,
+        "User",
+        on_delete=models.SET_NULL,
         db_column="user_id",
+        null=True,
+        blank=True,
         related_name="categories",
     )
     group = models.ForeignKey(
-        ShareGroup,
-        on_delete=models.DO_NOTHING,
+        "ShareGroup",
+        on_delete=models.SET_NULL,
         db_column="group_id",
+        null=True,
+        blank=True,
         related_name="categories",
     )
     name = models.CharField(max_length=255)
-    color = models.CharField(max_length=20)
-    is_io_type = models.BooleanField()
-    created_at = models.DateTimeField(blank=True, null=True)
-    updated_at = models.DateTimeField(blank=True, null=True)
+    color = models.CharField(
+        max_length=7,
+        validators=[RegexValidator(regex=r"^#[0-9A-Fa-f]{6}$")],
+    )
+    is_in_type = models.BooleanField()
+    icon_key = models.CharField(max_length=50)
+    is_builtin = models.BooleanField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "CATEGORIS"
-        managed = False
+        db_table = "CATEGORIES"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "name"],
+                name="uq_category_user_name",
+            ),
+            models.UniqueConstraint(
+                fields=["group", "name"],
+                name="uq_category_group_name",
+            ),
+        ]
 
 
-class Receipt(models.Model):
-    user = models.ForeignKey(
-        AppUser,
-        on_delete=models.DO_NOTHING,
-        db_column="user_id",
-        related_name="receipts",
-    )
-    group = models.ForeignKey(
-        ShareGroup,
-        on_delete=models.DO_NOTHING,
-        db_column="group_id",
-        related_name="receipts",
-    )
-    image_url = models.CharField(max_length=2048, blank=True, null=True)
-    taken_at = models.DateTimeField(blank=True, null=True)
-    ocr_status = models.CharField(max_length=50, blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        db_table = "RECEIPTS"
-        managed = False
-
-
-class InOrExp(models.Model):
-    user = models.ForeignKey(
-        AppUser,
-        on_delete=models.DO_NOTHING,
-        db_column="user_id",
-        related_name="in_or_exps",
-    )
+class MoneyFlow(models.Model):
+    id = models.BigAutoField(primary_key=True)
     category = models.ForeignKey(
-        Category,
-        on_delete=models.DO_NOTHING,
+        "Category",
+        on_delete=models.PROTECT,
         db_column="category_id",
-        related_name="in_or_exps",
+        related_name="money_flows",
     )
-    receipt = models.ForeignKey(
-        Receipt,
-        on_delete=models.DO_NOTHING,
-        db_column="receiept_id",
-        related_name="in_or_exps",
-        blank=True,
-        null=True,
-    )
-    group = models.ForeignKey(
-        ShareGroup,
-        on_delete=models.DO_NOTHING,
-        db_column="group_id",
-        related_name="in_or_exps",
-    )
-    amount = models.IntegerField()
+    receipt_id = models.BigIntegerField(null=True, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=0)
     expense_date = models.DateField()
-    memo = models.CharField(max_length=255, blank=True, null=True)
-    created_at = models.DateTimeField(blank=True, null=True)
-    updated_at = models.DateTimeField(blank=True, null=True)
+    memo = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "IN_OR_EXPS"
-        managed = False
+        db_table = "MONEY_FLOWS"
 
-
-class ReceiptItem(models.Model):
-    receipt = models.ForeignKey(
-        Receipt,
-        on_delete=models.DO_NOTHING,
-        db_column="receipt_id",
-        related_name="items",
-    )
-    category = models.ForeignKey(
-        Category,
-        on_delete=models.DO_NOTHING,
-        db_column="category_id",
-        related_name="receipt_items",
-    )
-    item_name = models.CharField(max_length=255)
-    price = models.IntegerField()
-    detection_date = models.DateField(blank=True, null=True)
-
-    class Meta:
-        db_table = "RECEIPT_ITEMS"
-        managed = False

@@ -1,5 +1,5 @@
 # Python
-__pychache__/
+*/__pychache__/
 *.pyc
 venv/
 env/
@@ -29,4 +29,13 @@ media/
 .DS_Store
 
 node_modules/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+
+/dev-sample/
 
