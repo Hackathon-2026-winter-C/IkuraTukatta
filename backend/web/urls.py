@@ -55,6 +55,21 @@ urlpatterns = [
         views.category_delete_api,
         name="category_delete_api",
     ),
+    path(
+        "api/account/username/",
+        views.account_username_update_api,
+        name="account_username_update_api",
+    ),
+    path(
+        "api/account/email/",
+        views.account_user_email_update_api,
+        name="account_user_email_update_api",
+    ),
+    path(
+        "api/account/password/",
+        views.account_user_password_update_api,
+        name="account_user_password_update_api",
+    ),
     path("api/account/profile-image/", views.profile_image_update_api, name="profile_image_update_api"),
     path("api/users/", views.users_api, name="users_api"),
 ]
