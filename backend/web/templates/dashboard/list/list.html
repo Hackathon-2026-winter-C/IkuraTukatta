@@ -1,59 +1,37 @@
-{% extends 'base.html' %}
-{% load static %}
-{% load humanize %} 
-{% load i18n %}
-
-{% block title %}
-  支出リスト
-{% endblock title %}
-{% block content %}
-  <main class="w-full flex flex-col items-center gap-4 px-4 pt-10 pb-36">
-    <div class="w-full max-w-[420px] flex flex-col gap-3">
-      <div class="radio-group w-full mx-auto mb-2.5 bg-[rgb(var(--app-bg))] app-shadow">
-        <h2 class="text-base flex justify-start items-center text-[rgb(var(--app-text))] w-full pl-5">
-          {{ user_name }}
-        </h2>
-      </div>
-      {# 日付ごとにカードを生成 #}
-      {% for expense_date, expenses_for_date in grouped_expenses %}
-        <div class="card w-full mb-2.5 p-4 bg-[rgb(var(--app-bg))] app-shadow overflow-auto">
-          <ul class="space-y-5">
-            {% for expense in expenses_for_date %}
-              <li class="grid grid-cols-[auto_1fr] items-center last:border-b-0 last:pb-0">
-                <div class="flex flex-col items-center mr-2 text-center space-y-0">
-                  {% language 'en' %}
-                    <span class="text-xs text-[rgb(var(--app-text))] dark:text-gray-400 leading-snug">
-                      {{ expense_date|date:"M" }} {# Feb #}
-                    </span>
-                    <span class="text-lg font-bold text-[rgb(var(--app-text))] dark:text-white leading-snug">
-                      {{ expense_date|date:"d" }} {# 06 #}
-                    </span>
-                    <span class="text-xs text-[rgb(var(--app-text))] dark:text-gray-400 leading-snug">
-                      {{ expense_date|date:"D" }} {# Fri #}
-                    </span>
-                  {% endlanguage %}
-                </div>
-                               
-                <div class="flex items-center justify-start gap-2"> 
-                  {% comment %} <span class="inline-block w-3 h-3 rounded-full mr-4" style="background-color: {{ expense.categoryColor }};"></span> {# 🔴 #} {% endcomment %}
-                  <div class="flex flex-col items-center w-10 h-full">
-                    <div class="text-[{{ expense.categoryColor }}]">
-                    {% include "icons/category/"|add:expense.icon_key|add:".svg" %}
-                    </div>
-                    <span class="text-[{{ expense.categoryColor }}] text-xs ">{{expense.category}}</span>
-                  </div>
-                  <div class="flex flex-col space-y-0.5"> 
-                    <span class="text-xl text-[rgb(var(--app-text))] font-medium">{{ expense.amount_sign }}{{ expense.amount|floatformat:0|intcomma }}</span> {# -1,084 #}
-                    <span class="text-sm text-[rgb(var(--app-text))]">{{ expense.memo }}</span> {# 食費 #}
-                  </div>
-                </div>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
-      {% empty %}
-        <p class="text-center text-gray-500 dark:text-gray-400">支出データがありません。</p>
-      {% endfor %}
+{% extends 'base.html' %} {% load static %} {% load humanize %} {% load i18n %} {% block title %} 支出リスト {% endblock title %} {% block content %}
+<main class="w-full flex flex-col items-center gap-4 px-4 pt-10 pb-36">
+  <div class="w-full max-w-[420px] flex flex-col gap-3">
+    <div class="radio-group w-full mx-auto mb-2.5 bg-[rgb(var(--app-bg))] app-shadow">
+      <h2 class="text-base flex justify-start items-center text-[rgb(var(--app-text))] w-full pl-5">{{ user_name }}</h2>
     </div>
-  </main>
+    {# 日付ごとにカードを生成 #} {% for expense_date, expenses_for_date in grouped_expenses %}
+    <div class="card w-full mb-2.5 p-4 bg-[rgb(var(--app-bg))] app-shadow overflow-auto">
+      <ul class="space-y-5">
+        {% for expense in expenses_for_date %}
+        <li class="grid grid-cols-[auto_1fr] items-center last:border-b-0 last:pb-0">
+          <div class="flex flex-col items-center mr-2 text-center space-y-0">
+            {% language 'en' %}
+            <span class="text-xs text-[rgb(var(--app-text))] dark:text-gray-400 leading-snug"> {{ expense_date|date:"M" }} {# Feb #} </span>
+            <span class="text-lg font-bold text-[rgb(var(--app-text))] dark:text-white leading-snug"> {{ expense_date|date:"d" }} {# 06 #} </span>
+            <span class="text-xs text-[rgb(var(--app-text))] dark:text-gray-400 leading-snug"> {{ expense_date|date:"D" }} {# Fri #} </span>
+            {% endlanguage %}
+          </div>
+
+          <div class="flex items-center justify-start gap-2">
+            {% comment %} <span class="inline-block w-3 h-3 rounded-full mr-4" style="background-color: {{ expense.categoryColor }};"></span> {# 🔴 #} {% endcomment %}
+            <div class="flex flex-col items-center w-10 h-full">
+              <div class="text-[{{ expense.categoryColor }}]">{% include "icons/category/"|add:expense.icon_key|add:".svg" %}</div>
+              <span class="text-[{{ expense.categoryColor }}] text-xs ">{{expense.category}}</span>
+            </div>
+            <div class="flex flex-col space-y-0.5"><span class="text-xl text-[rgb(var(--app-text))] font-medium">{{ expense.amount_sign }}{{ expense.amount|floatformat:0|intcomma }}</span> {# -1,084 #} <span class="text-xl text-[rgb(var(--app-text))] font-medium">{{ expense.amount_sign }}{{ expense.amount|floatformat:0|intcomma }}</span> {# -1,084 #} <span class="text-sm text-[rgb(var(--app-text))]">{{ expense.memo }}</span> {# 食費 #}</div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% empty %}
+    <p class="text-center text-gray-500 dark:text-gray-400">支出データがありません。</p>
+    {% endfor %}
+  </div>
+</main>
 {% endblock content%}

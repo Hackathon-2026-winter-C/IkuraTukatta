@@ -289,27 +289,40 @@ def dashboard_list_page(request):
         MoneyFlow.objects.select_related("category__user", "category")
         .filter(category__user__email=user_email)
         .order_by("-expense_date", "-id")
-    )   
+    ) 
+
     # 日付ごとに支出をグループ化する
-    grouped_expenses = defaultdict(list)
+    grouped_expenses = defaultdict(list) # キーが存在しない場合、空のリストを値として作成する辞書
     for e in qs:
         grouped_expenses[e.expense_date].append({
-            "amount": e.amount,
-            "amount_sign": "+" if e.category.is_in_type else "-",
-            "category": e.category.name,
-            "categoryColor": e.category.color,
-            "icon_key": e.category.icon_key,
-            "memo": e.memo,
-            "user": e.category.user.username,
+            "amount": e.amount,                                      # 支出の金額
+            "amount_sign": "+" if e.category.is_in_type else "-",    # 金額の符号
+            "category": e.category.name,                             # カテゴリ名
+            "categoryColor": e.category.color,                       # カテゴリの色
+            "icon_key": e.category.icon_key,                         # アイコンのキー
+            "memo": e.memo,                                          # メモ
+            "user": e.category.user.username,                        # ユーザー名
         })
-    # 日付の新しい順にソートされたリストにする
-    sorted_grouped_expenses = sorted(grouped_expenses.items(), key=lambda item: item[0], reverse=True)
-    # user_name を準備
-    user_name = request.user.username if request.user.username else user_email
-    return render(
-        request,
-        'dashboard/list/list.html',
-        {"grouped_expenses": sorted_grouped_expenses, "user_name": user_name} # ここで渡すデータを変更！
+   
+    # (日付, 支出リスト) のペアから日付（最初の要素）を返す関数
+    def get_date_from_item(item):
+        return item[0]
+    
+     # 日付の新しい順にソートされたリストにする
+    sorted_grouped_expenses = sorted(grouped_expenses.items(), key=get_date_from_item, reverse=True)
+
+    # ユーザー名があればそれを返し、なければメールアドレスを返す関数
+    def get_display_user_name(user_obj, email):
+        if user_obj.username:
+            return user_obj.username
+        else:
+            return email
+        
+    user_name = get_display_user_name(request.user, user_email) # 関数を呼び出す
+    
+    return render(request,
+                  'dashboard/list/list.html',
+                  {"grouped_expenses": sorted_grouped_expenses, "user_name": user_name} # ここで表示処理
     )
 
 @login_required(login_url="login")
