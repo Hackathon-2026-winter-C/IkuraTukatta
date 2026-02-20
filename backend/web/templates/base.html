@@ -1,34 +1,22 @@
-{% load static %}
-{% load django_browser_reload %}
+{% load static %} {% load django_browser_reload %}
 <!doctype html>
 <html lang="ja" data-theme="{{ request.COOKIES.theme | default:'light'}}">
-
   <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css"/>
-  
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+
     <script src="{% static 'js/theme-toggle.js' %}" defer></script>
-    <link rel="stylesheet" href="{% static 'css/app.css' %}">
-    <link rel="stylesheet" href="{% static 'css/_radio-group.css' %}">
-    <link rel="icon" href="{% static 'assets/images/favicon.ico' %}" type="image/x-icon"/>
-    <title>
-      {% block title %}App{% endblock %}
-    </title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}" />
+    <link rel="icon" href="{% static 'assets/images/favicon.ico' %}" type="image/x-icon" />
+    <title>{% block title %}App{% endblock %}</title>
   </head>
 
   <body class="bg-[rgb(var(--app-bg))] text-slate-900 min-h-screen">
+    {% include 'components/footer.html' %} {% block content %}{% endblock %} {% django_browser_reload_script %}
 
-    {% include 'components/footer.html' %}
-    
-    {% block content %}{% endblock %}
-    {% django_browser_reload_script %}
-
-
-
+    <script src="{% static 'js/utils.js' %}"></script>
   </body>
-
 </html>

@@ -2,8 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const openBtn = document.getElementById("open-user-email-modal");
   const modal = document.getElementById("user-email-modal");
   const bg = document.getElementById("user-email-modal-bg");
-  const closeBtns =
-    modal?.querySelectorAll("[data-close-user-email-modal]") || [];
+  const closeBtns = modal?.querySelectorAll("[data-close-user-email-modal]") || [];
   const emailInput = document.getElementById("user-email-input");
   const submitBtn = document.getElementById("submit-user-email");
   const errorEl = document.getElementById("user-email-error");
@@ -20,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const open = () => {
     modal.classList.remove("hidden");
     document.body.classList.add("overflow-hidden");
+    if (errorEl) errorEl.classList.add("hidden");
     emailInput.focus();
   };
 
@@ -52,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (errorEl) errorEl.classList.add("hidden");
+
     submitBtn.disabled = true;
     try {
       const res = await fetch("/api/account/email/", {
@@ -63,19 +64,18 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         throw new Error(data.error || "メールアドレスの更新に失敗しました");
       }
 
-      // 成功後はページを再読み込みして表示値を最新化
       window.location.reload();
     } catch (err) {
       if (errorEl) {
-        errorEl.textContent = err.message || "エラーが発生しました";
+        errorEl.textContent = err?.message || "エラーが発生しました";
         errorEl.classList.remove("hidden");
       } else {
-        alert(err.message || "エラーが発生しました");
+        alert(err?.message || "エラーが発生しました");
       }
     } finally {
       submitBtn.disabled = false;

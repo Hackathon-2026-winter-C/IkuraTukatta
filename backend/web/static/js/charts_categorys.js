@@ -1,4 +1,5 @@
 // static/js/charts_categorys.js
+// static/js/charts_categorys.js
 
 const categoriesContainer = document.getElementById("chart-categories");
 
