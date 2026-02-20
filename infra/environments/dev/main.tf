@@ -44,7 +44,8 @@ module "alb" {
 
 # EC2モジュールの呼び出し
 module "ec2" {
-  source = "../../modules/ec2"
+  source     = "../../modules/ec2"
+  depends_on = [module.vpc]
 
   project_name          = "${var.environment}-app"
   vpc_id                = module.vpc.vpc_id
@@ -104,5 +105,4 @@ module "rds" {
   allowed_security_group = [module.ec2.ec2_security_group_id]
   tags                   = local.common_tags
 }
-
 

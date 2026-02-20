@@ -2,19 +2,48 @@
 set -euxo pipefail
 
 APP_DIR=/app
-mkdir -p "$APP_DIR/nginx"
+COMPOSE_FILE="$APP_DIR/docker-compose.prod.yml"
+ENV_FILE="$APP_DIR/.env"
+NGINX_DIR="$APP_DIR/nginx"
+ECR_REGISTRY="$(echo "${ecr_repository_url}" | cut -d'/' -f1)"
+IMAGE_REF="${ecr_repository_url}:${image_tag}"
+
+retry() {
+  local max_retry="$1"
+  shift
+  local try=1
+
+  until "$@"; do
+    if [ "$try" -ge "$max_retry" ]; then
+      echo "Command failed after $max_retry attempts: $*" >&2
+      return 1
+    fi
+
+    sleep $((try * 5))
+    try=$((try + 1))
+  done
+}
+
+# Prefer instance profile credentials for bootstrap commands.
+unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN || true
+
+mkdir -p "$NGINX_DIR"
 cd "$APP_DIR"
 
 systemctl enable --now docker
+retry 12 systemctl is-active --quiet docker
 
-aws s3 cp "s3://${aws_s3_bucket}/deploy/docker-compose.prod.yml" "$APP_DIR/docker-compose.prod.yml"
-aws s3 cp "s3://${aws_s3_bucket}/deploy/default.conf" "$APP_DIR/nginx/default.conf"
+retry 6 aws s3 cp "s3://${aws_s3_bucket}/deploy/docker-compose.prod.yml" "$COMPOSE_FILE"
+retry 6 aws s3 cp "s3://${aws_s3_bucket}/deploy/default.conf" "$NGINX_DIR/default.conf"
 
-ECR_REGISTRY="$(echo "${ecr_repository_url}" | cut -d'/' -f1)"
-aws ecr get-login-password --region "${region}" \
-  | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+ecr_login() {
+  aws ecr get-login-password --region "${region}" \
+    | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+}
+retry 6 ecr_login
+retry 6 docker pull "$IMAGE_REF"
 
-cat > "$APP_DIR/.env" <<EOF
+cat > "$ENV_FILE" <<EOF
 DB_HOST=${db_host}
 DB_PORT=3306
 DB_NAME=${db_name}
@@ -30,5 +59,5 @@ ECR_REPOSITORY_URL=${ecr_repository_url}
 IMAGE_TAG=${image_tag}
 EOF
 
-chmod 600 "$APP_DIR/.env"
-docker compose --env-file "$APP_DIR/.env" -f "$APP_DIR/docker-compose.prod.yml" up -d
+chmod 600 "$ENV_FILE"
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d
