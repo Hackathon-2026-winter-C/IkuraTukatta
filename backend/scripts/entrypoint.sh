@@ -8,6 +8,7 @@ python manage.py migrate --noinput
 python manage.py shell -c "from web.seed_dummy import seed; seed()"
 
 echo "Start server"
+python manage.py collectstatic --noinput
 exec python manage.py runserver 0.0.0.0:8000
 
 # 本番用
