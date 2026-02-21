@@ -155,16 +155,19 @@ def error_404(request,exception):
 def error_500(request):
     return render(request,"accounts/error-page500.html",status=500)
 
-def _username_from_google_email(email: str) -> str:
+def _username_from_google_profile(email: str, google_name: str = "") -> str:
     """
     Googleログインで新規作成するユーザー名を決める。
-    現在のモデルでは username は unique=False のため、
-    メールのローカル部をそのまま使う方針で問題ない。
+    name クレームが取得できる場合はそれを優先し、
+    取得できない場合はメールのローカル部にフォールバックする。
     """
-    local = (email.split("@")[0] or "").strip()
-    if not local:
+    candidate = (google_name or "").strip()
+    if not candidate:
+        candidate = (email.split("@")[0] or "").strip()
+    if not candidate:
         return "google_user"
-    return local[:150]
+    candidate = re.sub(r"\s+", " ", candidate)
+    return candidate[:150]
 
 #Googleログイン
 @require_POST
@@ -195,6 +198,11 @@ def google_login_api(request):
 
     sub = info.get("sub")
     email = (info.get("email") or "").lower()
+    google_name = (info.get("name") or "").strip()
+    if not google_name:
+        given_name = (info.get("given_name") or "").strip()
+        family_name = (info.get("family_name") or "").strip()
+        google_name = " ".join(v for v in (given_name, family_name) if v).strip()
     email_verified = bool(info.get("email_verified"))
     # ログインに必要なクレームを検証。
     # sub: Googleアカウントを一意に表すID
@@ -227,7 +235,7 @@ def google_login_api(request):
                 # email は重複禁止 (unique=True)
                 user = User(
                     email=email,
-                    username=_username_from_google_email(email),
+                    username=_username_from_google_profile(email, google_name),
                     google_uid=sub,
                 )
                 user.set_unusable_password()

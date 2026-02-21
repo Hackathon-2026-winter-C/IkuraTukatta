@@ -125,3 +125,8 @@ variable "django_setup_revision" {
   type        = string
   default     = "v1"
 }
+
+variable "debug" {
+  type = bool
+  default = false
+}

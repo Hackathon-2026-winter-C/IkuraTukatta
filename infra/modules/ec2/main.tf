@@ -87,6 +87,7 @@ resource "aws_launch_template" "app" {
   user_data = base64encode(templatefile("${path.module}/userdata.sh", {
     ecr_repository_url = var.ecr_repository_url
     image_tag          = var.image_tag
+    debug              = var.debug
     region             = var.region
     db_host            = var.db_host
     db_name            = var.db_name
