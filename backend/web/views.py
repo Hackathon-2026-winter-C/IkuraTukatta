@@ -5,6 +5,11 @@ import json
 import re
 from collections import defaultdict
 
+from django.urls import reverse
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
+
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -136,10 +141,117 @@ def _json(request):
 # /にアクセスがあった時
 @ensure_csrf_cookie
 def index_page(request):
-    # return redirect("login")
-    # return render(request, "accounts/darkmode-modal.html",{})
-    return render(request, "accounts/error-page500.html",{})
+    return redirect("login")
 
+#エラーページ（403)
+def error_403(request,exception):
+    return render(request,"accounts/error-page403.html",status=403)
+
+#エラーページ（404)
+def error_404(request,exception):
+    return render(request,"accounts/error-page404.html",status=404)
+
+#エラーページ（500)
+def error_500(request):
+    return render(request,"accounts/error-page500.html",status=500)
+
+def _username_from_google_profile(email: str, google_name: str = "") -> str:
+    """
+    Googleログインで新規作成するユーザー名を決める。
+    name クレームが取得できる場合はそれを優先し、
+    取得できない場合はメールのローカル部にフォールバックする。
+    """
+    candidate = (google_name or "").strip()
+    if not candidate:
+        candidate = (email.split("@")[0] or "").strip()
+    if not candidate:
+        return "google_user"
+    candidate = re.sub(r"\s+", " ", candidate)
+    return candidate[:150]
+
+#Googleログイン
+@require_POST
+@csrf_protect
+def google_login_api(request):
+    # サーバー側に Google Client ID が設定されているか確認
+    # 未設定だとトークンの正当性を検証できないため 500 を返す。
+    if not settings.GOOGLE_OAUTH_CLIENT_ID:
+        return JsonResponse({"ok": False, "error": "google_client_id_not_configured"}, status=500)
+
+    # フロントから受け取った ID トークン(credential)を取り出す。
+    # JSONで送られてこない/空なら不正リクエストとして 400。
+    data = _json(request)
+    credential = (data.get("credential") or "").strip()
+    if not credential:
+        return JsonResponse({"ok": False, "error": "credential_required"}, status=400)
+
+    try:
+        # Googleの公開鍵で署名検証 + audience(client_id)検証を行う。
+        # verifyに失敗したトークンは信用できないため 401。
+        info = google_id_token.verify_oauth2_token(
+            credential,
+            google_requests.Request(),
+            settings.GOOGLE_OAUTH_CLIENT_ID,
+        )
+    except Exception:
+        return JsonResponse({"ok": False, "error": "invalid_google_token"}, status=401)
+
+    sub = info.get("sub")
+    email = (info.get("email") or "").lower()
+    google_name = (info.get("name") or "").strip()
+    if not google_name:
+        given_name = (info.get("given_name") or "").strip()
+        family_name = (info.get("family_name") or "").strip()
+        google_name = " ".join(v for v in (given_name, family_name) if v).strip()
+    email_verified = bool(info.get("email_verified"))
+    # ログインに必要なクレームを検証。
+    # sub: Googleアカウントを一意に表すID
+    # email: アプリ側の一意キーとして利用
+    # email_verified: 未検証メールでのログインを防ぐ
+    if not sub or not email or not email_verified:
+        return JsonResponse({"ok": False, "error": "invalid_google_payload"}, status=403)
+
+    with transaction.atomic():
+        # google_uid で既存連携済みユーザーを優先取得する。
+        # これが見つかれば、そのユーザーでログインする。
+        user = User.objects.select_for_update().filter(google_uid=sub).first()
+        is_new = False
+
+        if not user:
+            # google_uid が未連携なら email で既存ユーザーを探す。
+            # email は unique=True なので該当は最大1件。
+            user = User.objects.select_for_update().filter(email__iexact=email).first()
+            if user:
+                # 既存ユーザーが見つかった場合:
+                # google_uid が空なら今回の sub を紐付ける
+                # 別subが既に紐づいていれば競合として 409
+                if user.google_uid and user.google_uid != sub:
+                    return JsonResponse({"ok": False, "error": "google_uid_conflict"}, status=409)
+                user.google_uid = sub
+                user.save(update_fields=["google_uid"])
+            else:
+                # email 一致ユーザーがいなければ新規作成。
+                # username は重複可 (unique=False)
+                # email は重複禁止 (unique=True)
+                user = User(
+                    email=email,
+                    username=_username_from_google_profile(email, google_name),
+                    google_uid=sub,
+                )
+                user.set_unusable_password()
+                user.save()
+                create_default_categories(user)
+                is_new = True
+
+    # Djangoセッションを発行してログイン完了。
+    login(request, user)
+
+    # 新規登録ユーザーのみテーマ選択を挟み、既存はダッシュボードへ。
+    if is_new:
+        request.session["show_theme_choice"] = True
+        return JsonResponse({"ok": True, "redirect_to": reverse("signup_theme_choice")})
+
+    return JsonResponse({"ok": True, "redirect_to": reverse("dashboard")})
 
 # サインアップ
 @ensure_csrf_cookie
@@ -236,6 +348,7 @@ def login_page(request):
         "error": error,
         "email": identifier,
         "next": request.GET.get("next", ""),
+        "google_client_id": settings.GOOGLE_OAUTH_CLIENT_ID,
     }
     return render(request, "accounts/login.html", context)
 

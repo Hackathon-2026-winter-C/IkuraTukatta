@@ -8,6 +8,7 @@ urlpatterns = [
     path("login/", views.login_page, name="login"),
     path("signup/", views.signup_page, name="signup"),
     path("signup/theme/", views.signup_theme_choice_page, name="signup_theme_choice"),
+    path("auth/google/", views.google_login_api, name="google_login_api"),
     path("logout/", views.logout_view, name="logout"),
     path("dashboard/", views.dashboard_page, name="dashboard"),
     path("dashboard/charts/", views.charts_page, name="charts"),

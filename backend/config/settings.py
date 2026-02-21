@@ -45,6 +45,10 @@ MIDDLEWARE = [
     "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
+# Googleログインのポップアップで accounts.google.com と postMessage 通信するため、
+# COOP の既定値(same-origin)ではなく same-origin-allow-popups を使う。
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
+
 ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
@@ -91,6 +95,9 @@ AUTH_USER_MODEL = "web.User"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
+
+## GOOGLE認証
+GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID", "")
 
 # ---- AWS S3 (profile image upload) ----
 AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "ap-northeast-1")
