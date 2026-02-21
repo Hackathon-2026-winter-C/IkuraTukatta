@@ -4,6 +4,7 @@ import calendar
 import json
 import re
 from collections import defaultdict
+from datetime import date # dateモジュールをインポート
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -805,41 +806,104 @@ def dashboard_moneyflow_delete_page(request):
     return redirect("dashboard_list")
 
 
-# 円グラフ（合算対象）
+def create_nested_defaultdict_int():
+    return defaultdict(int)
+
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def charts_page(request):
-    scope_user_ids = get_scope_user_ids(request)
-
+    get_user_ids = get_scope_user_ids(request)
     qs = (
         MoneyFlow.objects.select_related("category", "category__user")
-        .filter(category__user_id__in=scope_user_ids)
+        .filter(category__user_id__in=get_user_ids)
         .order_by("-expense_date", "-id")
     )
+    all_expenses = list(qs) # 全期間の生データを取得
 
-    expense_list = list(qs)
+    # 年ごとの集計用
+    yearly_totals = defaultdict(create_nested_defaultdict_int)
+    yearly_colors = {}
 
-    expense_data = [
-        {
-            "date": e.expense_date.isoformat(),
-            "amount": int(e.amount),
-            "category": e.category.name,
-            "categoryColor": e.category.color,
-            "memo": e.memo,
-            "owner": {
-                "id": e.category.user_id,
-                "username": e.category.user.username if e.category.user else "",
-                "email": e.category.user.email if e.category.user else "",
-                "image_url": e.category.user.image_url if e.category.user else None,
-            },
-        }
-        expense_data.append(item)  # 作成した辞書をリストに追加する
+    # 月ごとの集計用
+    monthly_totals = defaultdict(create_nested_defaultdict_int)
+    monthly_colors = {}
 
+    for e in all_expenses:
+        expense_year = e.expense_date.year
+        expense_month = e.expense_date.month
+        category_name = e.category.name or "Unknwn"
+        amount = int(e.amount)
+        # 年ごとの集計
+        yearly_totals[expense_year][category_name] += amount
+        if category_name not in yearly_colors and e.category.color:
+            yearly_colors[category_name] = e.category.color
+        year_month_key = f"{expense_year}-{expense_month:02d}"
+        # 月ごとの集計 (例: "2026-02")
+        monthly_totals[year_month_key][category_name] += amount
+        if category_name not in monthly_colors and e.category.color:
+            monthly_colors[category_name] = e.category.color
+    # JavaScriptに渡すための最終的なデータ構造を構築
+    # 現在の年と月のデータを抽出して渡す
+    now = date.today()
+    current_year = now.year
+    current_month_key = f"{now.year}-{now.month:02d}"
 
+    # 現在の年データ
+    current_yearly_data = yearly_totals[current_year]
+    yearly_labels = list(current_yearly_data.keys())
+
+    yearly_values = [] # まず空のリストを初期化する
+    for label in yearly_labels: # yearly_labels の各要素をループする
+        value = current_yearly_data[label] # 各ラベルに対応する値を取得する
+        yearly_values.append(value) # 各ラベルに対応する値を取得する
+
+    yearly_bg = [] # まず空のリストを初期化する
+    for label in yearly_labels: # yearly_labels の各要素をループする
+        color = yearly_colors.get(label, "#999999") # 各ラベルに対応する色を取得する。見つからなければ "#999999" を使う
+        yearly_bg.append(color) # 取得した色をリストに追加する
+
+    yearly_total_amount = sum(yearly_values)
+    yearly_formatted_total_amount = f"¥{yearly_total_amount:,}"
+
+    # 現在の月データ
+    current_monthly_data = monthly_totals[current_month_key]
+    monthly_labels = list(current_monthly_data.keys())
+
+    monthly_values =[] # まず空のリストを初期化する
+    for label in monthly_labels: # monthly_labels の各要素をループする
+        value = current_monthly_data[label] # 各ラベルに対応する値を取得する
+        monthly_values.append(value) # 取得した値をリストに追加する
+
+    monthly_bg = [] # まず空のリストを初期化する
+    for label in monthly_labels: # monthly_labels の各要素をループする
+        color = monthly_colors.get(label, "#999999") # 各ラベルに対応する色を取得する。見つからなければ "#999999" を使う
+        monthly_bg.append(color) # 取得した色をリストに追加する
+    
+    monthly_total_amount = sum(monthly_values)
+    monthly_formatted_total_amount = f"¥{monthly_total_amount:,}"
+
+    processed_chart_data = {
+        "year": {
+            "labels": yearly_labels,
+            "values": yearly_values,
+            "bg": yearly_bg,
+            "formattedTotalAmount" : yearly_formatted_total_amount,
+        },
+        "month": {
+            "labels": monthly_labels,
+            "values": monthly_values,
+            "bg": monthly_bg,
+            "formattedTotalAmount": monthly_formatted_total_amount,
+        },
+    }
+    context = {
+        "current_user_username": request.user.username,
+        "processed_chart_data": processed_chart_data, # これをJavaScriptに渡す
+    }
     return render(
         request,
         "dashboard/charts/chart.html",
-        {"expense_data": expense_data},
+        context,
     )
 
 

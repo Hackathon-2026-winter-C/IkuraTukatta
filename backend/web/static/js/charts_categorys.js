@@ -5,7 +5,7 @@ const categoriesContainer = document.getElementById("chart-categories");
 // カテゴリリストを更新する関数
 // 外部から呼び出せるようにグローバルに定義
 window.updateCategoryList = function (labels, values, bg) {
-  // ここが変更点！関数化
+  // 関数化
   if (!categoriesContainer) return;
 
   // コンテナの中身を一度クリアする
