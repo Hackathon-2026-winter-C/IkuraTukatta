@@ -40,7 +40,7 @@
                   <span class="text-[9px] font-semibold leading-none max-w-[52px] truncate">
                     {{ cat.name }}
                   </span>
-                </span>
+                </span> 
               </span>
 
             </button>
@@ -120,78 +120,65 @@
 </main>
 
 <!-- ===== カテゴリ追加／名前変更モーダル（ライト固定） ===== -->
-<div id="cat-modal" class="fixed inset-0 hidden bg-black/30 z-50">
+<div id="cat-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50">
   <button type="button" id="cat-modal-bg" class="absolute inset-0 w-full h-full"></button>
 
-  <div class="absolute left-0 right-0 bottom-0 px-4 pb-6">
-    <div
-      class="neu-panel mx-auto w-full max-w-[420px] rounded-t-[80px] pt-[18px] bg-[#E8E8E8] text-black"
-      data-theme="light"
-    >
-      <p id="cat-modal-title" class="text-[11px] text-[#888] ml-[26px] mt-2">カテゴリ追加</p>
+  <div class="absolute inset-x-0 bottom-0">
+    <div class="w-full flex flex-col items-center gap-4 pt-10">
+      <div class="neu-panel w-full flex flex-col gap-4">
+        <h3 id="cat-modal-title" class="text-xl font-bold text-black text-center mb-3">カテゴリ追加</h3>
 
-      <div class="flex justify-center mt-[10px]">
-        <div
-          id="cat-modal-iconcircle"
-          class="w-[66px] h-[66px] rounded-full grid place-items-center bg-white/70 border-2"
-          style="border-color: var(--cat-accent, #FF9400);"
-        >
-          <div id="cat-modal-icon" class="grid place-items-center [&_svg]:w-[40px] [&_svg]:h-[40px]">
-            <span class="w-[28px] h-[28px] flex items-center justify-center text-[#C5C5C5] [&_svg]:w-[28px] [&_svg]:h-[28px] [&_svg]:block">
-              {% include "icons/category/plus.svg" %}
-            </span>
+        <div class="flex justify-center mt-1">
+          <div
+            id="cat-modal-iconcircle"
+            class="w-[66px] h-[66px] rounded-full grid place-items-center bg-white/70 border-2"
+            style="border-color: var(--cat-accent, #FF9400);"
+          >
+            <div id="cat-modal-icon" class="grid place-items-center [&_svg]:w-[40px] [&_svg]:h-[40px]">
+              <span class="w-[28px] h-[28px] flex items-center justify-center text-[#C5C5C5] [&_svg]:w-[28px] [&_svg]:h-[28px] [&_svg]:block">
+                {% include "icons/category/default.svg" %}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="px-6 mt-4">
-        <input id="cat-name" type="text" class="input w-full" placeholder="カテゴリ名" />
-        <p id="cat-error" class="text-xs text-red-500 hidden mt-2"></p>
-      </div>
+        <input id="cat-name" type="text" class="h-10 w-full rounded-xl bg-white pl-3" placeholder="カテゴリ名" />
+        <p id="cat-error" class="text-sm text-red-500 hidden"></p>
 
-      <div id="cat-color-row" class="px-6 mt-4 flex items-center justify-between">
-        <p class="text-[11px] text-black/50">カラー</p>
-        <input
-          id="cat-color"
-          type="color"
-          value="#FF9400"
-          class="w-12 h-9 rounded-xl border-0 bg-transparent"
-        >
-      </div>
+        <div id="cat-color-row" class="flex items-center justify-between">
+          <p class="text-sm text-black/50">カラー</p>
+          <input id="cat-color" type="color" value="#FF9400" class="w-12 h-9 rounded-xl border-0 bg-transparent" />
+        </div>
 
-      <div class="px-6 mt-5 space-y-4 pb-8">
-        <button
-          type="button"
-          id="cat-submit"
-          class="btn btn-main"
-          style="background:#FF9400; color:#fff; border:none; box-shadow: var(--app-mainbutton-shadow);"
-        >
+        <button type="button" id="cat-submit" class="btn btn-nodark-orange w-full p-0 text-[16px] flex justify-center items-center font-light">
           <span id="cat-submit-text">登　録</span>
         </button>
 
-        <button
-          type="button"
-          id="cat-cancel"
-          class="btn btn-sub"
-          style="background:#E8E8E8; color:#111; border:none; box-shadow: var(--app-mainbutton-shadow);"
-        >
-          キャンセル
-        </button>
+        <button type="button" id="cat-cancel" class="btn btn-nodark-sub font-light">キャンセル</button>
 
-        <!-- ★ rename時だけ出す（JSでhidden制御） -->
-        <button
-          type="button"
-          id="cat-delete"
-          class="btn btn-sub hidden"
-          style="background:#E8E8E8; color:#D11; border:none; box-shadow: var(--app-mainbutton-shadow);"
-        >
-          削　除
-        </button>
+        <button type="button" id="cat-delete" class="btn btn-nodark-sub font-light hidden text-[#D11]">削　除</button>
       </div>
-
     </div>
   </div>
 </div>
 
+<!-- ===== カテゴリ削除確認モーダル（ライト固定） ===== -->
+<div id="cat-delete-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50">
+  <button type="button" id="cat-delete-bg" class="absolute inset-0 w-full h-full"></button>
+
+  <div class="absolute inset-x-0 bottom-0">
+    <div class="w-full flex flex-col items-center gap-4 pt-10">
+      <div class="neu-panel w-full flex flex-col gap-4">
+        <h3 class="text-xl font-bold text-black text-center mb-3">カテゴリ削除</h3>
+
+        <p id="cat-delete-title" class="text-sm text-[#111] text-center">このカテゴリを削除しますか？</p>
+        <p class="text-xs text-black/50 text-center">削除すると元に戻せません。</p>
+
+        <button type="button" id="cat-delete-confirm" class="btn btn-nodark-orange w-full p-0 text-[16px] flex justify-center items-center font-light">削　除</button>
+        <button type="button" id="cat-delete-cancel" class="btn btn-nodark-sub font-light">キャンセル</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="{% static 'js/category.js' %}"></script>
 {% endblock %}

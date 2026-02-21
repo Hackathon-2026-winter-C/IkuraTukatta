@@ -21,9 +21,9 @@ function processDataForPeriod(period, rawData) {
 
     // 期間によるフィルタリング
     let shouldInclude = false;
-    if (period === 'year' && expenseYear === currentYear) {
+    if (period === "year" && expenseYear === currentYear) {
       shouldInclude = true;
-    } else if (period === 'month' && expenseYear === currentYear && expenseMonth === currentMonth) {
+    } else if (period === "month" && expenseYear === currentYear && expenseMonth === currentMonth) {
       shouldInclude = true;
     }
 
@@ -32,7 +32,7 @@ function processDataForPeriod(period, rawData) {
       const amt = Number(e.amount) || 0;
       totals.set(key, (totals.get(key) || 0) + amt);
       if (!colors.has(key) && e.categoryColor) {
-        colors.set(key, e.categoryColor); 
+        colors.set(key, e.categoryColor);
       }
     }
   }
@@ -48,9 +48,10 @@ function processDataForPeriod(period, rawData) {
 
 // ラジオボタンの変更を処理するメイン関数
 function handlePeriodChange() {
-  const selectedPeriod = document.querySelector('input[name="option"]:checked').value;
+  const checked = document.querySelector('input[name="chart-period"]:checked');
+  const selectedPeriod = checked ? checked.value : "year";
   const { labels, values, bg, formattedTotalAmount } = processDataForPeriod(selectedPeriod, rawExpenseData);
-  
+
   // charts.js と charts_categorys.js で定義された関数を呼び出す
   if (window.updateChart) {
     window.updateChart(labels, values, bg, formattedTotalAmount);
@@ -61,12 +62,10 @@ function handlePeriodChange() {
 }
 
 // イベントリスナーの登録
-const radioOptions = document.querySelectorAll('input[name="option"]');
-radioOptions.forEach(radio => {
-  radio.addEventListener('change', handlePeriodChange);
-});
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll('input[name="chart-period"]').forEach((radio) => {
+    radio.addEventListener("change", handlePeriodChange);
+  });
 
-// ページロード時の初期表示
-document.addEventListener('DOMContentLoaded', () => {
-  handlePeriodChange(); // 初期期間（checked="checked"のYear）で表示
+  handlePeriodChange();
 });

@@ -4,22 +4,13 @@
   <div class="neu-panel w-full flex flex-col gap-4">
     <h3 class="text-xl font-bold text-black text-center mb-3">メールアドレスを変更しますか？</h3>
 
-    <input
-      id="user-email-input"
-      type="text"
-      class="h-10 w-full rounded-xl bg-white pl-3 "
-      value="{{ request.user.email }}"
-    />
+    <input id="user-email-input" type="text" class="h-10 w-full rounded-xl bg-white pl-3" value="{{ request.user.email }}" />
     <p id="user-email-error" class="text-sm text-red-500 hidden"></p>
 
-    <button
-      id="submit-user-email"
-      type="button"
-      class="btn btn-nodark-sub bg-[#FF9400] w-full p-0 text-[16px] mt-3 flex justify-center items-center font-light "
-    >
+    <button id="submit-user-email" type="button" class="btn btn-nodark-sub bg-[#FF9400] w-full p-0 text-[16px] mt-3 flex justify-center items-center font-light">
       変更する
     </button>
-        <button class="btn btn-nodark-sub font-light" data-close-user-email-modal>
+    <button class="btn btn-nodark-sub font-light" data-close-user-email-modal>
       キャンセル
     </button>
   </div>
