@@ -26,6 +26,11 @@
       </div>
     </div>
 
+      {% if mode_receipt %}
+          <button id="receipt-open-btn" type="button" class="w-full h-12 rounded-2xl bg-[#FF9400] text-white font-bold flex items-center justify-center shadow-lg ">レシートを追加</button>
+          <input type="file" accept="image/*" class="hidden" id="receipt-image-input">
+      {% endif %}
+
     <!-- ===============================
          新規 / 編集 兼用フォーム
     ================================ -->
@@ -114,6 +119,7 @@
 </main>
 
 <script src="{% static 'js/segmented.js' %}"></script>
+<script src="{% static 'js/receipt-input.js' %}" defer></script>
 
 <script>
   // ----- segmented (Record) -----

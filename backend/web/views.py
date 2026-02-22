@@ -3,6 +3,7 @@ from datetime import date
 import calendar
 import json
 import re
+import logging
 from collections import defaultdict
 
 from django.urls import reverse
@@ -35,6 +36,8 @@ from .profile_image_service import save_profile_image
 from .forms import EmailUserCreationForm, UserUpdateForm
 from .category_defaults import create_default_categories
 from .models import Category, MoneyFlow, User, ShareGroup, ShareGroupMember
+from .receipt_image_service import compress_and_resize_receipt
+from .receipt_bedrock_service import analyze_receipt_with_bedrock
 
 from .ledger_utils import (
     GROUP_SESSION_KEY,
@@ -64,6 +67,7 @@ CATEGORY_ICON_KEYS = {
     "utilities",
 }
 IMMUTABLE_CATEGORY_NAMES = {"支出その他", "収入その他", "その他"}
+logger = logging.getLogger(__name__)
 
 
 @login_required(login_url="login")
@@ -641,6 +645,31 @@ def dashboard_moneyflow_form_page(request):
         },
     )
 
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def receipt_analyze_api(request):
+    receipt_image = request.FILES.get("receipt_image")
+    if not receipt_image:
+        return JsonResponse({"ok": False, "error": "receipt_image_required"}, status=400)
+
+    try:
+        image_bytes, meta = compress_and_resize_receipt(
+            receipt_image,
+            max_side=1600,
+            max_bytes=settings.BEDROCK_RECEIPT_MAX_BYTES,
+        )
+        result = analyze_receipt_with_bedrock(image_bytes, media_type=meta["content_type"])
+    except ValueError as e:
+        return JsonResponse({"ok": False, "error": str(e)}, status=400)
+    except Exception as e:
+        logger.exception("receipt analyze failed")
+        payload = {"ok": False, "error": "receipt_analyze_failed"}
+        if settings.DEBUG:
+            payload["detail"] = str(e)
+        return JsonResponse(payload, status=500)
+
+    return JsonResponse({"ok": True, "result": result})
 
 # カテゴリ管理
 @login_required(login_url="login")
