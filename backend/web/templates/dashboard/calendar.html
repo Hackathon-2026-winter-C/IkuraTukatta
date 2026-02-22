@@ -3,7 +3,7 @@
 {% load humanize %} {% block title %}Calendar{% endblock %} {% block content %}
 
 <!-- ページ全体のラッパー -->
-<main class="w-full flex flex-col items-center px-4 pt-28 pb-10">
+<main class="w-full flex flex-col items-center px-4 pt-3 pb-3">
   <!-- ===== 共有プルダウン ===== -->
   <div id="ledger-switcher" class="ledger-switcher w-full max-w-[420px] mb-2.5">
     <button type="button" id="ledger-switcher-btn" class="ledger-switcher__btn">
@@ -23,29 +23,39 @@
   <!-- カレンダー全体のカード -->
   <section class="w-full max-w-[420px] mt-3 p-4 rounded-3xl bg-[rgb(var(--app-bg))] app-shadow">
     <!-- ================= 月移動ナビ ================= -->
-    <div class="flex items-center justify-between mb-3">
-      <!-- 前の月へ移動するボタン -->
-      <!-- prev_ym は view.py で作って渡している：例 "2025-12" -->
-      <a href="/dashboard/?ym={{ prev_ym }}" aria-label="prev month" class="grid place-items-center w-[44px] h-[44px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> ← </a>
+    <div class="relative mb-3 h-[44px]">
+      <!-- 左ボタン -->
+      <a href="/dashboard/?ym={{ prev_ym }}" aria-label="prev month" class="absolute left-0 top-0 grid place-items-center w-[44px] h-[44px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> ← </a>
 
-      <!-- 今表示している年月のラベル -->
-      <!-- 例: January, 2026 -->
-      <div class="text-2xl font-bold text-[rgb(var(--app-text))]">{{ month_label }}</div>
+      <!-- 右ボタン -->
+      <a href="/dashboard/?ym={{ next_ym }}" aria-label="next month" class="absolute right-0 top-0 grid place-items-center w-[44px] h-[44px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> → </a>
 
-      <!-- 次の月へ移動するボタン -->
-      <a href="/dashboard/?ym={{ next_ym }}" aria-label="next month" class="grid place-items-center w-[44px] h-[44px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> → </a>
+      {% comment %}
+      <!-- 真ん中：2 を “完全中央” + “下揃え” -->
+      <span class="absolute left-1/2 -translate-x-1/2 bottom-[6px] text-3xl font-bold text-[#FF9400] leading-none"> {{ month_num }} </span>
+
+      <!-- 年：2の左に “下揃え” -->
+      <span class="absolute left-1/2 -translate-x-[calc(100%+20px)] bottom-[6px] text-xl font-bold text-[rgb(var(--app-text))] leading-none"> {{ year_label }} </span>
+
+      <!-- 月名：2の右に “下揃え” -->
+      <span class="absolute left-1/2 translate-x-[20px] bottom-[6px] text-xl font-bold text-[rgb(var(--app-text))] leading-none"> {{ month_name }} </span> {% endcomment %}
+
+      <div class="flex items-end justify-center mb-3 h-[44px] font-bold text-[rgb(var(--app-text))]">
+        <span class="text-xl"> {{ year_label }}. </span>
+        <span class="text-3xl text-[#FF9400] ml-1 leading-none"> {{ month_num }} </span>
+      </div>
     </div>
 
     <!-- ================= 曜日ヘッダー ================= -->
     <div class="grid grid-cols-7 text-center text-xs font-bold mb-2">
       <!-- 日〜土のラベル -->
-      <div class="text-[#FF9400]">Su</div>
-      <div class="text-[#FF9400]">Mo</div>
-      <div class="text-[#FF9400]">Tu</div>
-      <div class="text-[#FF9400]">We</div>
-      <div class="text-[#FF9400]">Th</div>
-      <div class="text-[#FF9400]">Fr</div>
-      <div class="text-[#FF9400]">Sa</div>
+      <div class="text-[rgb(var(--app-text))]">日</div>
+      <div class="text-[rgb(var(--app-text))]">月</div>
+      <div class="text-[rgb(var(--app-text))]">火</div>
+      <div class="text-[rgb(var(--app-text))]">水</div>
+      <div class="text-[rgb(var(--app-text))]">木</div>
+      <div class="text-[rgb(var(--app-text))]">金</div>
+      <div class="text-[rgb(var(--app-text))]">土</div>
     </div>
 
     <!-- ================= 日付グリッド ================= -->

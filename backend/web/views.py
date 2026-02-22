@@ -65,61 +65,6 @@ CATEGORY_ICON_KEYS = {
 }
 IMMUTABLE_CATEGORY_NAMES = {"支出その他", "収入その他", "その他"}
 
-
-@login_required(login_url="login")
-@require_POST
-@csrf_protect
-def account_profile_image_api(request):
-    profile_image = request.FILES.get("profile_image")
-    if not profile_image:
-        return JsonResponse({"ok": False, "error": "profile_image_required"}, status=400)
-
-    try:
-        key = save_profile_image(request.user.id, profile_image)
-        base_url = settings.AWS_S3_BASE_URL or (
-            f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com"
-        )
-        image_url = f"{base_url.rstrip('/')}/{key.lstrip('/')}"
-        request.user.image_url = image_url
-        request.user.save(update_fields=["image_url"])
-    except (BotoCoreError, ClientError, OSError, UnidentifiedImageError):
-        return JsonResponse({"ok": False, "error": "upload_failed"}, status=400)
-
-    return JsonResponse({"ok": True, "image_url": image_url})
-
-
-@login_required(login_url="login")
-@require_POST
-@csrf_protect
-def account_username_api(request):
-    data = _json(request)
-    username = (data.get("username") or "").strip()
-    if not username:
-        return JsonResponse({"ok": False, "error": "username_required"}, status=400)
-
-    request.user.username = username
-    request.user.save(update_fields=["username"])
-    return JsonResponse({"ok": True, "username": username})
-
-
-@login_required(login_url="login")
-@require_POST
-@csrf_protect
-def account_email_api(request):
-    data = _json(request)
-    email = (data.get("email") or "").strip().lower()
-    if not email:
-        return JsonResponse({"ok": False, "error": "email_required"}, status=400)
-
-    exists = User.objects.filter(email__iexact=email).exclude(id=request.user.id).exists()
-    if exists:
-        return JsonResponse({"ok": False, "error": "email_already_used"}, status=409)
-
-    request.user.email = email
-    request.user.save(update_fields=["email"])
-    return JsonResponse({"ok": True, "email": email})
-
-
 @login_required(login_url="login")
 @require_POST
 @csrf_protect
@@ -422,8 +367,7 @@ def dashboard_page(request):
     prev_y, prev_m = add_month(year, month, -1)
     next_y, next_m = add_month(year, month, 1)
 
-    # 表示用ラベル（例: February, 2026）
-    month_label = f"{calendar.month_name[month]}, {year}"
+    month_name = calendar.month_name[month]  # February
 
     # カレンダーに表示している最初と最後の日付
     # （前月・次月の分も含める）
@@ -501,7 +445,9 @@ def dashboard_page(request):
         {
             "weeks": weeks_view,  # カレンダー本体
             "month": month,
-            "month_label": month_label,  # 表示ラベル
+            "year_label": year,
+            "month_num": month,
+            "month_name": month_name,
             "prev_ym": f"{prev_y:04d}-{prev_m:02d}",  # 前月リンク用（年4桁・月2桁ゼロ埋め）
             "next_ym": f"{next_y:04d}-{next_m:02d}",  # 次月リンク用（年4桁・月2桁ゼロ埋め）
             "today": today,

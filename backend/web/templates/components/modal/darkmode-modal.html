@@ -1,11 +1,12 @@
 {% load static %}
+<div class="w-full flex flex-col items-center pt-8 sm:pt-10">
+  <div class="w-full max-w-[360px] sm:max-w-[420px] flex flex-col gap-4 px-4 sm:px-6 pb-6 sm:pb-8">
+    <img src="{% static 'assets/images/signup_img.png' %}" alt="テーマ画像" class="w-20 h-20 sm:w-24 sm:h-24 object-contain mx-auto" />
 
-<div class="px-0 mt-0 flex flex-col items-center gap-4">
-  <img src="{% static 'assets/images/signup_img.png' %}" alt="アカウント画像" class="w-28 h-28 object-contain" />
-  <h3 class="text-base font-bold text-black text-center">ダークモードに設定しますか？</h3>
-</div>
+    <h3 class="text-base sm:text-xl font-bold text-black text-center leading-snug">ダークモードに変更しますか？</h3>
 
-<div class="px-6 mt-5 space-y-3 pb-8">
-  <button id="theme-choice-dark" type="button" class="btn btn-main" style="background: #111; color: #fff; border: none; box-shadow: var(--app-mainbutton-shadow)">ダークモードへ変更</button>
-  <button id="theme-choice-light" type="button" class="btn btn-sub" style="background: #e8e8e8; color: #111; border: none; box-shadow: var(--app-mainbutton-shadow)">ライトモードのまま</button>
+    <button id="theme-choice-dark" type="button" class="btn btn-nodark-sub bg-[#111] text-white w-full h-12 sm:h-14 p-0 text-[15px] sm:text-[16px] mt-2 sm:mt-3 flex justify-center items-center font-light">ダークモードへ変更</button>
+
+    <button id="theme-choice-light" type="button" class="btn btn-nodark-sub w-full h-12 sm:h-14 p-0 text-[15px] sm:text-[16px] font-light">ライトモードのまま</button>
+  </div>
 </div>

@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent  # backend/
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
-DEBUG = os.getenv("DEBUG", "1") == "1"
+DEBUG = os.getenv("DEBUG", "0") == "0"
 
 def split_csv_env(name: str, default: str) -> list[str]:
     return [v.strip() for v in os.getenv(name, default).split(",") if v.strip()]

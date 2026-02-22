@@ -310,6 +310,7 @@ html[data-theme="dark"] .btn-red:active {
 
 
 /* 設定行のベース */
+/* 設定行のベース */
 .setting-btn {
     width: 100%;
     display: flex;
@@ -318,7 +319,7 @@ html[data-theme="dark"] .btn-red:active {
     /* 左ブロックと右ブロックを両端へ */
     gap: 12px;
 
-    padding: 16px 18px;
+    padding: 9px 18px;
     border-radius: 18px;
 
     background: rgb(var(--app-bg));
@@ -585,4 +586,8 @@ input[type="date"] {
     appearance: auto;
     -webkit-appearance: auto;
     -moz-appearance: auto;
+}
+
+.no-footer .app-footer {
+    display: none;
 }
