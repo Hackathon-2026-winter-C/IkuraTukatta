@@ -2,7 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const openBtn = document.getElementById("open-username-modal");
   const modal = document.getElementById("username-modal");
   const bg = document.getElementById("username-modal-bg");
-  const closeBtns = modal?.querySelectorAll("[data-close-username-modal]") || [];
+  const closeBtns =
+    modal?.querySelectorAll("[data-close-username-modal]") || [];
   const usernameInput = document.getElementById("username-input");
   const submitBtn = document.getElementById("submit-username");
 
@@ -45,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     submitBtn.disabled = true;
+    window.loadingOverlay?.show();
     try {
       const res = await fetch("/api/account/username/", {
         method: "POST",
@@ -64,6 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       alert(err?.message || "エラーが発生しました");
     } finally {
+      window.loadingOverlay?.hide();
       submitBtn.disabled = false;
     }
   });

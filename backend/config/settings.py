@@ -11,12 +11,19 @@ DEBUG = os.getenv("DEBUG", "1") == "1"
 def split_csv_env(name: str, default: str) -> list[str]:
     return [v.strip() for v in os.getenv(name, default).split(",") if v.strip()]
 
+
 # "localhost,127.0.0.1" のような CSV を env で渡す
 ALLOWED_HOSTS = split_csv_env("ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = split_csv_env(
     "CSRF_TRUSTED_ORIGINS",
     "http://localhost:8080,http://127.0.0.1:8080,http://localhost:8000,http://127.0.0.1:8000",
 )
+
+def int_env(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except (TypeError, ValueError):
+        return default
 
 AUTH_USER_MODEL = "web.User"
 
@@ -111,6 +118,14 @@ AWS_S3_BASE_URL = os.getenv(
     else "",
 )
 PROFILE_IMAGE_MAX_BYTES = 3 * 1024 * 1024
+
+# ---- AWS Bedrock　----
+BEDROCK_REGION_NAME = os.getenv("BEDROCK_REGION_NAME", AWS_S3_REGION_NAME)
+BEDROCK_MODEL_ID = os.getenv(
+    "BEDROCK_MODEL_ID",
+    "anthropic.claude-haiku-4-5-20251001-v1:0",
+)
+BEDROCK_RECEIPT_MAX_BYTES = int_env("BEDROCK_RECEIPT_MAX_BYTES", 1_000_000)
 
 # ---- Static ----
 STATIC_URL = "/static/"

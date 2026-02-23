@@ -36,3 +36,13 @@ output "interface_endpoint_sg_id" {
   description = "Security group ID attached to interface endpoints"
   value       = aws_security_group.interface_endpoint.id
 }
+
+output "nat_gateway_id" {
+  description = "NAT gateway ID when enabled, otherwise null"
+  value       = var.enable_nat_gateway ? aws_nat_gateway.main[0].id : null
+}
+
+output "nat_eip_public_ip" {
+  description = "Public IP of NAT EIP when enabled, otherwise null"
+  value       = var.enable_nat_gateway ? aws_eip.nat[0].public_ip : null
+}
