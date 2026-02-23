@@ -49,6 +49,11 @@ resource "aws_iam_role_policy_attachment" "ssm_managed" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+resource "aws_iam_role_policy_attachment" "bedrock_full" {
+  role       = aws_iam_role.ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonBedrockFullAccess"
+}
+
 resource "aws_iam_role_policy" "s3_access" {
   name = "${var.project_name}-s3-access"
   role = aws_iam_role.ec2.id
@@ -85,18 +90,25 @@ resource "aws_launch_template" "app" {
   vpc_security_group_ids = [aws_security_group.ec2.id]
 
   user_data = base64encode(templatefile("${path.module}/userdata.sh", {
-    ecr_repository_url = var.ecr_repository_url
-    image_tag          = var.image_tag
-    debug              = var.debug
-    region             = var.region
-    db_host            = var.db_host
-    db_name            = var.db_name
-    db_user            = var.db_user
-    db_password        = var.db_password
-    alb_dns_name       = var.alb_dns_name
-    aws_s3_bucket      = var.aws_s3_bucket
-    aws_access_key     = var.aws_access_key
-    aws_secret_key     = var.aws_secret_key
+    ecr_repository_url        = var.ecr_repository_url
+    image_tag                 = var.image_tag
+    debug                     = var.debug
+    region                    = var.region
+    db_host                   = var.db_host
+    db_name                   = var.db_name
+    db_user                   = var.db_user
+    db_password               = var.db_password
+    alb_dns_name              = var.alb_dns_name
+    aws_s3_bucket             = var.aws_s3_bucket
+    aws_access_key            = var.aws_access_key
+    aws_secret_key            = var.aws_secret_key
+    bedrock_region_name       = var.bedrock_region_name
+    bedrock_model_id          = var.bedrock_model_id
+    bedrock_receipt_max_bytes = var.bedrock_receipt_max_bytes
+    google_oauth_client_id    = var.google_oauth_client_id
+    django_secret_key         = var.django_secret_key
+    app_allowed_hosts         = var.app_allowed_hosts
+    app_csrf_trusted_origins  = var.app_csrf_trusted_origins
   }))
 
   tag_specifications {

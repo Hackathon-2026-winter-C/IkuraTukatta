@@ -43,18 +43,23 @@ ecr_login() {
 retry 6 ecr_login
 retry 6 docker pull "$IMAGE_REF"
 
-cat > "$ENV_FILE" <<EOF
+cat > "$ENV_FILE" <<'EOF'
 DB_HOST=${db_host}
 DB_PORT=3306
 DB_NAME=${db_name}
 DB_USER=${db_user}
 DB_PASSWORD=${db_password}
-ALLOWED_HOSTS=${alb_dns_name},localhost,127.0.0.1
-CSRF_TRUSTED_ORIGINS=http://${alb_dns_name}
+SECRET_KEY=${django_secret_key}
+ALLOWED_HOSTS=${app_allowed_hosts}
+CSRF_TRUSTED_ORIGINS=${app_csrf_trusted_origins}
 AWS_S3_REGION_NAME=${region}
 AWS_STORAGE_BUCKET_NAME=${aws_s3_bucket}
 AWS_ACCESS_KEY_ID=${aws_access_key}
 AWS_SECRET_ACCESS_KEY=${aws_secret_key}
+BEDROCK_REGION_NAME=${bedrock_region_name}
+BEDROCK_MODEL_ID=${bedrock_model_id}
+BEDROCK_RECEIPT_MAX_BYTES=${bedrock_receipt_max_bytes}
+GOOGLE_OAUTH_CLIENT_ID=${google_oauth_client_id}
 ECR_REPOSITORY_URL=${ecr_repository_url}
 IMAGE_TAG=${image_tag}
 EOF

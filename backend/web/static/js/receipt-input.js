@@ -3,8 +3,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const fileInput = document.getElementById("receipt-image-input");
   const amountDisplay = document.getElementById("amount_display");
   const amountHidden = document.getElementById("amount");
+  const titleInput = document.getElementById("title");
   const dateInput = document.getElementById("date-input");
   const dateText = document.getElementById("date-text");
+  const categoryHidden = document.getElementById("category_id");
   const getCookie = (name) => window.appUtils?.getCookie?.(name) || null;
 
   if (!openBtn || !fileInput) return;
@@ -43,6 +45,37 @@ document.addEventListener("DOMContentLoaded", () => {
     return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : "";
   };
 
+  const applySuggestedCategory = (suggestedId) => {
+    if (suggestedId == null) return;
+    const id = String(suggestedId).trim();
+    if (!id) return;
+
+    const picks = document.querySelectorAll(".cat-pick");
+    let matched = false;
+    picks.forEach((btn) => {
+      const isMatch = btn.dataset.id === id;
+      btn.classList.toggle("is-selected", isMatch);
+      if (isMatch) matched = true;
+    });
+
+    if (matched && categoryHidden) {
+      categoryHidden.value = id;
+      categoryHidden.dispatchEvent(new Event("change", { bubbles: true }));
+      if (typeof window.updateRecordSubmitState === "function") {
+        window.updateRecordSubmitState();
+      }
+      return;
+    }
+
+    if (categoryHidden) {
+      categoryHidden.value = "";
+      categoryHidden.dispatchEvent(new Event("change", { bubbles: true }));
+      if (typeof window.updateRecordSubmitState === "function") {
+        window.updateRecordSubmitState();
+      }
+    }
+  };
+
   const applyReceiptResultToForm = (result) => {
     if (!result || typeof result !== "object") return;
 
@@ -58,6 +91,18 @@ document.addEventListener("DOMContentLoaded", () => {
       dateInput.value = parsedDate;
       if (dateText) dateText.textContent = parsedDate;
     }
+
+    const titleCandidate =
+      typeof result.title === "string"
+        ? result.title.trim()
+        : typeof result.store_name === "string"
+          ? result.store_name.trim()
+          : "";
+    if (titleCandidate && titleInput) {
+      titleInput.value = titleCandidate;
+    }
+
+    applySuggestedCategory(result.suggested_category_id ?? result.category_id);
   };
 
   // レシートボタン押下 -> hidden file input を開く

@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 「ログアウト」確定時のみ実行
   submitBtn.addEventListener("click", () => {
+    window.loadingOverlay?.show();
     const url = logoutRowBtn.dataset.logoutUrl;
     if (!url) return;
     submitBtn.disabled = true;

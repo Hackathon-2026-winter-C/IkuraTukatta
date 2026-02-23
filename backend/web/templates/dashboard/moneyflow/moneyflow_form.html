@@ -1,6 +1,6 @@
 {% extends "base.html" %} {% load static %} {% block title %}Record{% endblock %} {% block content %}
 
-<main class="w-full flex flex-col items-center px-4 pb-28 pt-16">
+<main class="w-full flex flex-col items-center px-4 pb-28 pt-3">
   <div class="w-full max-w-[420px] space-y-4">
     <!-- ===== 支出 / 収入 / レシート ===== -->
     <div id="record-seg" class="relative flex w-full h-10 rounded-full p-1 border border-white/25 bg-white/15 backdrop-blur-lg app-shadow">
@@ -71,7 +71,6 @@
       <p id="date-error" class="hidden mt-1 text-[11px] text-red-500"></p>
 
       <!-- category -->
-      {% if not mode_receipt %}
       <section class="app-shadow bg-[rgb(var(--app-bg))] rounded-3xl px-5 pt-5 pb-6">
         <div class="flex items-center justify-between mb-4">
           <p class="text-[11px] opacity-60 text-[rgb(var(--app-text))]">Category</p>
@@ -103,7 +102,6 @@
 
         <p id="category-error" class="hidden mt-2 text-[11px] text-red-500"></p>
       </section>
-      {% endif %}
 
       <button id="submit-btn" type="submit" class="w-full h-12 rounded-2xl bg-[#FF9400] text-white font-semibold app-shadow active:translate-y-[1px] transition disabled:opacity-40 disabled:active:translate-y-0">{% if entry %}変　更{% else %}記　録{% endif %}</button>
     </form>
@@ -201,15 +199,25 @@
   }
 
   // ---------- submit state ----------
-  const updateSubmitState = () => {
-    const isReceipt = {{ mode_receipt|yesno:"true,false" }};
-    if (isReceipt) {
-      if (submitBtn) submitBtn.disabled = false;
-      return;
+  const syncHiddenCategoryFromSelected = () => {
+    if (!categoryHidden) return "";
+    const hiddenCategoryId = String(categoryHidden.value || "").trim();
+    if (hiddenCategoryId) return hiddenCategoryId;
+
+    const selected = document.querySelector(".cat-pick.is-selected");
+    const selectedId = selected ? String(selected.dataset.id || "").trim() : "";
+    if (selectedId) {
+      categoryHidden.value = selectedId;
+      return selectedId;
     }
-    const hasCategory = categoryHidden && categoryHidden.value && categoryHidden.value.trim() !== "";
+    return "";
+  };
+
+  const updateSubmitState = () => {
+    const hasCategory = syncHiddenCategoryFromSelected() !== "";
     if (submitBtn) submitBtn.disabled = !hasCategory;
   };
+  window.updateRecordSubmitState = updateSubmitState;
 
   updateSubmitState();
 
@@ -218,6 +226,12 @@
 
   if (categoryHidden) {
     const initial = categoryHidden.value;
+
+    categoryHidden.addEventListener("change", () => {
+      if (categoryError) clearError(categoryError);
+      updateSubmitState();
+    });
+
     if (initial) {
       picks.forEach((btn) => {
         if (btn.dataset.id === String(initial)) btn.classList.add("is-selected");
@@ -229,9 +243,14 @@
         categoryHidden.value = btn.dataset.id;
         picks.forEach((x) => x.classList.remove("is-selected"));
         btn.classList.add("is-selected");
-        if (categoryError) clearError(categoryError);
-        updateSubmitState();
+        categoryHidden.dispatchEvent(new Event("change", { bubbles: true }));
       });
+    });
+
+    // レシート解析側で class だけ先に変わった場合にも submit 状態を同期する。
+    const observer = new MutationObserver(() => updateSubmitState());
+    picks.forEach((btn) => {
+      observer.observe(btn, { attributes: true, attributeFilter: ["class"] });
     });
   }
 
@@ -263,15 +282,12 @@
         return;
       }
 
-      const isReceipt = {{ mode_receipt|yesno:"true,false" }};
-      if (!isReceipt) {
-        const catId = categoryHidden ? categoryHidden.value : "";
-        if (!catId) {
-          e.preventDefault();
-          if (categoryError) showError(categoryError, "カテゴリを選んでね");
-          updateSubmitState();
-          return;
-        }
+      const catId = syncHiddenCategoryFromSelected();
+      if (!catId) {
+        e.preventDefault();
+        if (categoryError) showError(categoryError, "カテゴリを選んでね");
+        updateSubmitState();
+        return;
       }
 
       isSubmitting = true;

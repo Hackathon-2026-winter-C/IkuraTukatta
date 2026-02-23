@@ -47,17 +47,41 @@ def _print_token_usage(response: dict) -> None:
     print(f"合計: {total_tokens}")
 
 
-def analyze_receipt_with_bedrock(image_bytes: bytes, media_type: str = "image/jpeg"):
+def _build_prompt(categories: list[dict] | None) -> str:
+    category_block = ""
+    if categories:
+        candidates = [
+            {"id": c.get("id"), "name": c.get("name")}
+            for c in categories
+            if c.get("id") is not None and c.get("name")
+        ]
+        if candidates:
+            category_block = (
+                "カテゴリ候補は以下のみです。必ず id で選んでください。"
+                "候補に合うものがない場合は suggested_category_id を null にしてください。\n"
+                f"{json.dumps(candidates, ensure_ascii=False)}\n"
+            )
+
+    return (
+        "レシート画像から日付と合計金額を抽出してください。"
+        "title には店舗名（例: セブンイレブン）を入れてください。"
+        "合計は税込金額で正確に抽出してください。（合計金額横の金額）"
+        "お預かりとかお釣りは除外してください。"
+        f"{category_block}"
+        "カテゴリは商品を読み取って合うものを選択すべきものを返してください"
+        "JSONのみ返してください。"
+        '{"date":"YYYY-MM-DD or null","total_amount":12345 or null,"title":"店舗名 or null","suggested_category_id":123 or null}'
+    )
+
+
+def analyze_receipt_with_bedrock(
+    image_bytes: bytes,
+    media_type: str = "image/jpeg",
+    categories: list[dict] | None = None,
+):
     image_format = _image_format_from_media_type(media_type)
     client = boto3.client("bedrock-runtime", region_name=settings.BEDROCK_REGION_NAME)
-
-    prompt = (
-        "レシート画像から日付と合計金額を抽出してください。"
-        "合計は税込金額で正確に抽出してください。（合計金額横の金額）"
-        "お預かりとかお釣りは抜きにしてください。"
-        "JSONのみ返してください。"
-        '{"date":"YYYY-MM-DD or null","total_amount":12345 or null}'
-    )
+    prompt = _build_prompt(categories)
 
     response = client.converse(
         modelId=settings.BEDROCK_MODEL_ID,
