@@ -8,7 +8,8 @@ locals {
     "ecr.dkr",
     "ssm",
     "ssmmessages",
-    "ec2messages"
+    "ec2messages",
+    "bedrock-runtime"
   ])
 }
 
@@ -78,6 +79,37 @@ resource "aws_route_table" "private" {
   })
 }
 
+resource "aws_eip" "nat" {
+  count = var.enable_nat_gateway ? 1 : 0
+
+  domain = "vpc"
+
+  tags = merge(var.tags, {
+    Name = "${var.environment}-nat-eip"
+  })
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+resource "aws_nat_gateway" "main" {
+  count = var.enable_nat_gateway ? 1 : 0
+
+  allocation_id = aws_eip.nat[0].id
+  subnet_id     = aws_subnet.public[0].id
+
+  tags = merge(var.tags, {
+    Name = "${var.environment}-nat-gateway"
+  })
+}
+
+resource "aws_route" "private_default_via_nat" {
+  count = var.enable_nat_gateway ? 1 : 0
+
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.main[0].id
+}
+
 resource "aws_route_table_association" "public" {
   count          = length(aws_subnet.public)
   subnet_id      = aws_subnet.public[count.index].id
@@ -140,5 +172,3 @@ resource "aws_vpc_endpoint" "interface" {
     Name = "${var.environment}-${replace(each.value, ".", "-")}-endpoint"
   })
 }
-
-

@@ -3,6 +3,7 @@ from datetime import date
 import calendar
 import json
 import re
+import logging
 from collections import defaultdict
 
 from django.urls import reverse
@@ -35,6 +36,8 @@ from .profile_image_service import save_profile_image
 from .forms import EmailUserCreationForm, UserUpdateForm
 from .category_defaults import create_default_categories
 from .models import Category, MoneyFlow, User, ShareGroup, ShareGroupMember
+from .receipt_image_service import compress_and_resize_receipt
+from .receipt_bedrock_service import analyze_receipt_with_bedrock
 
 from .ledger_utils import (
     GROUP_SESSION_KEY,
@@ -64,6 +67,7 @@ CATEGORY_ICON_KEYS = {
     "utilities",
 }
 IMMUTABLE_CATEGORY_NAMES = {"支出その他", "収入その他", "その他"}
+logger = logging.getLogger(__name__)
 
 @login_required(login_url="login")
 @require_POST
@@ -522,14 +526,14 @@ def dashboard_moneyflow_form_page(request):
         }
 
     categories = []
-    if mode in ("expense", "income"):
+    if mode in ("expense", "income","receipt"):
         is_in_type = (mode == "income")
         qs = Category.objects.filter(query, is_in_type=is_in_type).order_by("id")
         categories = [normalize_category(cat) for cat in qs]
 
     if request.method == "POST":
-        if mode == "receipt":
-            return JsonResponse({"ok": False, "error": "receiptはまだ未実装だよ"}, status=400)
+        # if mode == "receipt":
+        #     return JsonResponse({"ok": False, "error": "receiptはまだ未実装だよ"}, status=400)
 
         amount_raw = (request.POST.get("amount") or "").strip()
         title = (request.POST.get("title") or "").strip()
@@ -587,6 +591,75 @@ def dashboard_moneyflow_form_page(request):
         },
     )
 
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def receipt_analyze_api(request):
+    receipt_image = request.FILES.get("receipt_image")
+    if not receipt_image:
+        return JsonResponse({"ok": False, "error": "receipt_image_required"}, status=400)
+
+    query = _category_query_for_user(request.user)
+    expense_categories = list(
+        Category.objects.filter(query, is_in_type=False)
+        .order_by("id")
+        .values("id", "name")
+    )
+    allowed_category_ids = {c["id"] for c in expense_categories}
+
+    try:
+        image_bytes, meta = compress_and_resize_receipt(
+            receipt_image,
+            max_side=1600,
+            max_bytes=settings.BEDROCK_RECEIPT_MAX_BYTES,
+        )
+        result = analyze_receipt_with_bedrock(
+            image_bytes,
+            media_type=meta["content_type"],
+            categories=expense_categories,
+        )
+        if not isinstance(result, dict):
+            raise ValueError("invalid_model_response")
+
+        suggested_raw = result.get("suggested_category_id", result.get("category_id"))
+        suggested_id = None
+        if suggested_raw is not None and str(suggested_raw).strip() != "":
+            try:
+                suggested_id = int(str(suggested_raw).strip())
+            except (TypeError, ValueError):
+                suggested_id = None
+
+        if suggested_id not in allowed_category_ids:
+            suggested_id = None
+
+        result["suggested_category_id"] = suggested_id
+
+        title_raw = (
+            result.get("title")
+            or result.get("store_name")
+            or result.get("merchant_name")
+            or result.get("shop_name")
+        )
+        title_text = ""
+        if isinstance(title_raw, str):
+            title_text = re.sub(r"\s+", " ", title_raw).strip()
+        if title_text:
+            title_text = title_text[:255]
+            result["title"] = title_text
+        else:
+            result["title"] = None
+
+    except ValueError as e:
+        return JsonResponse({"ok": False, "error": str(e)}, status=400)
+    
+    except Exception as e:
+        logger.exception("receipt analyze failed")
+        payload = {"ok": False, "error": "receipt_analyze_failed"}
+        if settings.DEBUG:
+            payload["detail"] = str(e)
+        return JsonResponse(payload, status=500)
+
+    return JsonResponse({"ok": True, "result": result})
 
 # カテゴリ管理
 @login_required(login_url="login")
@@ -812,7 +885,7 @@ def dashboard_moneyflow_edit_page(request):
         except Category.DoesNotExist:
             return JsonResponse({"ok": False, "error": "カテゴリが見つからないよ"}, status=404)
 
-        if mode == "expense" and cat.is_in_type:
+        if mode in ("expense", "receipt") and cat.is_in_type:
             return JsonResponse({"ok": False, "error": "支出タブでは収入カテゴリは選べないよ"}, status=400)
         if mode == "income" and (not cat.is_in_type):
             return JsonResponse({"ok": False, "error": "収入タブでは支出カテゴリは選べないよ"}, status=400)

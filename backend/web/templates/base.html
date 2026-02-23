@@ -17,5 +17,7 @@
     {% include 'components/footer.html' %} {% block content %}{% endblock %} {% django_browser_reload_script %}
 
     <script src="{% static 'js/utils.js' %}"></script>
+    <script src="{% static 'js/loading-overlay.js' %}" defer></script>
+    {% include 'components/loading-overlay.html' %}
   </body>
 </html>

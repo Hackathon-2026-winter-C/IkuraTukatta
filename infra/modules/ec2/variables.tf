@@ -127,6 +127,41 @@ variable "django_setup_revision" {
 }
 
 variable "debug" {
-  type = bool
+  type    = bool
   default = false
+}
+
+variable "bedrock_region_name" {
+  description = "AWS Bedrock region name"
+  type        = string
+}
+
+variable "bedrock_model_id" {
+  description = "AWS Bedrock model ID (or inference profile ID/ARN)"
+  type        = string
+}
+
+variable "bedrock_receipt_max_bytes" {
+  description = "Maximum receipt image size (bytes) sent to Bedrock"
+  type        = number
+}
+
+variable "google_oauth_client_id" {
+  description = "Google OAuth client ID for web sign-in"
+  type        = string
+  default     = ""
+}
+
+variable "django_secret_key" {
+  description = "Django SECRET_KEY for production runtime"
+  type        = string
+  sensitive   = true
+}
+
+variable "app_allowed_hosts" {
+  type = string
+}
+
+variable "app_csrf_trusted_origins" {
+  type = string
 }

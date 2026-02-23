@@ -2,7 +2,6 @@ variable "aws_region" {
   type    = string
   default = "ap-northeast-1"
 }
-
 variable "environment" {
   type = string
 }
@@ -21,6 +20,11 @@ variable "public_subnet_cidrs" {
 
 variable "private_subnet_cidrs" {
   type = list(string)
+}
+
+variable "enable_nat_gateway" {
+  type    = bool
+  default = false
 }
 
 variable "ecr_repository_name" {
@@ -106,3 +110,49 @@ variable "aws_secret_key" {
   type      = string
   sensitive = true
 }
+
+variable "bedrock_region_name" {
+  type    = string
+  default = "ap-northeast-1"
+}
+
+variable "bedrock_model_id" {
+  type    = string
+  default = "jp.anthropic.claude-haiku-4-5-20251001-v1:0"
+}
+
+variable "bedrock_receipt_max_bytes" {
+  type    = number
+  default = 1000000
+}
+
+variable "google_oauth_client_id" {
+  type    = string
+  default = "794076670847-6mfhuj5lufrkimsdfqubdolpeaii534q.apps.googleusercontent.com"
+}
+
+variable "django_secret_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "domain_name" {
+  type = string
+
+}
+
+variable "enable_www" {
+  type    = bool
+  default = true
+}
+
+variable "route53_zone_id" {
+  type = string
+}
+
+variable "acm_certificate_arn" {
+  type = string
+}
+
+
+

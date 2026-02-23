@@ -2,7 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const openBtn = document.getElementById("open-user-email-modal");
   const modal = document.getElementById("user-email-modal");
   const bg = document.getElementById("user-email-modal-bg");
-  const closeBtns = modal?.querySelectorAll("[data-close-user-email-modal]") || [];
+  const closeBtns =
+    modal?.querySelectorAll("[data-close-user-email-modal]") || [];
   const emailInput = document.getElementById("user-email-input");
   const submitBtn = document.getElementById("submit-user-email");
   const errorEl = document.getElementById("user-email-error");
@@ -54,6 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (errorEl) errorEl.classList.add("hidden");
 
     submitBtn.disabled = true;
+    window.loadingOverlay?.show();
     try {
       const res = await fetch("/api/account/email/", {
         method: "POST",
@@ -78,6 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
         alert(err?.message || "エラーが発生しました");
       }
     } finally {
+      window.loadingOverlay?.hide();
       submitBtn.disabled = false;
     }
   });

@@ -63,6 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     submitBtn.disabled = true;
 
+    window.loadingOverlay?.show();
     try {
       const res = await fetch("/api/account/profile-image/", {
         method: "POST",
@@ -97,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       alert(err.message || "エラーが発生しました");
     } finally {
+      window.loadingOverlay?.hide();
       submitBtn.disabled = false;
     }
   });
