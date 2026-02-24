@@ -1,8 +1,7 @@
 variable "aws_region" {
-  type = string
+  type    = string
   default = "ap-northeast-1"
 }
-
 variable "environment" {
   type = string
 }
@@ -23,6 +22,11 @@ variable "private_subnet_cidrs" {
   type = list(string)
 }
 
+variable "enable_nat_gateway" {
+  type    = bool
+  default = false
+}
+
 variable "ecr_repository_name" {
   type = string
 }
@@ -32,12 +36,12 @@ variable "rds_instance_class" {
 }
 
 variable "rds_allocated_storage" {
-  type = number
+  type    = number
   default = 20
 }
 
 variable "rds_max_allocated_storage" {
-  type = number
+  type    = number
   default = 100
 }
 
@@ -54,16 +58,101 @@ variable "rds_master_password" {
 }
 
 variable "rds_multi_az" {
-  type = bool
+  type    = bool
   default = false
 }
 
 variable "rds_backup_retention_period" {
-  type = number
+  type    = number
   default = 7
 }
 
 variable "rds_skip_final_snapshot" {
-  type = bool
+  type    = bool
   default = false
 }
+
+variable "ec2_instance_type" {
+  type = string
+}
+
+variable "ec2_asg_min_size" {
+  type    = number
+  default = 1
+}
+
+variable "ec2_asg_max_size" {
+  type    = number
+  default = 6
+}
+
+variable "ec2_asg_desired_capacity" {
+  type    = number
+  default = 1
+}
+
+variable "ec2_django_setup_revision" {
+  type    = string
+  default = "v1"
+}
+
+variable "aws_s3_bucket" {
+  type = string
+
+}
+
+variable "aws_access_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "aws_secret_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "bedrock_region_name" {
+  type    = string
+  default = "ap-northeast-1"
+}
+
+variable "bedrock_model_id" {
+  type    = string
+  default = "jp.anthropic.claude-haiku-4-5-20251001-v1:0"
+}
+
+variable "bedrock_receipt_max_bytes" {
+  type    = number
+  default = 1000000
+}
+
+variable "google_oauth_client_id" {
+  type    = string
+  default = "794076670847-6mfhuj5lufrkimsdfqubdolpeaii534q.apps.googleusercontent.com"
+}
+
+variable "django_secret_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "domain_name" {
+  type = string
+
+}
+
+variable "enable_www" {
+  type    = bool
+  default = true
+}
+
+variable "route53_zone_id" {
+  type = string
+}
+
+variable "acm_certificate_arn" {
+  type = string
+}
+
+
+

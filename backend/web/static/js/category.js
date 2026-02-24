@@ -2,11 +2,12 @@ console.log("category.js loaded ✅");
 
 document.addEventListener("DOMContentLoaded", () => {
   // Cookie から指定した名前の値を取得する（CSRFトークン取得用）
-  function getCookie(name) {
-    const v = `; ${document.cookie}`;
-    const p = v.split(`; ${name}=`);
-    if (p.length === 2) return p.pop().split(";").shift();
-  }
+  const getCookie = (name) => {
+    const viaUtils = window.appUtils?.getCookie?.(name);
+    if (viaUtils !== undefined && viaUtils !== null) return viaUtils;
+    const m = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+    return m ? decodeURIComponent(m[2]) : null;
+  };
   const csrftoken = getCookie("csrftoken");
 
   // モーダル関連のDOM要素
@@ -26,15 +27,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const iconCircle = document.getElementById("cat-modal-iconcircle");
   const iconBox = document.getElementById("cat-modal-icon");
+  const defaultIconHtml = iconBox?.innerHTML || "";
+
+  // 削除確認モーダル
+  const deleteModal = document.getElementById("cat-delete-modal");
+  const deleteBg = document.getElementById("cat-delete-bg");
+  const deleteTitleEl = document.getElementById("cat-delete-title");
+  const deleteConfirmBtn = document.getElementById("cat-delete-confirm");
+  const deleteCancelBtn = document.getElementById("cat-delete-cancel");
 
   // 必要な要素が存在しないページでは何もしない
-  if (!modal || !bg || !titleEl || !nameEl || !errEl || !submitBtn || !submitText || !cancelBtn || !deleteBtn || !colorRow || !colorEl || !iconCircle || !iconBox) {
+  if (!modal || !bg || !titleEl || !nameEl || !errEl || !submitBtn || !submitText || !cancelBtn || !deleteBtn || !colorRow || !colorEl || !iconCircle || !iconBox || !deleteModal || !deleteBg || !deleteTitleEl || !deleteConfirmBtn || !deleteCancelBtn) {
     return;
   }
 
   let mode = null; // "create" or "rename"
   let currentId = null; // 編集/削除対象カテゴリID
   let currentIo = null; // 作成時の収支区分（0:支出 / 1:収入）
+  let currentName = ""; // 表示用
   let currentBuiltin = false; // ★ builtinフラグ
 
   function openModal(nextMode, payload, sourceBtn = null) {
@@ -48,6 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
       currentId = null;
       currentIo = payload.io;
       currentBuiltin = false;
+      currentName = "";
 
       titleEl.textContent = "カテゴリ追加";
       submitText.textContent = "登　録";
@@ -56,12 +67,19 @@ document.addEventListener("DOMContentLoaded", () => {
       colorRow.classList.remove("hidden");
       colorEl.value = "#FF9400";
 
+      // ★ create時はアイコンを「＋」に戻す
+      if (iconBox) {
+        iconBox.innerHTML = defaultIconHtml;
+        iconBox.style.color = "";
+      }
+
       // ★ create時は削除ボタンを必ず隠す
       deleteBtn.classList.add("hidden");
     } else {
       currentId = payload.id;
       currentIo = null;
       currentBuiltin = !!payload.is_builtin;
+      currentName = payload.name || "";
 
       titleEl.textContent = "カテゴリ名変更";
       submitText.textContent = "カテゴリ名を変更";
@@ -106,9 +124,25 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeModal() {
     modal.classList.add("hidden");
   }
+  function openDeleteModal() {
+    const label = currentName || "このカテゴリ";
+    deleteTitleEl.textContent = `${label}を削除しますか？`;
+    deleteModal.classList.remove("hidden");
+  }
+  function closeDeleteModal() {
+    deleteModal.classList.add("hidden");
+  }
 
   bg.addEventListener("click", closeModal);
   cancelBtn.addEventListener("click", closeModal);
+  deleteBg.addEventListener("click", () => {
+    closeDeleteModal();
+    modal.classList.remove("hidden");
+  });
+  deleteCancelBtn.addEventListener("click", () => {
+    closeDeleteModal();
+    modal.classList.remove("hidden");
+  });
 
   // 画面上のカテゴリボタンのクリック処理
   document.addEventListener("click", (e) => {
@@ -205,10 +239,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentBuiltin) return;
 
     if (!currentId) return;
+    closeModal();
+    openDeleteModal();
 
-    const ok = confirm("このカテゴリを削除する？（元に戻せないよ）");
-    if (!ok) return;
+    return;
+  });
 
+  deleteConfirmBtn.addEventListener("click", async () => {
+    errEl.classList.add("hidden");
+
+    if (!currentId) return;
     try {
       const res = await fetch(`/api/categories/${currentId}/delete/`, {
         method: "POST",
@@ -223,10 +263,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok || !data.ok) throw new Error(data.error || "削除に失敗したよ");
 
       closeModal();
+      closeDeleteModal();
       location.reload();
     } catch (err) {
       errEl.textContent = err?.message || "エラーが起きたよ";
       errEl.classList.remove("hidden");
+      closeDeleteModal();
+      modal.classList.remove("hidden");
     }
   });
 });
