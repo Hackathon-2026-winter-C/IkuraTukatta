@@ -28,7 +28,6 @@ INSTALLED_APPS = [
 
     "django_browser_reload",
     "web",
-    'django.contrib.humanize',
 ]
 
 
