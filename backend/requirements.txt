@@ -3,16 +3,12 @@ mysqlclient>=2.2
 python-dotenv>=1.0
 django-browser-reload>=1.12
 boto3
-Pillow
-numpy
-opencv-python-headless
-easyocr
-
-
-django-allauth>=0.60
-requests
-PyJWT
-cryptography
 
 
 
+
+Pillow>=10.0
+gunicorn>=21.2
+whitenoise>=6.7
+google-auth>=2.35
+requests>=2.31

@@ -1,0 +1,11 @@
+{% load static %}
+
+<div class="px-0 mt-0 flex flex-col items-center gap-4">
+  <img src="{% static 'assets/images/signup_img.png' %}" alt="アカウント画像" class="w-28 h-28 object-contain" />
+  <h3 class="text-base font-bold text-black text-center">ダークモードに設定しますか？</h3>
+</div>
+
+<div class="px-6 mt-5 space-y-3 pb-8">
+  <button id="theme-choice-dark" type="button" class="btn btn-main" style="background: #111; color: #fff; border: none; box-shadow: var(--app-mainbutton-shadow)">ダークモードへ変更</button>
+  <button id="theme-choice-light" type="button" class="btn btn-sub" style="background: #e8e8e8; color: #111; border: none; box-shadow: var(--app-mainbutton-shadow)">ライトモードのまま</button>
+</div>

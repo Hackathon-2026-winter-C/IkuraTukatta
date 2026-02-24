@@ -41,11 +41,29 @@
 cp .env.sample .env
 ```
 
+### .env に access_key と secret_access_key を記述
+
+```text
+AWS_S3_REGION_NAME=ap-northeast-1
+AWS_STORAGE_BUCKET_NAME=hackathon-media-s3-bucket-20260207
+AWS_ACCESS_KEY_ID=  配布されたaccess_keyを入れる
+AWS_SECRET_ACCESS_KEY=　配布されたsecret_access_keyを入れる
+```
+
 ## ②
 
 ```bash
 ディレクトリルートで実行
 docker compose up --build
+```
+
+## ③
+
+docker を削除する場合(-v をつけると volume も削除されます)
+
+```bash
+ディレクトリルートで実行
+docker compose down -v
 ```
 
 # アクセス方法

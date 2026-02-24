@@ -1,20 +1,34 @@
-aws_region = "ap-northeast-1"
+aws_region  = "ap-northeast-1"
 environment = "dev"
 
-vpc_cidr_block = "10.0.0.0/16"
-availability_zones = ["ap-northeast-1a","ap-northeast-1c"]
-public_subnet_cidrs = ["10.0.1.0/24","10.0.2.0/24"]
-private_subnet_cidrs = ["10.0.100.0/24","10.0.200.0/24"]
+vpc_cidr_block       = "10.0.0.0/16"
+availability_zones   = ["ap-northeast-1a", "ap-northeast-1c"]
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.100.0/24", "10.0.200.0/24"]
+enable_nat_gateway   = true
 
 ecr_repository_name = "hachathon-winter-c-app"
 
-rds_instance_class = "db.t3.micro"
-rds_allocated_storage = 20
-rds_max_allocated_storage = 100
-rds_database_name = "ikuratukatta_rds"
-rds_master_username = "admin"
-rds_master_password = "admin1234"
-rds_multi_az = false # prodでtrue
-rds_backup_retention_period = 0 # prodで7
-rds_skip_final_snapshot = true # prodでfalse
+rds_instance_class          = "db.t3.micro"
+rds_allocated_storage       = 20
+rds_max_allocated_storage   = 100
+rds_database_name           = "ikuratukatta_rds"
+rds_master_username         = "admin"
+rds_master_password         = "admin1234"
+rds_multi_az                = false # prodでtrue
+rds_backup_retention_period = 0     # prodで7
+rds_skip_final_snapshot     = true  # prodでfalse
 
+# domain
+domain_name         = "ikuratukatta.click"
+enable_www          = true
+route53_zone_id     = "Z05807932ZUV0W0H0GJ68"
+acm_certificate_arn = "arn:aws:acm:ap-northeast-1:048588986880:certificate/2e574c36-cb67-4ac1-b41e-1acefefff518"
+
+
+# ec2
+ec2_instance_type = "t3.micro"
+aws_s3_bucket     = "hackathon-media-s3-bucket-20260207"
+
+# app runtime envs
+django_secret_key = "replace-with-strong-random-secret-key"
