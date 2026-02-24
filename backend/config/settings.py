@@ -24,15 +24,11 @@ INSTALLED_APPS = [
      "django_browser_reload",
     "web",
     'django.contrib.humanize',
-
-    "corsheaders"
 ]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-
-    "corsheaders.middleware.CorsMiddleware",
-
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -103,3 +99,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ===== Security関連 =====
 X_FRAME_OPTIONS = "DENY"
+
+# 本番用セキュリティ
+# HTTPS前提(本番のみ)
+SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "0") == "1"
+
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
