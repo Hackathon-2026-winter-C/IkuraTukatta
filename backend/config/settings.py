@@ -115,6 +115,8 @@ SECURE_HSTS_PRELOAD = True
 
 # Referrer対策
 SECURE_REFERRER_PORICY = "same-origin"
+# クロスオリジン系の防御
+SECURE_CROSS_ORIGIN_OPENER_PORICY = "same-origin"
 
 
 # パスワード強度
