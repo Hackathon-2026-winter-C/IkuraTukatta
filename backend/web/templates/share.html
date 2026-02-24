@@ -1,0 +1,32 @@
+{%extends "base.html" %}
+{% block title %}共有ページ{% endblock %}
+{% block content %}
+    <h1>共有ページ</h1>
+
+    {# 未所属の場合の作成動線 #}
+    {% if not user.group %}  <!--user=自分 user.group=グループにユーザーが紐付いているか-->
+    <p style="color:red">共有するには先に共有グループを作成してください</p>
+
+    <form method="post" action="{% url 'group_create' %}">
+        {% csrf_token %}
+        <label>グループ名 (任意)</label>
+        <input type="text" name="name" placeholder="グループ名">
+        <button type="submit">共有グループを作成</button>
+    </form>
+
+    {# 所属済みの場合,招待フォームを見せる #}
+    {% else %}
+        <p>現在の共有グループ: {{ user.group.name}}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <label>共有したい相手のメールアドレス</label>
+            <input type="email" name="email" required>
+            <button type="submit">共有に追加</button>
+        </form>
+    {% endif %}
+
+
+{% if error %}<p style="color:red;">{{ error }}</p>{% endif %}
+{% if message %}<p style="color:green;">{{ message }}</p>{% endif %}
+{% endblock %}

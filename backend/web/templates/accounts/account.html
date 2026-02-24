@@ -55,6 +55,7 @@
     </button>
 
     <!-- 共有　-->
+  <a href="{% url 'share' %}">
     <button type="button" class="setting-btn app-shadow">
       <span class="setting-left">
         <span class="setting-icon"> {% include "accounts/account_icons/user.svg" with class="w-6 h-6" %} </span>
@@ -64,6 +65,7 @@
         <span class="setting-next app-shadow"> {% include "accounts/account_icons/chevron-right.svg" with class="w-5 h-5" %} </span>
       </span>
     </button>
+  </a>
 
     <!-- カラーテーマ -->
     <div class="setting-btn app-shadow" role="group" aria-label="theme">

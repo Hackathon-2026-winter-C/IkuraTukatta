@@ -1,0 +1,110 @@
+<h2>レシートOCRテスト</h2>
+
+<form id="upload-form">
+  <input type="file" name="image" id="image" accept="image/*" required>
+  <button type="submit">アップロード</button>     
+</form>
+
+<hr>
+
+<form id="confirm-form">
+  <label>
+    金額:
+    <input type="number" id="amount" name="amount" required>
+  </label><br>
+
+  <label>
+    日付:
+    <input type="date" id="date" name="date" required>
+  </label><br>
+
+  <label>
+    カテゴリ:
+    <input type="text" id="category" name="category" required placeholder="例:食費" required>
+  </label><br>
+
+  <button type="submit">保存</button>
+</form>
+
+<div id="warning"></div>
+
+<script>
+  const uploadForm = document.getElementById("upload-form");
+  const confirmForm = document.getElementById("confirm-form");
+
+  uploadForm.addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(uploadForm);
+
+    fetch("/receipt_upload_api", {
+      method: "POST",
+      body: formData,
+      headers: {
+        "X-CSRFToken": getCookie("csrftoken")
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) {
+        alert("OCRに失敗しました");
+        return;
+      }
+
+      document.getElementById("amount").value = data.amount;
+      document.getElementById("date").value = data.date;
+
+      if (data.warning || data.confidence < 0.7) {
+        document.getElementById("warning").innerText =
+          "⚠️ 読み取り精度が低いため確認してください";
+      } else {
+        document.getElementById("warning").innerText = "";
+      }
+    });
+  });
+
+  // 保存処理を追加
+  confirmForm.addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const amount = document.getElementById("amount").value;
+    const date = document.getElementById("date").value;
+    const category = document.getElementById("category").value;
+
+    fetch("/receipt_save_api", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken")
+      },
+      body: JSON.stringify({
+        amount: amount,
+        date: date,
+        category: category
+      })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) {
+      alert(data.error);
+      return;
+      }
+
+      alert("保存しました！");
+    });
+  });
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let c of cookies) {
+        c = c.trim();
+        if (c.startsWith(name + "=")) {
+          cookieValue = decodeURIComponent(c.substring(name.length + 1));
+        }
+      }
+    }
+    return cookieValue;
+  }
+</script>

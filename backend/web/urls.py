@@ -2,6 +2,9 @@ from django.urls import path
 
 from . import views
 
+from django.contrib import admin
+from django.urls import path, include
+
 urlpatterns = [
     # テスト
     # path("", views.index_page, name="index"),
@@ -50,4 +53,19 @@ urlpatterns = [
         name="category_delete_api",
     ),
     path("api/users", views.users_api, name="users_api"),
+
+    # レシートテスト用
+    path("receipt_test/", views.receipt_test_page),
+    path("receipt_upload_api", views.receipt_upload_api),
+    path("receipt_save_api", views.receipt_save_api),
+
+    # path("dashboard/date/", views.dashboard_date_page, name="dashboard_date"), #
+    path("account/share", views.share_page, name="share"),
+    path("account/group/create", views.group_create, name="group_create"),
+
+    
+
+    
+    # テストAPI
+    # path("api/users", views.users_api, name="users_api")
 ]

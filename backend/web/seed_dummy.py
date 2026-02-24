@@ -117,6 +117,5 @@ def seed():
             memo=memo,
             defaults={
                 "amount": Decimal(str(amount)),
-                "receipt_id": None,
             },
         )
