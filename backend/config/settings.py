@@ -23,11 +23,16 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
      "django_browser_reload",
     "web",
-    'django.contrib.humanize'
+    'django.contrib.humanize',
+
+    "corsheaders"
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+
+    "corsheaders.middleware.CorsMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -95,3 +100,6 @@ STATICFILES_DIRS = [
 ]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ===== Security関連 =====
+X-FRAME_OPTION = "DANY"
