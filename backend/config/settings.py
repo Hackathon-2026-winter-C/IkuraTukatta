@@ -102,4 +102,4 @@ STATICFILES_DIRS = [
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ===== Security関連 =====
-X-FRAME_OPTION = "DANY"
+X_FRAME_OPTIONS = "DENY"
