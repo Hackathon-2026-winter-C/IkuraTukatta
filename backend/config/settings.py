@@ -100,6 +100,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ===== Security関連 =====
 X_FRAME_OPTIONS = "DENY"
 
+
+
 # 本番用セキュリティ
 # HTTPS前提(本番のみ)
 SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "0") == "1"

@@ -85,3 +85,53 @@ Unibeautify - Universal Formatter
   "html.autoClosingTags": true
 }
 ```
+
+
+
+
+# セキュリティ対策
+
+1. SQLインジェクション対策
+Django ORMを使用し、SQLを直接記述しないことで、ユーザー入力がSQL文として実行されることを防止している。
+
+  # views.py などで ORM を利用
+  Models.object,filter(field=value)
+
+
+2. CSRF対策
+DjangoのCSRFミドルウェアとテンプレートのトークン機構利用し、不正なPOSTリクエストを防止している。
+
+  # settings.py
+  MIDDLEWARE = [
+    "django.middlewere.csrf.CsrfViwe.Middleware",
+  ]
+
+  # html
+  <form method="post>
+    {% csrf_token %}
+  </form>
+
+
+3. XSS対策
+Djangoテンプレートの自動エスケープ気候により、ユーザー入力がHTMLやJavaScriptとして実行されることを防止している。
+
+  {{ user_input }}   <!-- 自動的にエスケープされる -->
+
+  # settings.py
+  SECURE_CONTENT_TYPE_NOSNIFF = True
+
+
+4. クリックジャッキング対策
+X_Frame-Optionsヘッダを付与し、外部サイトからiframeで埋め込まれることを防止している。
+
+  # settings.py
+  X_FRAME_OPTIONS = "DENY"
+
+  MIDDLEWARE = [
+    "django.middleware.clickjacking.XframeMiddleware",
+  ]
+
+5. CORS対策
+フロントエンドとバックエンドを同一オリジンで運用し、外部オリジンからのアクセスを許可していない。
+
+
