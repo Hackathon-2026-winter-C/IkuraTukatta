@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const iconCircle = document.getElementById("cat-modal-iconcircle");
   const iconBox = document.getElementById("cat-modal-icon");
+  const defaultIconHtml = iconBox?.innerHTML || "";
 
   // 削除確認モーダル
   const deleteModal = document.getElementById("cat-delete-modal");
@@ -65,6 +66,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       colorRow.classList.remove("hidden");
       colorEl.value = "#FF9400";
+
+      // ★ create時はアイコンを「＋」に戻す
+      if (iconBox) {
+        iconBox.innerHTML = defaultIconHtml;
+        iconBox.style.color = "";
+      }
 
       // ★ create時は削除ボタンを必ず隠す
       deleteBtn.classList.add("hidden");

@@ -31,7 +31,10 @@ document.addEventListener("DOMContentLoaded", () => {
   modal.addEventListener("icon-modal:closed", resetPickedImage);
 
   // プレビュークリックでファイル選択を開く
-  pickBtn.addEventListener("click", () => input.click());
+  pickBtn.addEventListener("click", () => {
+    if (pickBtn.tagName === "LABEL") return;
+    input.click();
+  });
 
   // 画像選択直後にプレビュー反映
   input.addEventListener("change", () => {
@@ -51,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
   submitBtn.addEventListener("click", async () => {
     const file = input.files?.[0];
     if (!file) {
-      alert("画像を選択してください");
+      input.click();
       return;
     }
 
@@ -60,6 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     submitBtn.disabled = true;
 
+    window.loadingOverlay?.show();
     try {
       const res = await fetch("/api/account/profile-image/", {
         method: "POST",
@@ -94,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       alert(err.message || "エラーが発生しました");
     } finally {
+      window.loadingOverlay?.hide();
       submitBtn.disabled = false;
     }
   });

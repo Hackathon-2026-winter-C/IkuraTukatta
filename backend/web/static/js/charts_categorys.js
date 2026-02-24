@@ -1,4 +1,5 @@
 // static/js/charts_categorys.js
+// static/js/charts_categorys.js
 
 const categoriesContainer = document.getElementById("chart-categories");
 
@@ -18,7 +19,7 @@ window.updateCategoryList = function (labels, values, bg) {
     // labels は引数から受け取る
     const noDataMessage = document.createElement("div");
     noDataMessage.className = "text-sm text-slate-500";
-    noDataMessage.textContent = "No data";
+    noDataMessage.textContent = "";
     categoriesContainer.appendChild(noDataMessage);
     return;
   }

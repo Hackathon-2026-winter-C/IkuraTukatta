@@ -155,6 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!input.files?.length) {
       restoreFileInput();
     }
+    window.loadingOverlay?.show();
   });
 });
 

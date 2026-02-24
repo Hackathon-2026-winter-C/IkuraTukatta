@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const open = () => {
     modal.classList.remove("hidden");
     document.body.classList.add("overflow-hidden");
+    if (errorEl) errorEl.classList.add("hidden");
     emailInput.focus();
   };
 
@@ -52,7 +53,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (errorEl) errorEl.classList.add("hidden");
+
     submitBtn.disabled = true;
+    window.loadingOverlay?.show();
     try {
       const res = await fetch("/api/account/email/", {
         method: "POST",
@@ -63,21 +66,21 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         throw new Error(data.error || "メールアドレスの更新に失敗しました");
       }
 
-      // 成功後はページを再読み込みして表示値を最新化
       window.location.reload();
     } catch (err) {
       if (errorEl) {
-        errorEl.textContent = err.message || "エラーが発生しました";
+        errorEl.textContent = err?.message || "エラーが発生しました";
         errorEl.classList.remove("hidden");
       } else {
-        alert(err.message || "エラーが発生しました");
+        alert(err?.message || "エラーが発生しました");
       }
     } finally {
+      window.loadingOverlay?.hide();
       submitBtn.disabled = false;
     }
   });

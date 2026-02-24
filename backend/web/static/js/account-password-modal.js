@@ -4,9 +4,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const bg = document.getElementById("user-password-modal-bg");
   const closeBtns =
     modal?.querySelectorAll("[data-close-user-password-modal]") || [];
-  const currentPasswordInput = document.getElementById("current-password-input");
+  const currentPasswordInput = document.getElementById(
+    "current-password-input",
+  );
   const newPasswordInput = document.getElementById("new-password-input");
-  const confirmPasswordInput = document.getElementById("confirm-password-input");
+  const confirmPasswordInput = document.getElementById(
+    "confirm-password-input",
+  );
   const submitBtn = document.getElementById("submit-user-password");
   const errorEl = document.getElementById("user-password-error");
 
@@ -87,6 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
     hideError();
     submitBtn.disabled = true;
 
+    window.loadingOverlay?.show();
     try {
       const res = await fetch("/api/account/password/", {
         method: "POST",
@@ -101,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         throw new Error(data.error || "パスワードの更新に失敗しました");
       }
@@ -111,6 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       showError(err.message || "エラーが発生しました");
     } finally {
+      window.loadingOverlay?.hide();
       submitBtn.disabled = false;
     }
   });

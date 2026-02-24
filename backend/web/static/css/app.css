@@ -1,3 +1,5 @@
+/* @import "tailwindcss"; */
+
 /* lightモードの時 */
 :root {
     --app-bg: 232 232 232;
@@ -217,7 +219,7 @@ html[data-theme="light"] .btn-red {
 /* black */
 html[data-theme="light"] .btn-black {
     background: #111;
-    color:#fff;
+    color: #fff;
     box-shadow: var(--app-mainbutton-shadow);
 }
 
@@ -231,6 +233,13 @@ html[data-theme="light"] .btn-black {
 /* orange ダークモードの適用なし */
 .btn-nodark-orange {
     background: #FF9400;
+    color: #fff;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
+/* red ダークモードの適用なし */
+.btn-nodark-red {
+    background: #ff383c;
     color: #fff;
     box-shadow: var(--app-mainbutton-shadow);
 }
@@ -507,6 +516,7 @@ html[data-theme="dark"] .btn-red:active {
 .cat-pick.is-selected .cat-inner svg.other-exp-icon {
     filter: none;
 }
+
 .cat-pick.is-selected .cat-inner svg.other-exp-icon .yen-mark {
     fill: var(--c) !important;
 }
@@ -529,9 +539,7 @@ html[data-theme="dark"] .btn-red:active {
     height: 14px;
     display: grid;
     place-items: center;
-    /* 文字を箱の中央に */
     line-height: 1;
-    /* これは残してOK */
     text-align: center;
 }
 

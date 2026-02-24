@@ -300,15 +300,27 @@
       memberListEl.innerHTML = members
         .map((m) => {
           const label = m.username || m.email || "";
+          const role = m.role || "member";
+          const isOwner = role === "owner";
+          const isSelf = MY_ID && m.id === MY_ID;
+          const badge = isOwner
+            ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-black/10 text-black/70">オーナー</span>`
+            : "";
+
           return `
             <button type="button"
-              class="w-full rounded-2xl px-4 py-3 bg-white/70 flex flex-col items-start gap-1"
+              class="w-full rounded-2xl px-4 py-3 bg-white/70 flex items-start justify-between gap-2 ${isOwner || isSelf ? "opacity-70" : ""}"
               style="box-shadow: var(--app-mainbutton-shadow);"
               data-mid="${m.id}"
+              data-role="${escapeHtml(role)}"
+              data-self="${isSelf ? "1" : "0"}"
               data-email="${escapeHtml(m.email || "")}"
               data-username="${escapeHtml(m.username || "")}">
-              <span class="text-sm font-semibold text-[#111]">${escapeHtml(label)}</span>
-              <span class="text-[11px] text-black/50">${escapeHtml(m.email || "")}</span>
+              <span class="flex flex-col items-start gap-1">
+                <span class="text-sm font-semibold text-[#111]">${escapeHtml(label)}</span>
+                <span class="text-[11px] text-black/50">${escapeHtml(m.email || "")}</span>
+              </span>
+              ${badge}
             </button>
           `;
         })
@@ -317,6 +329,10 @@
       // 押されたメンバーを「削除対象」として保持し、削除確認へ
       memberListEl.querySelectorAll("button[data-mid]").forEach((b) => {
         b.addEventListener("click", () => {
+          const role = b.dataset.role || "member";
+          const isSelf = b.dataset.self === "1";
+          if (role === "owner" || isSelf) return;
+
           const id = parseInt(b.dataset.mid, 10);
           const email = b.dataset.email || "";
           const username = b.dataset.username || "";
@@ -355,10 +371,16 @@
       // グループのメンバー一覧
       const data = await apiGet(`/api/groups/${groupId}/members/`);
 
-      // 仕様：自分は一覧に出さない（UI側で除外）
-      const members = (data.members || []).filter((m) => m.id !== MY_ID);
+      const allMembers = data.members || [];
 
-      renderMembers(members);
+      // 自分のロールを確認して「グループ削除」表示を切り替え
+      const myRole = MY_ID ? allMembers.find((m) => m.id === MY_ID)?.role : null;
+      if (groupDeleteBtn) {
+        if (myRole === "owner") groupDeleteBtn.classList.remove("hidden");
+        else groupDeleteBtn.classList.add("hidden");
+      }
+
+      renderMembers(allMembers);
     }
 
     // =========================
@@ -489,6 +511,7 @@
 
     // メンバー一覧で「グループ削除」を押したら削除確認へ
     groupDeleteBtn?.addEventListener("click", () => {
+      if (groupDeleteBtn.classList.contains("hidden")) return;
       openGroupRemoveModal();
     });
 
