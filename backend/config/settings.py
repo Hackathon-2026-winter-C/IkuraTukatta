@@ -11,9 +11,6 @@ DEBUG = os.getenv("DEBUG", "1") == "1"
 # "localhost,127.0.0.1" みたいに env で渡したのを分割
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
 
-AUTH_USER_MODEL = "web.User"
-
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -21,7 +18,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-     "django_browser_reload",
+    "django.contrib.humanize",
+    "django.contrib.sites",   #google認証機能　
+
+    "allauth", #ログイン,ログアウト
+    "allauth.account", #メールパスワード
+    "allauth.socialaccount", #Googleから帰ってきた情報を受け取る
+    "allauth.socialaccount.providers.google", #googleのurlを使用する
+
+    "django_browser_reload",
     "web",
     'django.contrib.humanize',
 ]
@@ -33,9 +38,13 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+
+    "allauth.account.middleware.AccountMiddleware", #google認証
+
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_browser_reload.middleware.BrowserReloadMiddleware",
+    
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -69,7 +78,7 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD", os.getenv("MYSQL_PASSWORD", "")),
         "HOST": os.getenv("DB_HOST", "db"),
         "PORT": os.getenv("DB_PORT", "3306"),
-        "OPTIONS": {"charset": "utf8mb4","use_unicode":True,"init_command": "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"},
+        "OPTIONS": {"charset": "utf8mb4"},
     }
 }
 
