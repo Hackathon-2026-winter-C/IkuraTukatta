@@ -4,19 +4,15 @@
   <div class="neu-panel w-full flex flex-col gap-4">
     <h3 class="text-xl font-bold text-black text-center mb-3">メールアドレスを変更しますか？</h3>
 
-    <input id="user-email-input" type="text" class="h-10 w-full rounded-xl pl-3 {% if request.user.google_uid %}bg-gray-400 cursor-not-allowed{% else %}bg-white{% endif %}" value="{{ request.user.email }}" {% if request.user.google_uid %}disabled{% endif %}/>
-      
-      {% if request.user.google_uid %}
-        <span class="pl-3 text-sm text-red-500">Googleアカウント連携中のため変更できません</span>
-      {% endif %}
-        
+    <input id="user-email-input" type="text" class="h-10 w-full rounded-xl pl-3 bg-white" value="{{ request.user.email }}" {% if request.user.google_uid %}disabled{% endif %} />
+
+    {% if request.user.google_uid %}
+    <span class="pl-3 text-sm text-red-500">Googleアカウント連携中のため変更できません</span>
+    {% endif %}
+
     <p id="user-email-error" class="text-sm text-red-500 hidden"></p>
 
-    <button id="submit-user-email" type="button" class="btn btn-main w-full p-0 text-[16px] mt-3 flex justify-center items-center font-light">
-      変更する
-    </button>
-    <button class="btn btn-sub font-light" data-close-user-email-modal>
-      キャンセル
-    </button>
+    <button id="submit-user-email" type="button" class="btn btn-main w-full p-0 text-[16px] mt-3 flex justify-center items-center disabled:opacity-40" {% if request.user.google_uid %}disabled{% endif %}>変更する</button>
+    <button class="btn btn-sub" data-close-user-email-modal>キャンセル</button>
   </div>
 </div>

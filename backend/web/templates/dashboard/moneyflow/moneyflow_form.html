@@ -27,7 +27,7 @@
     </div>
 
     {% if mode_receipt %}
-    <button id="receipt-open-btn" type="button" class="btn btn-main w-full font-bold flex items-center justify-center">レシートを追加</button>
+          <button id="receipt-open-btn" type="button" class="btn btn-main w-full flex items-center justify-center">レシートを追加</button>
     <input type="file" accept="image/*" class="hidden" id="receipt-image-input" />
     {% endif %}
 
@@ -103,16 +103,16 @@
         <p id="category-error" class="hidden mt-2 text-[11px] text-red-500"></p>
       </section>
 
-      <button id="submit-btn" type="submit" class="btn btn-main w-full font-semibold disabled:opacity-40 disabled:active:translate-y-0">{% if entry %}変　更{% else %}記　録{% endif %}</button>
+      <button id="submit-btn" type="submit" class="btn btn-main w-full disabled:opacity-40 disabled:active:translate-y-0">{% if entry %}変　更{% else %}記　録{% endif %}</button>
     </form>
 
     <!-- ===== 削除（編集時のみ） ===== -->
     {% if entry %}
     <form method="post" action="{% url 'dashboard_moneyflow_delete' %}?id={{ entry.id }}">
       {% csrf_token %}
-      <button type="submit" class="btn btn-red w-full font-semibold" onclick="return confirm('このデータを削除しますか？');">削　除</button>
+      <button type="submit" class="btn btn-red w-full" onclick="return confirm('このデータを削除しますか？');">削　除</button>
     </form>
-    <button type="button" class="btn btn-sub w-full font-semibold mt-3" onclick="history.back()">戻　る</button>
+    <button type="button" class="btn btn-sub w-full mt-3" onclick="history.back()">戻　る</button>
     {% endif %}
   </div>
 </main>
