@@ -1,15 +1,9 @@
-{% extends 'base.html' %} {% load static %} {% block title %}エラーページ{% endblock title %} {% block content %}
-<style>
-  /* error pages only */
-  .app-footer {
-    display: none;
-  }
-</style>
+{% extends 'accounts/base.html' %} {% load static %} {% block title %}エラーページ{% endblock title %} {% block content %}
 
 <div class="min-h-screen flex flex-col items-center justify-center px-4">
   <div class="w-full max-w-[360px] flex flex-col items-center text-center gap-6">
     <img src="{% static 'assets/images/403.png' %}" alt="エラー画像" class="w-[75%] max-w-[280px] h-auto" />
-    <button type="button" onclick="history.back()" class="btn btn-nodark-orange w-full h-14 text-[16px] font-light hover:bg-[#FF9400]">前のページに戻る</button>
+    <button type="button" onclick="history.back()" class="btn btn-main w-full text-[16px] font-light">前のページに戻る</button>
   </div>
 </div>
 {% endblock %}

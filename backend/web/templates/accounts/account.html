@@ -1,5 +1,5 @@
 {% extends "base.html" %} {% load static %} {% block title %}アカウント{% endblock %} {% block content %}
-<main class="w-full flex flex-col items-center gap-4 px-4 pt-3 pb-3">
+<main class="w-full flex flex-col items-center gap-4 px-4 pb-5 pt-5">
   <!-- ================= アイコン ================= -->
   <div class="relative mt-2">
     <div class="w-[120px] h-[120px] rounded-[18px] overflow-hidden bg-[rgb(var(--app-bg))] app-shadow">
@@ -106,7 +106,7 @@
 </main>
 
 <!-- ================= アカウント削除モーダル ================= -->
-<div id="account-delete-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50">
+<div id="account-delete-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50 modal-light">
   <button type="button" id="account-delete-modal-bg" class="absolute inset-0 w-full h-full"></button>
 
   <div class="absolute inset-x-0 bottom-0">
@@ -116,15 +116,15 @@
         <p class="text-sm text-[#111] text-center">アカウントを削除しますか？</p>
         <p class="text-xs text-black/50 text-center">削除すると元に戻せません。</p>
 
-        <button type="button" id="account-delete-confirm" class="btn btn-nodark-red w-full p-0 text-[16px] flex justify-center items-center font-light">削除する</button>
-        <button type="button" class="btn btn-nodark-sub font-light" data-close-account-delete-modal>キャンセル</button>
+        <button type="button" id="account-delete-confirm" class="btn btn-red w-full p-0 text-[16px] flex justify-center items-center font-light">削除する</button>
+        <button type="button" class="btn btn-sub font-light" data-close-account-delete-modal>キャンセル</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ================= 共有モーダル（①グループ一覧/作成） ================= -->
-<div id="share-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50">
+<div id="share-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50 modal-light">
   <button type="button" id="share-modal-bg" class="absolute inset-0 w-full h-full"></button>
 
   <div class="absolute inset-x-0 bottom-0">
@@ -136,7 +136,7 @@
         <p id="share-error" class="text-sm text-red-500 hidden"></p>
         <p id="share-ok" class="text-sm text-emerald-600 hidden"></p>
 
-        <button type="button" id="group-create" class="btn btn-nodark-orange w-full p-0 text-[16px] flex justify-center items-center font-light">グループ作成</button>
+        <button type="button" id="group-create" class="btn btn-main w-full p-0 text-[16px] flex justify-center items-center font-light">グループ作成</button>
 
         <div>
           <p class="text-sm text-black/50">グループ一覧</p>
@@ -145,14 +145,14 @@
           </div>
         </div>
 
-        <button type="button" id="share-cancel" class="btn btn-nodark-sub font-light">キャンセル</button>
+        <button type="button" id="share-cancel" class="btn btn-sub font-light">キャンセル</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ================= 共有モーダル（②メンバー一覧/追加） ================= -->
-<div id="share-members-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50">
+<div id="share-members-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50 modal-light">
   <button type="button" id="share-members-bg" class="absolute inset-0 w-full h-full"></button>
 
   <div class="absolute inset-x-0 bottom-0">
@@ -164,7 +164,7 @@
 
         <input id="member-email" type="email" class="h-10 w-full rounded-xl bg-white pl-3" placeholder="メールアドレス" />
 
-        <button type="button" id="member-add" class="btn btn-nodark-orange w-full p-0 text-[16px] flex justify-center items-center font-light">追　加</button>
+        <button type="button" id="member-add" class="btn btn-main w-full p-0 text-[16px] flex justify-center items-center font-light">追　加</button>
 
         <div>
           <div class="flex items-center justify-between">
@@ -176,14 +176,14 @@
           </div>
         </div>
 
-        <button type="button" id="members-back" class="btn btn-nodark-sub font-light">戻る</button>
+        <button type="button" id="members-back" class="btn btn-sub font-light">戻 る</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ================= 共有モーダル（③メンバー編集） ================= -->
-<div id="share-member-edit-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50">
+<div id="share-member-edit-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50 modal-light">
   <button type="button" id="share-member-edit-bg" class="absolute inset-0 w-full h-full"></button>
 
   <div class="absolute inset-x-0 bottom-0">
@@ -193,18 +193,18 @@
 
         <input id="edit-member-email" type="email" class="h-10 w-full rounded-xl bg-white pl-3" placeholder="メールアドレス" />
 
-        <button type="button" id="member-update" class="btn btn-nodark-orange w-full p-0 text-[16px] flex justify-center items-center font-light">変更する</button>
+        <button type="button" id="member-update" class="btn btn-main w-full p-0 text-[16px] flex justify-center items-center font-light">変更する</button>
 
-        <button type="button" id="member-delete" class="btn btn-nodark-orange w-full p-0 text-[16px] flex justify-center items-center font-light">削除する</button>
+        <button type="button" id="member-delete" class="btn btn-main w-full p-0 text-[16px] flex justify-center items-center font-light">削除する</button>
 
-        <button type="button" id="member-edit-cancel" class="btn btn-nodark-sub font-light">キャンセル</button>
+        <button type="button" id="member-edit-cancel" class="btn btn-sub font-light">キャンセル</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ================= 共有モーダル（④メンバー削除確認） ================= -->
-<div id="share-remove-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50">
+<div id="share-remove-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50 modal-light">
   <button type="button" id="share-remove-bg" class="absolute inset-0 w-full h-full"></button>
 
   <div class="absolute inset-x-0 bottom-0">
@@ -215,15 +215,15 @@
         <p id="share-remove-title" class="text-sm text-[#111] text-center">このユーザーを削除しますか？</p>
         <p class="text-xs text-black/50 text-center">削除すると<span id="share-remove-group-name">このグループ</span>から外れます。</p>
 
-        <button type="button" id="share-remove-confirm" class="btn btn-nodark-orange w-full p-0 text-[16px] flex justify-center items-center font-light">削除する</button>
-        <button type="button" id="share-remove-cancel" class="btn btn-nodark-sub font-light">キャンセル</button>
+        <button type="button" id="share-remove-confirm" class="btn btn-main w-full p-0 text-[16px] flex justify-center items-center font-light">削除する</button>
+        <button type="button" id="share-remove-cancel" class="btn btn-sub font-light">キャンセル</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ================= 共有モーダル（⑤グループ削除確認） ================= -->
-<div id="group-remove-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50">
+<div id="group-remove-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50 modal-light">
   <button type="button" id="group-remove-bg" class="absolute inset-0 w-full h-full"></button>
 
   <div class="absolute inset-x-0 bottom-0">
@@ -234,37 +234,37 @@
         <p id="group-remove-title" class="text-sm text-[#111] text-center">このグループを削除しますか？</p>
         <p class="text-xs text-black/50 text-center">削除すると、このグループは復元できません。</p>
 
-        <button type="button" id="group-remove-confirm" class="btn btn-nodark-orange w-full p-0 text-[16px] flex justify-center items-center font-light">削除する</button>
-        <button type="button" id="group-remove-cancel" class="btn btn-nodark-sub font-light">キャンセル</button>
+        <button type="button" id="group-remove-confirm" class="btn btn-main w-full p-0 text-[16px] flex justify-center items-center font-light">削除する</button>
+        <button type="button" id="group-remove-cancel" class="btn btn-sub font-light">キャンセル</button>
       </div>
     </div>
   </div>
 </div>
 <!--プロフィール編集モーダル -->
-<div id="icon-modal" class="fixed inset-0 z-50 hidden">
+<div id="icon-modal" class="fixed inset-0 z-50 hidden modal-light">
   <button id="icon-modal-bg" type="button" class="absolute inset-0 bg-[rgb(var(--app-text)/0.5)]"></button>
   <div class="absolute inset-x-0 bottom-0">{% include 'components/modal/usericon-update-modal.html' %}</div>
 </div>
 
 <!--ユーザーネーム編集モーダル -->
-<div id="username-modal" class="fixed inset-0 z-50 hidden">
+<div id="username-modal" class="fixed inset-0 z-50 hidden modal-light">
   <button id="username-modal-bg" type="button" class="absolute inset-0 bg-[rgb(var(--app-text)/0.5)]"></button>
   <div class="absolute inset-x-0 bottom-0">{% include 'components/modal/username-update-modal.html' %}</div>
 </div>
 
 <!--メールアドレス編集モーダル -->
-<div id="user-email-modal" class="fixed inset-0 z-50 hidden">
+<div id="user-email-modal" class="fixed inset-0 z-50 hidden modal-light">
   <button id="user-email-modal-bg" type="button" class="absolute inset-0 bg-[rgb(var(--app-text)/0.5)]"></button>
   <div class="absolute inset-x-0 bottom-0">{% include 'components/modal/useremail-update-modal.html' %}</div>
 </div>
 
 <!--パスワード編集モーダル -->
-<div id="user-password-modal" class="fixed inset-0 z-50 hidden">
+<div id="user-password-modal" class="fixed inset-0 z-50 hidden modal-light">
   <button id="user-password-modal-bg" type="button" class="absolute inset-0 bg-[rgb(var(--app-text)/0.5)]"></button>
   <div class="absolute inset-x-0 bottom-0">{% include 'components/modal/userpassword-update-modal.html' %}</div>
 </div>
 <!--ログアウトモーダル -->
-<div id="user-logout-modal" class="fixed inset-0 z-50 hidden">
+<div id="user-logout-modal" class="fixed inset-0 z-50 hidden modal-light">
   <button id="user-logout-modal-bg" type="button" class="absolute inset-0 bg-[rgb(var(--app-text)/0.5)]"></button>
   <div class="absolute inset-x-0 bottom-0">{% include 'components/modal/user-logout-modal.html' %}</div>
 </div>

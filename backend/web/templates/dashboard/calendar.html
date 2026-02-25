@@ -3,7 +3,7 @@
 {% load humanize %} {% block title %}Calendar{% endblock %} {% block content %}
 
 <!-- ページ全体のラッパー -->
-<main class="w-full flex flex-col items-center px-4 pt-3 pb-3">
+<main class="w-full flex flex-col items-center px-4 pt-5 pb-5">
   <!-- ===== 共有プルダウン ===== -->
   <div id="ledger-switcher" class="ledger-switcher w-full max-w-[420px] mb-2.5">
     <button type="button" id="ledger-switcher-btn" class="ledger-switcher__btn">
@@ -15,9 +15,7 @@
       <span id="ledger-switcher-chevron" class="transition-transform duration-200"> {% include "icons/ui/chevron-down.svg" %} </span>
     </button>
 
-    <div id="ledger-switcher-menu" class="ledger-switcher__menu" aria-hidden="true">
-      <!-- JSで埋まる -->
-    </div>
+    <div id="ledger-switcher-menu" class="ledger-switcher__menu" aria-hidden="true"></div>
   </div>
 
   <!-- カレンダー全体のカード -->
@@ -30,21 +28,12 @@
       <!-- 右ボタン -->
       <a href="/dashboard/?ym={{ next_ym }}" aria-label="next month" class="absolute right-0 top-0 grid place-items-center w-[44px] h-[44px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> → </a>
 
-      {% comment %}
-      <!-- 真ん中：2 を “完全中央” + “下揃え” -->
-      <span class="absolute left-1/2 -translate-x-1/2 bottom-[6px] text-3xl font-bold text-[#FF9400] leading-none"> {{ month_num }} </span>
-
-      <!-- 年：2の左に “下揃え” -->
-      <span class="absolute left-1/2 -translate-x-[calc(100%+20px)] bottom-[6px] text-xl font-bold text-[rgb(var(--app-text))] leading-none"> {{ year_label }} </span>
-
-      <!-- 月名：2の右に “下揃え” -->
-      <span class="absolute left-1/2 translate-x-[20px] bottom-[6px] text-xl font-bold text-[rgb(var(--app-text))] leading-none"> {{ month_name }} </span> {% endcomment %}
-
-      <div class="flex items-end justify-center mb-3 h-[44px] font-bold text-[rgb(var(--app-text))]">
-        <span class="text-xl"> {{ year_label }}. </span>
+      <div class="flex items-center justify-center h-[44px] font-bold text-[rgb(var(--app-text))]">
+        <span class="text-2xl leading-none"> {{ year_label }}. </span>
         <span class="text-3xl text-[#FF9400] ml-1 leading-none"> {{ month_num }} </span>
       </div>
     </div>
+    　
 
     <!-- ================= 曜日ヘッダー ================= -->
     <div class="grid grid-cols-7 text-center text-xs font-bold mb-2">

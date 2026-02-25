@@ -1,9 +1,16 @@
 {% extends 'accounts/base.html' %} {% load static %} {% block title %}カラーモード{% endblock title %} {% block content %}
 <div id="theme-choice-modal" class="fixed inset-0 bg-black/30 z-50">
-  <div class="absolute left-0 right-0 bottom-0 px-0 pb-0">
-    <div class="neu-panel mx-auto w-full max-w-[420px] rounded-t-[80px] pt-[18px] bg-[#E8E8E8] text-black" data-theme="light">
-      <p class="text-[11px] text-[#888] ml-[26px] mt-2">カラーモード</p>
-      {% include "components/modal/darkmode-modal.html" %}
+  <div class="absolute inset-x-0 bottom-0 px-0 pb-0">
+    <div class="w-full flex flex-col items-center gap-4 pt-10 modal-light">
+      <div class="neu-panel w-full flex flex-col gap-4">
+        <img src="{% static 'assets/images/signup_img.png' %}" alt="テーマ画像" class="w-20 h-20 sm:w-24 sm:h-24 object-contain mx-auto" />
+
+        <h3 class="text-base sm:text-xl font-bold text-black text-center leading-snug">ダークモードに変更しますか？</h3>
+
+        <button id="theme-choice-dark" type="button" class="btn btn-black w-full p-0 text-[15px] sm:text-[16px] mt-2 sm:mt-3 flex justify-center items-center font-light">ダークモードへ変更</button>
+
+        <button id="theme-choice-light" type="button" class="btn btn-sub w-full p-0 text-[15px] sm:text-[16px] font-light">ライトモードのまま</button>
+      </div>
     </div>
   </div>
 </div>

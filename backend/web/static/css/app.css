@@ -181,6 +181,7 @@ html[data-theme="dark"] .ledger-switcher.is-open .ledger-switcher__menu {
 /* btn */
 .btn {
     width: 100%;
+    height: 50px;
     border: none;
     font-size: 16px;
     border-radius: 12px;
@@ -219,27 +220,6 @@ html[data-theme="light"] .btn-red {
 /* black */
 html[data-theme="light"] .btn-black {
     background: #111;
-    color: #fff;
-    box-shadow: var(--app-mainbutton-shadow);
-}
-
-/* gray ダークモードの適用なし */
-.btn-nodark-sub {
-    background: #e8e8e8;
-    color: #111;
-    box-shadow: var(--app-mainbutton-shadow);
-}
-
-/* orange ダークモードの適用なし */
-.btn-nodark-orange {
-    background: #FF9400;
-    color: #fff;
-    box-shadow: var(--app-mainbutton-shadow);
-}
-
-/* red ダークモードの適用なし */
-.btn-nodark-red {
-    background: #ff383c;
     color: #fff;
     box-shadow: var(--app-mainbutton-shadow);
 }
@@ -300,6 +280,76 @@ html[data-theme="dark"] .btn-sub:active {
 
 /* red */
 html[data-theme="dark"] .btn-red:active {
+    box-shadow: inset 4px 4px 8px #cc2d30, inset -4px -4px 8px #ff6b6e;
+}
+
+/* account modals: force light button styles */
+.modal-light .btn-main {
+    background: #FF9400;
+    color: #fff;
+    border: none;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
+.modal-light .btn-sub {
+    background: #e8e8e8;
+    color: #111;
+    border: none;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
+.modal-light .btn-red {
+    background: #ff383c;
+    color: #fff;
+    border: none;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
+.modal-light .btn-main:active {
+    box-shadow: inset 4px 4px 8px #d4571c, inset -4px -4px 8px #ff8a4a;
+}
+
+.modal-light .btn-sub:active {
+    color: #666;
+    box-shadow: inset 4px 4px 12px #c5c5c5, inset -4px -4px 12px #fff;
+}
+
+.modal-light .btn-red:active {
+    box-shadow: inset 4px 4px 8px #cc2d30, inset -4px -4px 8px #ff6b6e;
+}
+
+/* dark theme override: keep modal buttons light */
+html[data-theme="dark"] .modal-light .btn-main {
+    background: #FF9400;
+    color: #fff;
+    border: none;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
+html[data-theme="dark"] .modal-light .btn-sub {
+    background: #e8e8e8;
+    color: #111;
+    border: none;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
+html[data-theme="dark"] .modal-light .btn-red {
+    background: #ff383c;
+    color: #fff;
+    border: none;
+    box-shadow: var(--app-mainbutton-shadow);
+}
+
+html[data-theme="dark"] .modal-light .btn-main:active {
+    box-shadow: inset 4px 4px 8px #d4571c, inset -4px -4px 8px #ff8a4a;
+}
+
+html[data-theme="dark"] .modal-light .btn-sub:active {
+    color: #666;
+    box-shadow: inset 4px 4px 12px #c5c5c5, inset -4px -4px 12px #fff;
+}
+
+html[data-theme="dark"] .modal-light .btn-red:active {
     box-shadow: inset 4px 4px 8px #cc2d30, inset -4px -4px 8px #ff6b6e;
 }
 
