@@ -7,6 +7,12 @@ urlpatterns = [
     path("", include("web.urls")),
 ]
 
+# エラーページ
+handler403 = "web.views.error_403"
+handler404 = "web.views.error_404"
+handler500 = "web.views.error_500"
+
+
 # ホットリロードできるようにする
 if settings.DEBUG:
     urlpatterns += [
