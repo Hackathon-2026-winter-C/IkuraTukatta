@@ -20,6 +20,16 @@ provider "aws" {
   region = var.aws_region
 }
 
+data "aws_ssm_parameter" "rds_master_password" {
+  name            = var.rds_master_password_param_name
+  with_decryption = true
+}
+
+data "aws_ssm_parameter" "django_secret_key" {
+  name            = var.django_secret_key_param_name
+  with_decryption = true
+}
+
 # VPCモジュールの呼び出し
 module "vpc" {
   source = "../../modules/vpc"
@@ -47,7 +57,7 @@ module "alb" {
 # EC2モジュールの呼び出し
 module "ec2" {
   source     = "../../modules/ec2"
-  depends_on = [module.vpc]
+  depends_on = [module.vpc, module.notify]
 
   project_name          = "${var.environment}-app"
   vpc_id                = module.vpc.vpc_id
@@ -66,7 +76,7 @@ module "ec2" {
   db_host               = module.rds.address
   db_name               = var.rds_database_name
   db_user               = var.rds_master_username
-  db_password           = var.rds_master_password
+  db_password           = data.aws_ssm_parameter.rds_master_password.value
   rds_security_group_id = module.rds.security_group_id
   alb_dns_name          = module.alb.alb_dns_name
 
@@ -78,10 +88,20 @@ module "ec2" {
   bedrock_model_id          = var.bedrock_model_id
   bedrock_receipt_max_bytes = var.bedrock_receipt_max_bytes
   google_oauth_client_id    = var.google_oauth_client_id
-  django_secret_key         = var.django_secret_key
+  django_secret_key         = data.aws_ssm_parameter.django_secret_key.value
 
   app_allowed_hosts        = "${var.domain_name},www.${var.domain_name},localhost,127.0.0.1"
   app_csrf_trusted_origins = "https://${var.domain_name},https://www.${var.domain_name}"
+}
+
+# notifyモジュールの呼び出し
+module "notify" {
+  source = "../../modules/notify"
+
+  environment                   = var.environment
+  app_url                       = "https://${var.domain_name}"
+  autoscaling_group_name        = var.notify_autoscaling_group_name
+  mattermost_webhook_param_name = var.mattermost_webhook_param_name
 }
 
 # ECRモジュールの呼び出し
@@ -107,7 +127,7 @@ module "rds" {
   max_allocated_storage   = var.rds_max_allocated_storage
   database_name           = var.rds_database_name
   master_username         = var.rds_master_username
-  master_password         = var.rds_master_password
+  master_password         = data.aws_ssm_parameter.rds_master_password.value
   multi_az                = var.rds_multi_az
   backup_retention_period = var.rds_backup_retention_period
   skip_final_snapshot     = var.rds_skip_final_snapshot
@@ -140,4 +160,3 @@ resource "aws_route53_record" "app_www_alias" {
     evaluate_target_health = true
   }
 }
-
