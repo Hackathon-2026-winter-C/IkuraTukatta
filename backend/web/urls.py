@@ -42,34 +42,6 @@ urlpatterns = [
 
     # APIs
     path("api/categories/create/", views.category_create_api, name="category_create_api"),
-<<<<<<< HEAD
-    path(
-        "api/categories/<int:category_id>/rename/",
-        views.category_rename_api,
-        name="category_rename_api",
-    ),
-    path(
-        "api/categories/<int:category_id>/delete/",
-        views.category_delete_api,
-        name="category_delete_api",
-    ),
-    path("api/users", views.users_api, name="users_api"),
-
-    # レシートテスト用
-    path("receipt_test/", views.receipt_test_page),
-    path("receipt_upload_api", views.receipt_upload_api),
-    path("receipt_save_api", views.receipt_save_api),
-
-    # path("dashboard/date/", views.dashboard_date_page, name="dashboard_date"), #
-    path("account/share", views.share_page, name="share"),
-    path("account/group/create", views.group_create, name="group_create"),
-
-    
-
-    
-    # テストAPI
-    # path("api/users", views.users_api, name="users_api")
-=======
     path("api/categories/<int:category_id>/rename/", views.category_rename_api, name="category_rename_api"),
     path("api/categories/<int:category_id>/delete/", views.category_delete_api, name="category_delete_api"),
     path("api/users/", views.users_api, name="users_api"),
@@ -89,5 +61,4 @@ urlpatterns = [
     path("api/groups/<int:group_id>/members/add/", views.groups_members_add_api, name="groups_members_add_api"),
     path("api/groups/<int:group_id>/members/remove/", views.groups_members_remove_api, name="groups_members_remove_api"),
     path("api/groups/<int:group_id>/delete/", views.groups_delete_api, name="groups_delete_api"),
->>>>>>> origin/develop
 ]
