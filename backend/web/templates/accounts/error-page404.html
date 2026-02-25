@@ -1,18 +1,9 @@
-{% extends 'accounts/base.html' %}
+{% extends 'accounts/base.html' %} {% load static %} {% block title %}エラーページ{% endblock title %} {% block content %}
 
-{% load static %}
-
-{% block title %}エラーページ{% endblock title %}
-
- {% block content %}
-  <div class="w-full flex flex-col items-center gap-4 px-4 pt-10">
-    
-    <div class="relative w-full max-w-[420px]"> 
-        <button type="submit" class="absolute bottom-[27.5%] left-[13.5%] btn btn-nodark-orange w-[73%] h-14 p-0 text-[16px] flex justify-center items-center font-light leading-none hover:bg-[#FF9400]">
-          前のページに戻る
-        </button>
-        <img src="{% static 'assets/images/404.png' %}" alt="エラー画像" class="w-full h-auto block">       
-    </div>
+<div class="min-h-screen flex flex-col items-center justify-center px-4">
+  <div class="w-full max-w-[360px] flex flex-col items-center text-center gap-6">
+    <img src="{% static 'assets/images/404.png' %}" alt="エラー画像" class="w-[75%] max-w-[280px] h-auto" />
+    <button type="button" onclick="history.back()" class="btn btn-main w-full text-[16px]">前のページに戻る</button>
   </div>
-  
+</div>
 {% endblock %}
