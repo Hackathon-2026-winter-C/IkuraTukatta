@@ -3,7 +3,13 @@ from datetime import date
 import calendar
 import json
 import re
+import logging
 from collections import defaultdict
+
+from django.urls import reverse
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
+
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -30,6 +36,8 @@ from .profile_image_service import save_profile_image
 from .forms import EmailUserCreationForm, UserUpdateForm
 from .category_defaults import create_default_categories
 from .models import Category, MoneyFlow, User, ShareGroup, ShareGroupMember
+from .receipt_image_service import compress_and_resize_receipt
+from .receipt_bedrock_service import analyze_receipt_with_bedrock
 
 from .ledger_utils import (
     GROUP_SESSION_KEY,
@@ -59,61 +67,7 @@ CATEGORY_ICON_KEYS = {
     "utilities",
 }
 IMMUTABLE_CATEGORY_NAMES = {"支出その他", "収入その他", "その他"}
-
-
-@login_required(login_url="login")
-@require_POST
-@csrf_protect
-def account_profile_image_api(request):
-    profile_image = request.FILES.get("profile_image")
-    if not profile_image:
-        return JsonResponse({"ok": False, "error": "profile_image_required"}, status=400)
-
-    try:
-        key = save_profile_image(request.user.id, profile_image)
-        base_url = settings.AWS_S3_BASE_URL or (
-            f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com"
-        )
-        image_url = f"{base_url.rstrip('/')}/{key.lstrip('/')}"
-        request.user.image_url = image_url
-        request.user.save(update_fields=["image_url"])
-    except (BotoCoreError, ClientError, OSError, UnidentifiedImageError):
-        return JsonResponse({"ok": False, "error": "upload_failed"}, status=400)
-
-    return JsonResponse({"ok": True, "image_url": image_url})
-
-
-@login_required(login_url="login")
-@require_POST
-@csrf_protect
-def account_username_api(request):
-    data = _json(request)
-    username = (data.get("username") or "").strip()
-    if not username:
-        return JsonResponse({"ok": False, "error": "username_required"}, status=400)
-
-    request.user.username = username
-    request.user.save(update_fields=["username"])
-    return JsonResponse({"ok": True, "username": username})
-
-
-@login_required(login_url="login")
-@require_POST
-@csrf_protect
-def account_email_api(request):
-    data = _json(request)
-    email = (data.get("email") or "").strip().lower()
-    if not email:
-        return JsonResponse({"ok": False, "error": "email_required"}, status=400)
-
-    exists = User.objects.filter(email__iexact=email).exclude(id=request.user.id).exists()
-    if exists:
-        return JsonResponse({"ok": False, "error": "email_already_used"}, status=409)
-
-    request.user.email = email
-    request.user.save(update_fields=["email"])
-    return JsonResponse({"ok": True, "email": email})
-
+logger = logging.getLogger(__name__)
 
 @login_required(login_url="login")
 @require_POST
@@ -136,10 +90,117 @@ def _json(request):
 # /にアクセスがあった時
 @ensure_csrf_cookie
 def index_page(request):
-    # return redirect("login")
-    # return render(request, "accounts/darkmode-modal.html",{})
-    return render(request, "accounts/error-page500.html",{})
+    return redirect("login")
 
+#エラーページ（403)
+def error_403(request,exception):
+    return render(request,"accounts/error-page403.html",status=403)
+
+#エラーページ（404)
+def error_404(request,exception):
+    return render(request,"accounts/error-page404.html",status=404)
+
+#エラーページ（500)
+def error_500(request):
+    return render(request,"accounts/error-page500.html",status=500)
+
+def _username_from_google_profile(email: str, google_name: str = "") -> str:
+    """
+    Googleログインで新規作成するユーザー名を決める。
+    name クレームが取得できる場合はそれを優先し、
+    取得できない場合はメールのローカル部にフォールバックする。
+    """
+    candidate = (google_name or "").strip()
+    if not candidate:
+        candidate = (email.split("@")[0] or "").strip()
+    if not candidate:
+        return "google_user"
+    candidate = re.sub(r"\s+", " ", candidate)
+    return candidate[:150]
+
+#Googleログイン
+@require_POST
+@csrf_protect
+def google_login_api(request):
+    # サーバー側に Google Client ID が設定されているか確認
+    # 未設定だとトークンの正当性を検証できないため 500 を返す。
+    if not settings.GOOGLE_OAUTH_CLIENT_ID:
+        return JsonResponse({"ok": False, "error": "google_client_id_not_configured"}, status=500)
+
+    # フロントから受け取った ID トークン(credential)を取り出す。
+    # JSONで送られてこない/空なら不正リクエストとして 400。
+    data = _json(request)
+    credential = (data.get("credential") or "").strip()
+    if not credential:
+        return JsonResponse({"ok": False, "error": "credential_required"}, status=400)
+
+    try:
+        # Googleの公開鍵で署名検証 + audience(client_id)検証を行う。
+        # verifyに失敗したトークンは信用できないため 401。
+        info = google_id_token.verify_oauth2_token(
+            credential,
+            google_requests.Request(),
+            settings.GOOGLE_OAUTH_CLIENT_ID,
+        )
+    except Exception:
+        return JsonResponse({"ok": False, "error": "invalid_google_token"}, status=401)
+
+    sub = info.get("sub")
+    email = (info.get("email") or "").lower()
+    google_name = (info.get("name") or "").strip()
+    if not google_name:
+        given_name = (info.get("given_name") or "").strip()
+        family_name = (info.get("family_name") or "").strip()
+        google_name = " ".join(v for v in (given_name, family_name) if v).strip()
+    email_verified = bool(info.get("email_verified"))
+    # ログインに必要なクレームを検証。
+    # sub: Googleアカウントを一意に表すID
+    # email: アプリ側の一意キーとして利用
+    # email_verified: 未検証メールでのログインを防ぐ
+    if not sub or not email or not email_verified:
+        return JsonResponse({"ok": False, "error": "invalid_google_payload"}, status=403)
+
+    with transaction.atomic():
+        # google_uid で既存連携済みユーザーを優先取得する。
+        # これが見つかれば、そのユーザーでログインする。
+        user = User.objects.select_for_update().filter(google_uid=sub).first()
+        is_new = False
+
+        if not user:
+            # google_uid が未連携なら email で既存ユーザーを探す。
+            # email は unique=True なので該当は最大1件。
+            user = User.objects.select_for_update().filter(email__iexact=email).first()
+            if user:
+                # 既存ユーザーが見つかった場合:
+                # google_uid が空なら今回の sub を紐付ける
+                # 別subが既に紐づいていれば競合として 409
+                if user.google_uid and user.google_uid != sub:
+                    return JsonResponse({"ok": False, "error": "google_uid_conflict"}, status=409)
+                user.google_uid = sub
+                user.save(update_fields=["google_uid"])
+            else:
+                # email 一致ユーザーがいなければ新規作成。
+                # username は重複可 (unique=False)
+                # email は重複禁止 (unique=True)
+                user = User(
+                    email=email,
+                    username=_username_from_google_profile(email, google_name),
+                    google_uid=sub,
+                )
+                user.set_unusable_password()
+                user.save()
+                create_default_categories(user)
+                is_new = True
+
+    # Djangoセッションを発行してログイン完了。
+    login(request, user)
+
+    # 新規登録ユーザーのみテーマ選択を挟み、既存はダッシュボードへ。
+    if is_new:
+        request.session["show_theme_choice"] = True
+        return JsonResponse({"ok": True, "redirect_to": reverse("signup_theme_choice")})
+
+    return JsonResponse({"ok": True, "redirect_to": reverse("dashboard")})
 
 # サインアップ
 @ensure_csrf_cookie
@@ -236,6 +297,7 @@ def login_page(request):
         "error": error,
         "email": identifier,
         "next": request.GET.get("next", ""),
+        "google_client_id": settings.GOOGLE_OAUTH_CLIENT_ID,
     }
     return render(request, "accounts/login.html", context)
 
@@ -309,8 +371,7 @@ def dashboard_page(request):
     prev_y, prev_m = add_month(year, month, -1)
     next_y, next_m = add_month(year, month, 1)
 
-    # 表示用ラベル（例: February, 2026）
-    month_label = f"{calendar.month_name[month]}, {year}"
+    month_name = calendar.month_name[month]  # February
 
     # カレンダーに表示している最初と最後の日付
     # （前月・次月の分も含める）
@@ -388,7 +449,9 @@ def dashboard_page(request):
         {
             "weeks": weeks_view,  # カレンダー本体
             "month": month,
-            "month_label": month_label,  # 表示ラベル
+            "year_label": year,
+            "month_num": month,
+            "month_name": month_name,
             "prev_ym": f"{prev_y:04d}-{prev_m:02d}",  # 前月リンク用（年4桁・月2桁ゼロ埋め）
             "next_ym": f"{next_y:04d}-{next_m:02d}",  # 次月リンク用（年4桁・月2桁ゼロ埋め）
             "today": today,
@@ -463,14 +526,14 @@ def dashboard_moneyflow_form_page(request):
         }
 
     categories = []
-    if mode in ("expense", "income"):
+    if mode in ("expense", "income","receipt"):
         is_in_type = (mode == "income")
         qs = Category.objects.filter(query, is_in_type=is_in_type).order_by("id")
         categories = [normalize_category(cat) for cat in qs]
 
     if request.method == "POST":
-        if mode == "receipt":
-            return JsonResponse({"ok": False, "error": "receiptはまだ未実装だよ"}, status=400)
+        # if mode == "receipt":
+        #     return JsonResponse({"ok": False, "error": "receiptはまだ未実装だよ"}, status=400)
 
         amount_raw = (request.POST.get("amount") or "").strip()
         title = (request.POST.get("title") or "").strip()
@@ -528,6 +591,75 @@ def dashboard_moneyflow_form_page(request):
         },
     )
 
+@login_required(login_url="login")
+@require_POST
+@csrf_protect
+def receipt_analyze_api(request):
+    receipt_image = request.FILES.get("receipt_image")
+    if not receipt_image:
+        return JsonResponse({"ok": False, "error": "receipt_image_required"}, status=400)
+
+    query = _category_query_for_user(request.user)
+    expense_categories = list(
+        Category.objects.filter(query, is_in_type=False)
+        .order_by("id")
+        .values("id", "name")
+    )
+    allowed_category_ids = {c["id"] for c in expense_categories}
+
+    try:
+        image_bytes, meta = compress_and_resize_receipt(
+            receipt_image,
+            max_side=1600,
+            max_bytes=settings.BEDROCK_RECEIPT_MAX_BYTES,
+        )
+        result = analyze_receipt_with_bedrock(
+            image_bytes,
+            media_type=meta["content_type"],
+            categories=expense_categories,
+        )
+        if not isinstance(result, dict):
+            raise ValueError("invalid_model_response")
+
+        suggested_raw = result.get("suggested_category_id", result.get("category_id"))
+        suggested_id = None
+        if suggested_raw is not None and str(suggested_raw).strip() != "":
+            try:
+                suggested_id = int(str(suggested_raw).strip())
+            except (TypeError, ValueError):
+                suggested_id = None
+
+        if suggested_id not in allowed_category_ids:
+            suggested_id = None
+
+        result["suggested_category_id"] = suggested_id
+
+        title_raw = (
+            result.get("title")
+            or result.get("store_name")
+            or result.get("merchant_name")
+            or result.get("shop_name")
+        )
+        title_text = ""
+        if isinstance(title_raw, str):
+            title_text = re.sub(r"\s+", " ", title_raw).strip()
+        if title_text:
+            title_text = title_text[:255]
+            result["title"] = title_text
+        else:
+            result["title"] = None
+
+    except ValueError as e:
+        return JsonResponse({"ok": False, "error": str(e)}, status=400)
+    
+    except Exception as e:
+        logger.exception("receipt analyze failed")
+        payload = {"ok": False, "error": "receipt_analyze_failed"}
+        if settings.DEBUG:
+            payload["detail"] = str(e)
+        return JsonResponse(payload, status=500)
+
+    return JsonResponse({"ok": True, "result": result})
 
 # カテゴリ管理
 @login_required(login_url="login")
@@ -753,7 +885,7 @@ def dashboard_moneyflow_edit_page(request):
         except Category.DoesNotExist:
             return JsonResponse({"ok": False, "error": "カテゴリが見つからないよ"}, status=404)
 
-        if mode == "expense" and cat.is_in_type:
+        if mode in ("expense", "receipt") and cat.is_in_type:
             return JsonResponse({"ok": False, "error": "支出タブでは収入カテゴリは選べないよ"}, status=400)
         if mode == "income" and (not cat.is_in_type):
             return JsonResponse({"ok": False, "error": "収入タブでは支出カテゴリは選べないよ"}, status=400)

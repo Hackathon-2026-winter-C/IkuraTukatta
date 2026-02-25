@@ -1,6 +1,6 @@
 {% extends "base.html" %} {% load static %} {% block title %}Record{% endblock %} {% block content %}
 
-<main class="w-full flex flex-col items-center px-4 pb-28 pt-16">
+<main class="w-full flex flex-col items-center px-4 pb-28 pt-5">
   <div class="w-full max-w-[420px] space-y-4">
     <!-- ===== 支出 / 収入 / レシート ===== -->
     <div id="record-seg" class="relative flex w-full h-10 rounded-full p-1 border border-white/25 bg-white/15 backdrop-blur-lg app-shadow">
@@ -26,6 +26,11 @@
       </div>
     </div>
 
+    {% if mode_receipt %}
+          <button id="receipt-open-btn" type="button" class="btn btn-main w-full flex items-center justify-center">レシートを追加</button>
+    <input type="file" accept="image/*" class="hidden" id="receipt-image-input" />
+    {% endif %}
+
     <!-- ===============================
          新規 / 編集 兼用フォーム
     ================================ -->
@@ -44,7 +49,7 @@
 
       <!-- title -->
       <div class="relative w-full">
-        <input id="title" name="title" value="{% if request.POST.title %}{{ request.POST.title }}{% elif entry %}{{ entry.title }}{% endif %}" placeholder=" " class="input w-full !px-4 !pt-6 !pb-3 text-black" />
+        <input id="title" name="title" value="{% if request.POST.title %}{{ request.POST.title }}{% elif entry %}{{ entry.memo }}{% endif %}" placeholder=" " class="input w-full !px-4 !pt-6 !pb-3 text-black" />
         <label for="title" class="absolute left-4 top-1 text-[11px] opacity-60 pointer-events-none">Title</label>
       </div>
 
@@ -66,7 +71,6 @@
       <p id="date-error" class="hidden mt-1 text-[11px] text-red-500"></p>
 
       <!-- category -->
-      {% if not mode_receipt %}
       <section class="app-shadow bg-[rgb(var(--app-bg))] rounded-3xl px-5 pt-5 pb-6">
         <div class="flex items-center justify-between mb-4">
           <p class="text-[11px] opacity-60 text-[rgb(var(--app-text))]">Category</p>
@@ -98,22 +102,23 @@
 
         <p id="category-error" class="hidden mt-2 text-[11px] text-red-500"></p>
       </section>
-      {% endif %}
 
-      <button id="submit-btn" type="submit" class="w-full h-12 rounded-2xl bg-[#FF9400] text-white font-semibold app-shadow active:translate-y-[1px] transition disabled:opacity-40 disabled:active:translate-y-0">{% if entry %}変　更{% else %}記　録{% endif %}</button>
+      <button id="submit-btn" type="submit" class="btn btn-main w-full disabled:opacity-40 disabled:active:translate-y-0">{% if entry %}変　更{% else %}記　録{% endif %}</button>
     </form>
 
     <!-- ===== 削除（編集時のみ） ===== -->
     {% if entry %}
     <form method="post" action="{% url 'dashboard_moneyflow_delete' %}?id={{ entry.id }}">
       {% csrf_token %}
-      <button type="submit" class="w-full h-12 rounded-2xl bg-[#FF3B30] text-white font-semibold app-shadow active:translate-y-[1px] transition" onclick="return confirm('このデータを削除しますか？');">削　除</button>
+      <button type="submit" class="btn btn-red w-full" onclick="return confirm('このデータを削除しますか？');">削　除</button>
     </form>
+    <button type="button" class="btn btn-sub w-full mt-3" onclick="history.back()">戻　る</button>
     {% endif %}
   </div>
 </main>
 
 <script src="{% static 'js/segmented.js' %}"></script>
+<script src="{% static 'js/receipt-input.js' %}" defer></script>
 
 <script>
   // ----- segmented (Record) -----
@@ -195,15 +200,25 @@
   }
 
   // ---------- submit state ----------
-  const updateSubmitState = () => {
-    const isReceipt = {{ mode_receipt|yesno:"true,false" }};
-    if (isReceipt) {
-      if (submitBtn) submitBtn.disabled = false;
-      return;
+  const syncHiddenCategoryFromSelected = () => {
+    if (!categoryHidden) return "";
+    const hiddenCategoryId = String(categoryHidden.value || "").trim();
+    if (hiddenCategoryId) return hiddenCategoryId;
+
+    const selected = document.querySelector(".cat-pick.is-selected");
+    const selectedId = selected ? String(selected.dataset.id || "").trim() : "";
+    if (selectedId) {
+      categoryHidden.value = selectedId;
+      return selectedId;
     }
-    const hasCategory = categoryHidden && categoryHidden.value && categoryHidden.value.trim() !== "";
+    return "";
+  };
+
+  const updateSubmitState = () => {
+    const hasCategory = syncHiddenCategoryFromSelected() !== "";
     if (submitBtn) submitBtn.disabled = !hasCategory;
   };
+  window.updateRecordSubmitState = updateSubmitState;
 
   updateSubmitState();
 
@@ -212,6 +227,12 @@
 
   if (categoryHidden) {
     const initial = categoryHidden.value;
+
+    categoryHidden.addEventListener("change", () => {
+      if (categoryError) clearError(categoryError);
+      updateSubmitState();
+    });
+
     if (initial) {
       picks.forEach((btn) => {
         if (btn.dataset.id === String(initial)) btn.classList.add("is-selected");
@@ -223,9 +244,14 @@
         categoryHidden.value = btn.dataset.id;
         picks.forEach((x) => x.classList.remove("is-selected"));
         btn.classList.add("is-selected");
-        if (categoryError) clearError(categoryError);
-        updateSubmitState();
+        categoryHidden.dispatchEvent(new Event("change", { bubbles: true }));
       });
+    });
+
+    // レシート解析側で class だけ先に変わった場合にも submit 状態を同期する。
+    const observer = new MutationObserver(() => updateSubmitState());
+    picks.forEach((btn) => {
+      observer.observe(btn, { attributes: true, attributeFilter: ["class"] });
     });
   }
 
@@ -257,15 +283,12 @@
         return;
       }
 
-      const isReceipt = {{ mode_receipt|yesno:"true,false" }};
-      if (!isReceipt) {
-        const catId = categoryHidden ? categoryHidden.value : "";
-        if (!catId) {
-          e.preventDefault();
-          if (categoryError) showError(categoryError, "カテゴリを選んでね");
-          updateSubmitState();
-          return;
-        }
+      const catId = syncHiddenCategoryFromSelected();
+      if (!catId) {
+        e.preventDefault();
+        if (categoryError) showError(categoryError, "カテゴリを選んでね");
+        updateSubmitState();
+        return;
       }
 
       isSubmitting = true;

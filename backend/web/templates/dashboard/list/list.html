@@ -1,6 +1,6 @@
 {% extends 'base.html' %} {% load static %} {% load humanize %} {% load i18n %} {% block title %} 支出リスト {% endblock title %} {% block content %}
 
-<main class="w-full flex flex-col items-center gap-4 px-4 pt-10 pb-10">
+<main class="w-full flex flex-col items-center gap-4 px-4 pt-5 pb-5">
   <div class="w-full max-w-[420px] flex flex-col gap-3">
     <!-- ===== 共有プルダウン ===== -->
     <div id="ledger-switcher" class="ledger-switcher w-full mb-2.5">
@@ -17,7 +17,7 @@
     </div>
 
     {# 日付ごとにカードを生成 #} {% for expense_date, expenses_for_date in grouped_expenses %}
-    <div class="card w-full mb-2.5 p-4 bg-[rgb(var(--app-bg))] app-shadow">
+    <div id="date-{{ expense_date|date:'Y-m-d' }}" class="card w-full mb-2.5 p-4 bg-[rgb(var(--app-bg))] app-shadow">
       <ul class="space-y-2">
         {% for expense in expenses_for_date %}
         <li class="border-b border-gray-200/60 dark:border-gray-700/60 last:border-b-0">
@@ -32,17 +32,17 @@
               {% endlanguage %}
             </div>
 
-            <div class="flex items-center justify-between w-full gap-3 pl-2">
+            <div class="flex items-center justify-between w-full gap-3 pl-2 min-w-0">
               <!-- 左：カテゴリ等 -->
-              <div class="flex items-center justify-start gap-3 min-w-0">
+              <div class="flex items-center justify-start gap-3 min-w-0 flex-1">
                 <div class="flex flex-col items-center w-12 shrink-0">
                   <div class="text-[{{ expense.categoryColor }}]">{% include "icons/category/"|add:expense.icon_key|add:".svg" %}</div>
                   <span class="text-[{{ expense.categoryColor }}] text-[11px] leading-tight"> {{ expense.category }} </span>
                 </div>
 
-                <div class="flex flex-col space-y-0.5 min-w-0">
-                  <span class="text-xl text-[rgb(var(--app-text))] font-medium"> {{ expense.amount_sign }}{{ expense.amount|floatformat:0|intcomma }} </span>
-                  <span class="text-sm text-[rgb(var(--app-text))] opacity-80 truncate"> {{ expense.memo }} </span>
+                <div class="flex flex-col space-y-0.5 min-w-0 flex-1 overflow-hidden">
+                  <span class="block w-full text-xl text-[rgb(var(--app-text))] font-medium truncate"> {{ expense.amount_sign }}{{ expense.amount|floatformat:0|intcomma }} </span>
+                  <span class="block w-full text-sm text-[rgb(var(--app-text))] opacity-80 truncate"> {{ expense.memo }} </span>
                 </div>
               </div>
 
@@ -51,7 +51,7 @@
                 {% if expense.owner_image_url %}
                 <img src="{{ expense.owner_image_url }}" alt="avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-white/40" />
                 {% else %}
-                <div class="w-9 h-9 rounded-full bg-white/40 grid place-items-center text-xs font-bold">?</div>
+                <img data-user-avatar src="{% static 'assets/images/default-avatar.png' %}" alt="avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-white/40" />
                 {% endif %}
               </div>
             </div>
@@ -68,17 +68,17 @@
             </div>
 
             <!-- ✅ ここが差し替えポイント：内容行（左 + 右アバター） -->
-            <div class="flex items-center justify-between w-full gap-3 pl-2">
+            <div class="flex items-center justify-between w-full gap-3 pl-2 min-w-0">
               <!-- 左：カテゴリ等 -->
-              <div class="flex items-center justify-start gap-3 min-w-0">
+              <div class="flex items-center justify-start gap-3 min-w-0 flex-1">
                 <div class="flex flex-col items-center w-12 shrink-0">
                   <div class="text-[{{ expense.categoryColor }}]">{% include "icons/category/"|add:expense.icon_key|add:".svg" %}</div>
                   <span class="text-[{{ expense.categoryColor }}] text-[11px] leading-tight"> {{ expense.category }} </span>
                 </div>
 
-                <div class="flex flex-col space-y-0.5 min-w-0">
-                  <span class="text-xl text-[rgb(var(--app-text))] font-medium"> {{ expense.amount_sign }}{{ expense.amount|floatformat:0|intcomma }} </span>
-                  <span class="text-sm text-[rgb(var(--app-text))] opacity-80 truncate"> {{ expense.memo }} </span>
+                <div class="flex flex-col space-y-0.5 min-w-0 flex-1 overflow-hidden">
+                  <span class="block w-full text-xl text-[rgb(var(--app-text))] font-medium truncate"> {{ expense.amount_sign }}{{ expense.amount|floatformat:0|intcomma }} </span>
+                  <span class="block w-full text-sm text-[rgb(var(--app-text))] opacity-80 truncate"> {{ expense.memo }} </span>
                 </div>
               </div>
 
@@ -87,7 +87,7 @@
                 {% if expense.owner_image_url %}
                 <img src="{{ expense.owner_image_url }}" alt="avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-white/40" />
                 {% else %}
-                <div class="w-9 h-9 rounded-full bg-white/40 grid place-items-center text-xs font-bold">?</div>
+                <img data-user-avatar src="{% static 'assets/images/default-avatar.png' %}" alt="avatar" class="w-9 h-9 rounded-full object-cover ring-2 ring-white/40" />
                 {% endif %}
               </div>
             </div>
@@ -123,6 +123,27 @@
     }, 1200);
 
     url.searchParams.delete("focus");
+    history.replaceState(null, "", url.toString());
+  })();
+</script>
+<script>
+  (() => {
+    const url = new URL(window.location.href);
+    const date = url.searchParams.get("date");
+    if (!date) return;
+
+    const el = document.getElementById(`date-${date}`);
+    if (!el) return;
+
+    el.style.scrollMarginTop = "96px";
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    el.classList.add("ring-2", "ring-[#FF9400]", "rounded-3xl");
+    setTimeout(() => {
+      el.classList.remove("ring-2", "ring-[#FF9400]", "rounded-3xl");
+    }, 1200);
+
+    url.searchParams.delete("date");
     history.replaceState(null, "", url.toString());
   })();
 </script>
