@@ -13,15 +13,13 @@
           <span id="ledger-switcher-label" class="text-base text-[rgb(var(--app-text))]">読み込み中…</span>
           <span id="ledger-switcher-badge" class="ledger-switcher__badge">表示中</span>
         </div>
-
         <span id="ledger-switcher-chevron" class="transition-transform duration-200"> {% include "icons/ui/chevron-down.svg" %} </span>
       </button>
-
       <div id="ledger-switcher-menu" class="ledger-switcher__menu" aria-hidden="true"></div>
     </div>
 
     <!-- ===== Segmented (Charts: Year / Month) ===== -->
-    <div id="charts-seg" class="relative flex w-full h-10 rounded-full p-1 border border-white/25 bg-white/15 backdrop-blur-lg app-shadow">
+    <div id="charts-seg" class="relative flex w-full h-10 rounded-full p-1 border-white/25 backdrop-blur-lg app-shadow">
       <!-- slider -->
       <div id="charts-slider" class="absolute top-1 bottom-1 left-1 rounded-full bg-white shadow-[0_3px_12px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.08)] transition-[left,width] duration-300"></div>
 
@@ -38,23 +36,39 @@
       </div>
     </div>
 
-    <!-- chart -->
-    <div class="card w-full mb-2.5 bg-[rgb(var(--app-bg))] app-shadow">
-      <div class="p-4 h-64 shadow flex justify-center items-center rounded-[30px] bg-transparent">
-        <canvas id="expense-chart" class="w-48 h-48"></canvas>
-        <div id="chart-empty" class="mt-2 text-sm text-[rgb(var(--app-text))]" hidden>まだデータがありません。</div>
-      </div>
+<div class="card w-full mb-2.5 bg-[rgb(var(--app-bg))] app-shadow">
+
+    <!-- 年移動ナビ -->
+    <div id="year-navigation" class="flex items-center justify-between mb-3">
+      <a href="/dashboard/charts/?year={{ prev_year }}" aria-label="prev year" class="grid place-items-center w-[38px] h-[38px] mt-[12px] ml-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> ← </a>
+      <div id="year-display" class="text-[24px] mt-[12px] font-bold text-[rgb(var(--app-text))]">{{ current_year_display }}</div>
+      <a href="/dashboard/charts/?year={{ next_year }}" aria-label="next year" class="grid place-items-center w-[38px] h-[38px] mt-[12px] mr-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> → </a>
     </div>
 
-    <!-- categories -->
-    <div class="card w-full bg-[rgb(var(--app-bg))] app-shadow">
-      <div id="chart-categories" class="mt-2.5 p-5 text-xl text-[rgb(var(--app-text))]"></div>
+    <!-- 月移動ナビ -->
+    <div id="month-navigation" class="flex items-center justify-between mb-3" style="display: none;">
+      <a href="/dashboard/charts/?year={{ current_year_display }}&month={{ prev_month_key }}" aria-label="prev month" class="grid place-items-center w-[38px] h-[38px] mt-[12px] ml-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> ← </a>
+      <div id="month-display" class="text-[22px] mt-[12px] font-bold text-[rgb(var(--app-text))]">{{ current_year_display }}</div> 
+      <a href="/dashboard/charts/?year={{ current_year_display }}&month={{ next_month_key }}" aria-label="next month" class="grid place-items-center w-[38px] h-[38px] mt-[12px] mr-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> → </a>
     </div>
-  </div>
-  <script src="{% static 'js/ledger-switcher.js' %}" defer></script>
+    <!-- 円グラフ表示 -->
+      <div class="p-4 h-64 shadow flex justify-center items-center rounded-[15px] bg-transparent">
+        <canvas id="expense-chart" class= "hidden w-56 h-56 mb-[4px]"></canvas>
+        <div id="chart-empty" class="mt-3 text-lg text-[rgb(var(--app-text))]" hidden>
+          支出データがありません。
+        </div>
+      </div>
+</div>
+
+    <div class="card w-full bg-[rgb(var(--app-bg))] app-shadow h-[350px] overflow-scroll "> 
+          <div id="chart-categories" class="mt-2.5 p-5 text-xl text-[rgb(var(--app-text))]" ></div>
+    </div>
+  </div> 
 </main>
 
-{{ expense_data|json_script:"expense-data" }}
+{{ processed_chart_data|json_script:"processed-chart-data" }}
+{{ current_period_type|json_script:"initial-period-type" }} 
+
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="{% static 'js/charts.js' %}"></script>
@@ -65,6 +79,9 @@
 
 <!-- period switch -->
 <script src="{% static 'js/charts_period_switcher.js' %}"></script>
+
+<!-- ここに ledger-switcher.js を追加 -->
+<script src="{% static 'js/ledger-switcher.js' %}"></script> 
 
 <script>
   initSegmented({

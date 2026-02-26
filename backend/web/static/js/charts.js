@@ -79,4 +79,4 @@ window.updateChart = function(labels, values, bg, formattedTotalAmount) {
   }
 };
 
-// 初期表示は charts_period_switcher.js で行うため、ここでは何もしない
+// 初期表示は charts_period_switcher.js で行う
