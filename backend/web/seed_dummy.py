@@ -10,22 +10,22 @@ from web.category_defaults import DEFAULT_CATEGORY_SPECS
 @transaction.atomic
 def seed():
     user, created = User.objects.get_or_create(
-        email="demo@example.com",
-        defaults={"username": "demo", "image_url":"https://hackathon-media-s3-bucket-20260207.s3.ap-northeast-1.amazonaws.com/default-avatar.png"},
+        email="haruto@example.com",
+        defaults={"username": "haruto", "image_url":"https://hackathon-media-s3-bucket-20260207.s3.ap-northeast-1.amazonaws.com/default-avatar.png"},
     )
     if created or not user.has_usable_password():
         user.set_password("demo1234")
         user.save(update_fields=["password"])
 
     categories = {}
-    for name, is_in_type, icon_key, color_hex in DEFAULT_CATEGORY_SPECS:
+    for name, is_income, icon_key, color_hex in DEFAULT_CATEGORY_SPECS:
         cat, _ = Category.objects.update_or_create(
             user=user,
             group=None,
             name=name,
             defaults={
                 "color": color_hex,
-                "is_in_type": is_in_type,
+                "is_income": is_income,
                 "icon_key": icon_key,
                 "is_builtin": True,
             },
@@ -95,11 +95,11 @@ def seed():
         ("医療費", 4500, "2026-02-28", "美容室"),
     ]
 
-    for name, amount, expense_date, memo in moneyflow_specs:
+    for name, amount, expense_date, title in moneyflow_specs:
         MoneyFlow.objects.update_or_create(
             category=categories[name],
             expense_date=date.fromisoformat(expense_date),
-            memo=memo,
+            title=title,
             defaults={
                 "amount": Decimal(str(amount)),
                 "receipt_id": None,

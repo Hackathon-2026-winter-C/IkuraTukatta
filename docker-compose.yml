@@ -38,7 +38,7 @@ services:
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID}
     volumes:
       - ./backend:/app
-      - static_data:/app/staticfiles      
+      - static_data:/app/staticfiles
     depends_on:
       db:
         condition: service_healthy

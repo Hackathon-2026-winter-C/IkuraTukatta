@@ -1,6 +1,6 @@
 {% extends "base.html" %} {% load static %} {% block title %}Record{% endblock %} {% block content %}
 
-<main class="w-full flex flex-col items-center px-4 pb-28 pt-3">
+<main class="w-full flex flex-col items-center px-4 pb-28 pt-5">
   <div class="w-full max-w-[420px] space-y-4">
     <!-- ===== 支出 / 収入 / レシート ===== -->
     <div id="record-seg" class="relative flex w-full h-10 rounded-full p-1 border border-white/25 bg-white/15 backdrop-blur-lg app-shadow">
@@ -26,10 +26,10 @@
       </div>
     </div>
 
-      {% if mode_receipt %}
-          <button id="receipt-open-btn" type="button" class="w-full h-12 rounded-2xl bg-[#FF9400] text-white font-bold flex items-center justify-center shadow-lg ">レシートを追加</button>
-          <input type="file" accept="image/*" class="hidden" id="receipt-image-input">
-      {% endif %}
+    {% if mode_receipt %}
+    <button id="receipt-open-btn" type="button" class="btn btn-main w-full flex items-center justify-center">レシートを追加</button>
+    <input type="file" accept="image/*" class="hidden" id="receipt-image-input" />
+    {% endif %}
 
     <!-- ===============================
          新規 / 編集 兼用フォーム
@@ -103,223 +103,45 @@
         <p id="category-error" class="hidden mt-2 text-[11px] text-red-500"></p>
       </section>
 
-      <button id="submit-btn" type="submit" class="w-full h-12 rounded-2xl bg-[#FF9400] text-white font-semibold app-shadow active:translate-y-[1px] transition disabled:opacity-40 disabled:active:translate-y-0">{% if entry %}変　更{% else %}記　録{% endif %}</button>
+      <button id="submit-btn" type="submit" class="btn btn-main w-full disabled:opacity-40 disabled:active:translate-y-0">{% if entry %}変　更{% else %}記　録{% endif %}</button>
     </form>
 
     <!-- ===== 削除（編集時のみ） ===== -->
     {% if entry %}
-    <form method="post" action="{% url 'dashboard_moneyflow_delete' %}?id={{ entry.id }}">
+    <form id="delete-form" method="post" action="{% url 'dashboard_moneyflow_delete' %}?id={{ entry.id }}">
       {% csrf_token %}
-      <button type="submit" class="w-full h-12 rounded-2xl bg-[#FF3B30] text-white font-semibold app-shadow active:translate-y-[1px] transition" onclick="return confirm('このデータを削除しますか？');">削　除</button>
+      <button type="button" id="open-moneyflow-delete-modal" class="btn btn-red w-full">削　除</button>
+
+      <!-- ===== 収支削除確認モーダル ===== -->
+      <div id="moneyflow-delete-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50 modal-light">
+        <button type="button" id="moneyflow-delete-modal-bg" class="absolute inset-0 w-full h-full"></button>
+
+        <div class="absolute inset-x-0 bottom-0">
+          <div class="w-full flex flex-col items-center gap-4 pt-10">
+            <div class="neu-panel w-full flex flex-col gap-4">
+              <h3 class="text-xl font-bold text-black text-center mb-3">収支を削除</h3>
+
+              <p class="text-sm text-[#111] text-center">このデータを削除しますか？</p>
+              <p class="text-xs text-black/50 text-center">削除すると元に戻せません。</p>
+
+              <button type="submit" class="btn btn-red w-full">削除する</button>
+              <button type="button" class="btn btn-sub w-full" data-close-moneyflow-delete-modal>キャンセル</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </form>
+    <button type="button" class="btn btn-sub w-full mt-3" onclick="history.back()">戻　る</button>
     {% endif %}
   </div>
 </main>
 
-<script src="{% static 'js/segmented.js' %}"></script>
-<script src="{% static 'js/receipt-input.js' %}" defer></script>
-
 <script>
-  // ----- segmented (Record) -----
-  initSegmented({
-    rootId: "record-seg",
-    sliderId: "seg-slider",
-    radioName: "record-mode",
-  });
-
-  // ---------- amount ----------
-  const amountDisplay = document.getElementById("amount_display");
-  const amountHidden = document.getElementById("amount");
-
-  const formatJPY = (digits) => {
-    if (!digits) return "";
-    digits = digits.replace(/^0+(?=\d)/, "");
-    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  };
-
-  const syncAmount = () => {
-    const digits = amountDisplay.value.replace(/[^\d]/g, "");
-    amountHidden.value = digits;
-    amountDisplay.value = formatJPY(digits);
-  };
-
-  if (amountDisplay && amountHidden) {
-    if (amountHidden.value) {
-      amountDisplay.value = formatJPY(amountHidden.value.replace(/[^\d]/g, ""));
-    }
-    amountDisplay.addEventListener("input", syncAmount);
-    amountDisplay.addEventListener("blur", syncAmount);
-  }
-
-  // ---------- error helpers ----------
-  const showError = (el, msg) => {
-    el.textContent = msg;
-    el.classList.remove("hidden");
-  };
-  const clearError = (el) => {
-    el.textContent = "";
-    el.classList.add("hidden");
-  };
-
-  const amountError = document.getElementById("amount-error");
-  const dateError = document.getElementById("date-error");
-  const categoryError = document.getElementById("category-error");
-
-  // ✅ FIX: メインフォームをidで取得（削除フォームに誤爆しない）
-  const form = document.getElementById("record-form");
-  const submitBtn = document.getElementById("submit-btn");
-
-  const categoryHidden = document.getElementById("category_id");
-
-  // ✅ FIX: date inputもidで取得（安全）
-  const dateInput = document.getElementById("date-input");
-  const dateWrap = document.getElementById("date-wrap");
-  const dateText = document.getElementById("date-text");
-
-  // ---------- date picker ----------
-  if (dateWrap && dateInput) {
-    const openDatePicker = () => {
-      try {
-        if (typeof dateInput.showPicker === "function") {
-          dateInput.showPicker();
-          return;
-        }
-      } catch (_) {}
-      dateInput.focus({ preventScroll: true });
-      dateInput.click();
-    };
-
-    dateWrap.addEventListener("click", () => openDatePicker());
-
-    if (dateText) {
-      dateInput.addEventListener("change", () => {
-        if (dateInput.value) dateText.textContent = dateInput.value;
-      });
-    }
-  }
-
-  // ---------- submit state ----------
-  const syncHiddenCategoryFromSelected = () => {
-    if (!categoryHidden) return "";
-    const hiddenCategoryId = String(categoryHidden.value || "").trim();
-    if (hiddenCategoryId) return hiddenCategoryId;
-
-    const selected = document.querySelector(".cat-pick.is-selected");
-    const selectedId = selected ? String(selected.dataset.id || "").trim() : "";
-    if (selectedId) {
-      categoryHidden.value = selectedId;
-      return selectedId;
-    }
-    return "";
-  };
-
-  const updateSubmitState = () => {
-    const hasCategory = syncHiddenCategoryFromSelected() !== "";
-    if (submitBtn) submitBtn.disabled = !hasCategory;
-  };
-  window.updateRecordSubmitState = updateSubmitState;
-
-  updateSubmitState();
-
-  // ---------- category ----------
-  const picks = document.querySelectorAll(".cat-pick");
-
-  if (categoryHidden) {
-    const initial = categoryHidden.value;
-
-    categoryHidden.addEventListener("change", () => {
-      if (categoryError) clearError(categoryError);
-      updateSubmitState();
-    });
-
-    if (initial) {
-      picks.forEach((btn) => {
-        if (btn.dataset.id === String(initial)) btn.classList.add("is-selected");
-      });
-    }
-
-    picks.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        categoryHidden.value = btn.dataset.id;
-        picks.forEach((x) => x.classList.remove("is-selected"));
-        btn.classList.add("is-selected");
-        categoryHidden.dispatchEvent(new Event("change", { bubbles: true }));
-      });
-    });
-
-    // レシート解析側で class だけ先に変わった場合にも submit 状態を同期する。
-    const observer = new MutationObserver(() => updateSubmitState());
-    picks.forEach((btn) => {
-      observer.observe(btn, { attributes: true, attributeFilter: ["class"] });
-    });
-  }
-
-  // ---------- validation ----------
-  let isSubmitting = false;
-
-  if (form) {
-    form.addEventListener("submit", (e) => {
-      if (isSubmitting) {
-        e.preventDefault();
-        return;
-      }
-
-      if (amountError) clearError(amountError);
-      if (dateError) clearError(dateError);
-      if (categoryError) clearError(categoryError);
-
-      const amount = amountHidden ? amountHidden.value : "";
-      if (!amount || Number(amount) <= 0) {
-        e.preventDefault();
-        if (amountError) showError(amountError, "金額は1円以上にしてね");
-        return;
-      }
-
-      const ds = dateInput ? dateInput.value : "";
-      if (!ds) {
-        e.preventDefault();
-        if (dateError) showError(dateError, "日付を入れてね");
-        return;
-      }
-
-      const catId = syncHiddenCategoryFromSelected();
-      if (!catId) {
-        e.preventDefault();
-        if (categoryError) showError(categoryError, "カテゴリを選んでね");
-        updateSubmitState();
-        return;
-      }
-
-      isSubmitting = true;
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = "保存中…";
-      }
-    });
-  }
-
-  // ---------- mode switch ----------
-  const modeMap = {
-    "rec-exp": "expense",
-    "rec-inc": "income",
-    "rec-receipt": "receipt",
-  };
-
-  document.querySelectorAll('input[name="record-mode"]').forEach((radio) => {
-    radio.addEventListener("change", () => {
-      const mode = modeMap[radio.id];
-      if (!mode) return;
-
-      const url = new URL(window.location.href);
-      url.searchParams.set("mode", mode);
-
-      {% if entry %}
-      url.searchParams.set("id", "{{ entry.id }}");
-      {% endif %}
-
-      window.location.href = url.toString();
-    });
-  });
+  window.IS_ENTRY_MODE = "{% if entry %}true{% else %}false{% endif %}";
+  window.ENTRY_ID = "{% if entry %}{{ entry.id }}{% else %}{% endif %}";
 </script>
 
+<script src="{% static 'js/segmented.js' %}"></script>
+<script src="{% static 'js/receipt-input.js' %}" defer></script>
+<script src="{% static 'js/moneyflow_form.js' %}"></script>
 {% endblock %}

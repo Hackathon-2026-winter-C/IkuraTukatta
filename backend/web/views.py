@@ -10,6 +10,7 @@ from django.urls import reverse
 from google.oauth2 import id_token as google_id_token
 from google.auth.transport import requests as google_requests
 
+from datetime import date # dateモジュールをインポート
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -68,61 +69,6 @@ CATEGORY_ICON_KEYS = {
 }
 IMMUTABLE_CATEGORY_NAMES = {"支出その他", "収入その他", "その他"}
 logger = logging.getLogger(__name__)
-
-
-@login_required(login_url="login")
-@require_POST
-@csrf_protect
-def account_profile_image_api(request):
-    profile_image = request.FILES.get("profile_image")
-    if not profile_image:
-        return JsonResponse({"ok": False, "error": "profile_image_required"}, status=400)
-
-    try:
-        key = save_profile_image(request.user.id, profile_image)
-        base_url = settings.AWS_S3_BASE_URL or (
-            f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com"
-        )
-        image_url = f"{base_url.rstrip('/')}/{key.lstrip('/')}"
-        request.user.image_url = image_url
-        request.user.save(update_fields=["image_url"])
-    except (BotoCoreError, ClientError, OSError, UnidentifiedImageError):
-        return JsonResponse({"ok": False, "error": "upload_failed"}, status=400)
-
-    return JsonResponse({"ok": True, "image_url": image_url})
-
-
-@login_required(login_url="login")
-@require_POST
-@csrf_protect
-def account_username_api(request):
-    data = _json(request)
-    username = (data.get("username") or "").strip()
-    if not username:
-        return JsonResponse({"ok": False, "error": "username_required"}, status=400)
-
-    request.user.username = username
-    request.user.save(update_fields=["username"])
-    return JsonResponse({"ok": True, "username": username})
-
-
-@login_required(login_url="login")
-@require_POST
-@csrf_protect
-def account_email_api(request):
-    data = _json(request)
-    email = (data.get("email") or "").strip().lower()
-    if not email:
-        return JsonResponse({"ok": False, "error": "email_required"}, status=400)
-
-    exists = User.objects.filter(email__iexact=email).exclude(id=request.user.id).exists()
-    if exists:
-        return JsonResponse({"ok": False, "error": "email_already_used"}, status=409)
-
-    request.user.email = email
-    request.user.save(update_fields=["email"])
-    return JsonResponse({"ok": True, "email": email})
-
 
 @login_required(login_url="login")
 @require_POST
@@ -426,8 +372,7 @@ def dashboard_page(request):
     prev_y, prev_m = add_month(year, month, -1)
     next_y, next_m = add_month(year, month, 1)
 
-    # 表示用ラベル（例: February, 2026）
-    month_label = f"{calendar.month_name[month]}, {year}"
+    month_name = calendar.month_name[month]  # February
 
     # カレンダーに表示している最初と最後の日付
     # （前月・次月の分も含める）
@@ -455,7 +400,7 @@ def dashboard_page(request):
     month_in_total = 0
     month_out_total = 0
     for e in month_qs:
-        if e.category.is_in_type:
+        if e.category.is_income:
             month_in_total += int(e.amount)
         else:
             month_out_total += int(e.amount)
@@ -470,7 +415,7 @@ def dashboard_page(request):
         key = e.expense_date.isoformat()
 
         # category.is_io_type が 1 なら収入、そうでなければ支出
-        if e.category.is_in_type:
+        if e.category.is_income:
             daily[key]["in"] += int(e.amount)
         else:
             daily[key]["out"] += int(e.amount)
@@ -505,7 +450,9 @@ def dashboard_page(request):
         {
             "weeks": weeks_view,  # カレンダー本体
             "month": month,
-            "month_label": month_label,  # 表示ラベル
+            "year_label": year,
+            "month_num": month,
+            "month_name": month_name,
             "prev_ym": f"{prev_y:04d}-{prev_m:02d}",  # 前月リンク用（年4桁・月2桁ゼロ埋め）
             "next_ym": f"{next_y:04d}-{next_m:02d}",  # 次月リンク用（年4桁・月2桁ゼロ埋め）
             "today": today,
@@ -536,12 +483,12 @@ def dashboard_list_page(request):
             {
                 "id": e.id,
                 "amount": e.amount,
-                "amount_sign": "+" if e.category.is_in_type else "-",
-                "mode": "income" if e.category.is_in_type else "expense",
+                "amount_sign": "+" if e.category.is_income else "-",
+                "mode": "income" if e.category.is_income else "expense",
                 "category": e.category.name,
                 "categoryColor": e.category.color,
                 "icon_key": e.category.icon_key,
-                "memo": e.memo,
+                "title": e.title,
                 "can_edit": can_edit,
                 "owner_username": (u.username if u else ""),
                 "owner_email": (u.email if u else ""),
@@ -575,14 +522,14 @@ def dashboard_moneyflow_form_page(request):
             "name": cat.name,
             "icon_key": icon_key,
             "color": color,
-            "is_in_type": bool(cat.is_in_type),
+            "is_income": bool(cat.is_income),
             "is_builtin": bool(cat.is_builtin),
         }
 
     categories = []
     if mode in ("expense", "income","receipt"):
-        is_in_type = (mode == "income")
-        qs = Category.objects.filter(query, is_in_type=is_in_type).order_by("id")
+        is_income = (mode == "income")
+        qs = Category.objects.filter(query, is_income=is_income).order_by("id")
         categories = [normalize_category(cat) for cat in qs]
 
     if request.method == "POST":
@@ -613,16 +560,16 @@ def dashboard_moneyflow_form_page(request):
         except Category.DoesNotExist:
             return JsonResponse({"ok": False, "error": "カテゴリが見つからないよ"}, status=404)
 
-        if mode == "expense" and cat.is_in_type:
+        if mode == "expense" and cat.is_income:
             return JsonResponse({"ok": False, "error": "支出タブでは収入カテゴリは選べないよ"}, status=400)
-        if mode == "income" and (not cat.is_in_type):
+        if mode == "income" and (not cat.is_income):
             return JsonResponse({"ok": False, "error": "収入タブでは支出カテゴリは選べないよ"}, status=400)
 
         created = MoneyFlow.objects.create(
             category=cat,
             amount=amount,
             expense_date=expense_date,
-            memo=title,
+            title=title,
         )
         return redirect(f"{redirect('dashboard_list').url}?focus={created.id}")
 
@@ -655,7 +602,7 @@ def receipt_analyze_api(request):
 
     query = _category_query_for_user(request.user)
     expense_categories = list(
-        Category.objects.filter(query, is_in_type=False)
+        Category.objects.filter(query, is_income=False)
         .order_by("id")
         .values("id", "name")
     )
@@ -735,8 +682,8 @@ def dashboard_moneyflow_category_page(request):
     query = Q(user=request.user)
     base_qs = Category.objects.filter(query).order_by("id")
 
-    expense_categories_raw = base_qs.filter(is_in_type=False)
-    income_categories_raw = base_qs.filter(is_in_type=True)
+    expense_categories_raw = base_qs.filter(is_income=False)
+    income_categories_raw = base_qs.filter(is_income=True)
 
     expense_categories = [normalize_category(cat) for cat in expense_categories_raw]
     income_categories = [normalize_category(cat) for cat in income_categories_raw]
@@ -783,15 +730,15 @@ def category_create_api(request):
     if not CATEGORY_COLOR_RE.match(color):
         return JsonResponse({"ok": False, "error": "color must be #RRGGBB"}, status=400)
 
-    is_in_type = bool(is_io_type)
+    is_income = bool(is_io_type)
     query = _category_query_for_user(request.user)
 
     limit = MAX_EXPENSE_CATEGORIES if is_io_type == 0 else MAX_INCOME_CATEGORIES
-    current_count = Category.objects.filter(query, is_in_type=is_in_type).count()
+    current_count = Category.objects.filter(query, is_income=is_income).count()
     if current_count >= limit:
         return JsonResponse({"ok": False, "error": "これ以上カテゴリは追加できないよ"}, status=409)
 
-    exists = Category.objects.filter(query, is_in_type=is_in_type, name=name).exists()
+    exists = Category.objects.filter(query, is_income=is_income, name=name).exists()
     if exists:
         return JsonResponse({"ok": False, "error": "同じ名前のカテゴリが既にあるよ"}, status=409)
 
@@ -800,7 +747,7 @@ def category_create_api(request):
         group=None,
         name=name,
         color=color,
-        is_in_type=is_in_type,
+        is_income=is_income,
         icon_key="default",
         is_builtin=False,
     )
@@ -812,7 +759,7 @@ def category_create_api(request):
                 "name": cat.name,
                 "color": cat.color,
                 "is_io_type": is_io_type,
-                "is_in_type": cat.is_in_type,
+                "is_income": cat.is_income,
                 "icon_key": cat.icon_key,
             },
         }
@@ -838,7 +785,7 @@ def category_rename_api(request, category_id: int):
         return JsonResponse({"ok": False, "error": "このカテゴリは変更できないよ"}, status=400)
 
     exists = (
-        Category.objects.filter(query, is_in_type=cat.is_in_type, name=name)
+        Category.objects.filter(query, is_income=cat.is_income, name=name)
         .exclude(id=cat.id)
         .exists()
     )
@@ -889,7 +836,7 @@ def dashboard_moneyflow_edit_page(request):
 
     mode = (request.GET.get("mode") or request.POST.get("mode") or "").strip()
     if mode not in ("expense", "income", "receipt"):
-        mode = "income" if entry.category.is_in_type else "expense"
+        mode = "income" if entry.category.is_income else "expense"
 
     query = _category_query_for_user(request.user)
 
@@ -901,14 +848,14 @@ def dashboard_moneyflow_edit_page(request):
             "name": cat.name,
             "icon_key": icon_key,
             "color": color,
-            "is_in_type": bool(cat.is_in_type),
+            "is_income": bool(cat.is_income),
             "is_builtin": bool(cat.is_builtin),
         }
 
     categories = []
     if mode in ("expense", "income"):
-        is_in_type = (mode == "income")
-        qs = Category.objects.filter(query, is_in_type=is_in_type).order_by("id")
+        is_income = (mode == "income")
+        qs = Category.objects.filter(query, is_income=is_income).order_by("id")
         categories = [normalize_category(cat) for cat in qs]
 
     if request.method == "POST":
@@ -939,16 +886,16 @@ def dashboard_moneyflow_edit_page(request):
         except Category.DoesNotExist:
             return JsonResponse({"ok": False, "error": "カテゴリが見つからないよ"}, status=404)
 
-        if mode in ("expense", "receipt") and cat.is_in_type:
+        if mode in ("expense", "receipt") and cat.is_income:
             return JsonResponse({"ok": False, "error": "支出タブでは収入カテゴリは選べないよ"}, status=400)
-        if mode == "income" and (not cat.is_in_type):
+        if mode == "income" and (not cat.is_income):
             return JsonResponse({"ok": False, "error": "収入タブでは支出カテゴリは選べないよ"}, status=400)
 
         entry.category = cat
         entry.amount = amount
         entry.expense_date = expense_date
-        entry.memo = title
-        entry.save(update_fields=["category", "amount", "expense_date", "memo"])
+        entry.title = title
+        entry.save(update_fields=["category", "amount", "expense_date", "title"])
 
         return redirect(f"{redirect('dashboard_list').url}?focus={entry.id}")
 
@@ -990,43 +937,147 @@ def dashboard_moneyflow_delete_page(request):
     return redirect("dashboard_list")
 
 
-# 円グラフ（合算対象）
+def create_nested_defaultdict_int():
+    return defaultdict(int)
+
 @login_required(login_url="login")
 @ensure_csrf_cookie
 def charts_page(request):
-    scope_user_ids = get_scope_user_ids(request)
-
+    get_user_ids = get_scope_user_ids(request)
     qs = (
         MoneyFlow.objects.select_related("category", "category__user")
-        .filter(category__user_id__in=scope_user_ids)
+        .filter(category__user_id__in=get_user_ids)
         .order_by("-expense_date", "-id")
     )
+    all_expenses = list(qs) # 全期間の生データを取得
 
-    expense_list = list(qs)
+    # 年ごとの集計用
+    yearly_totals = defaultdict(create_nested_defaultdict_int)
+    yearly_colors = {}
 
-    expense_data = [
-        {
-            "date": e.expense_date.isoformat(),
-            "amount": int(e.amount),
-            "category": e.category.name,
-            "categoryColor": e.category.color,
-            "memo": e.memo,
-            "owner": {
-                "id": e.category.user_id,
-                "username": e.category.user.username if e.category.user else "",
-                "email": e.category.user.email if e.category.user else "",
-                "image_url": e.category.user.image_url if e.category.user else None,
-            },
-        }
-        for e in expense_list
-    ]
+    # 月ごとの集計用
+    monthly_totals = defaultdict(create_nested_defaultdict_int)
+    monthly_colors = {}
 
+    # 年の処理
+    current_year_str = request.GET.get('year')
+    if current_year_str:
+        current_year = int(current_year_str)
+    else:
+        current_year = date.today().year
+    prev_year = current_year - 1
+    next_year = current_year + 1
+    # 月の処理
+    current_month_str = request.GET.get('month')
+    if current_month_str:
+        try:
+            year_part, month_part = map(int, current_month_str.split('-'))
+            current_month_date = date(year_part, month_part, 1)
+        except ValueError:
+            current_month_date = date(current_year, date.today().month, 1)
+    else:
+        current_month_date = date(current_year, date.today().month, 1)
+    current_month_key = f"{current_month_date.year}-{current_month_date.month:02d}"
+
+    # python-dateutil を使わない場合の prev_month_date と next_month_date の計算
+    # 前の月を計算
+    if current_month_date.month == 1: # 1月の場合
+        prev_month_date = date(current_month_date.year - 1, 12, 1) # 前年の12月
+    else:
+        prev_month_date = date(current_month_date.year, current_month_date.month - 1, 1) # 前の月
+    # 次の月を計算
+    if current_month_date.month == 12: # 12月の場合
+        next_month_date = date(current_month_date.year + 1, 1, 1) # 次の年の1月
+    else:
+        next_month_date = date(current_month_date.year, current_month_date.month + 1, 1) # 次の月
+    prev_month_key = f"{prev_month_date.year}-{prev_month_date.month:02d}"
+    next_month_key = f"{next_month_date.year}-{next_month_date.month:02d}"
+
+    # 現在の表示期間タイプを決定 (JavaScriptに渡すため)
+    current_period_type = 'month' if current_month_str else 'year'
+
+    for e in all_expenses:
+        expense_year = e.expense_date.year
+        expense_month = e.expense_date.month
+        category_name = e.category.name or "Unknwn"
+        amount = int(e.amount)
+        # 年ごとの集計
+        yearly_totals[expense_year][category_name] += amount
+        if category_name not in yearly_colors and e.category.color:
+            yearly_colors[category_name] = e.category.color
+        year_month_key = f"{expense_year}-{expense_month:02d}"
+        # 月ごとの集計 (例: "2026-02")
+        monthly_totals[year_month_key][category_name] += amount
+        if category_name not in monthly_colors and e.category.color:
+            monthly_colors[category_name] = e.category.color
+
+    # 現在の年データ
+    current_yearly_data = yearly_totals[current_year]
+    yearly_labels = list(current_yearly_data.keys())
+
+    yearly_values = [] # まず空のリストを初期化する
+    for label in yearly_labels: # yearly_labels の各要素をループする
+        value = current_yearly_data[label] # 各ラベルに対応する値を取得する
+        yearly_values.append(value) # 各ラベルに対応する値を取得する
+
+    yearly_bg = [] # まず空のリストを初期化する
+    for label in yearly_labels: # yearly_labels の各要素をループする
+        color = yearly_colors.get(label, "#999999") # 各ラベルに対応する色を取得する。見つからなければ "#999999" を使う
+        yearly_bg.append(color) # 取得した色をリストに追加する
+
+    yearly_total_amount = sum(yearly_values)
+    yearly_formatted_total_amount = f"¥{yearly_total_amount:,}"
+
+    # 現在の月データ
+    current_monthly_data = monthly_totals[current_month_key]
+    monthly_labels = list(current_monthly_data.keys())
+
+    monthly_values =[] # まず空のリストを初期化する
+    for label in monthly_labels: # monthly_labels の各要素をループする
+        value = current_monthly_data[label] # 各ラベルに対応する値を取得する
+        monthly_values.append(value) # 取得した値をリストに追加する
+
+    monthly_bg = [] # まず空のリストを初期化する
+    for label in monthly_labels: # monthly_labels の各要素をループする
+        color = monthly_colors.get(label, "#999999") # 各ラベルに対応する色を取得する。見つからなければ "#999999" を使う
+        monthly_bg.append(color) # 取得した色をリストに追加する
+    
+    monthly_total_amount = sum(monthly_values)
+    monthly_formatted_total_amount = f"¥{monthly_total_amount:,}"
+
+    processed_chart_data = {
+        "year": {
+            "labels": yearly_labels,
+            "values": yearly_values,
+            "bg": yearly_bg,
+            "formattedTotalAmount" : yearly_formatted_total_amount,
+            "currentYearDisplay": current_year,
+        },
+        "month": {
+            "labels": monthly_labels,
+            "values": monthly_values,
+            "bg": monthly_bg,
+            "formattedTotalAmount": monthly_formatted_total_amount,
+            "currentYearDisplay": current_year, 
+            "currentMonthKey": current_month_key,
+        },
+    }
+    context = {
+        "current_user_username": request.user.username,
+        "processed_chart_data": processed_chart_data, 
+        "current_year_display": current_year,
+        "prev_year": prev_year, 
+        "next_year": next_year, 
+        "current_month_key": current_month_key, # HTMLの月ナビゲーションリンク用
+        "prev_month_key": prev_month_key,     # HTMLの月ナビゲーションリンク用
+        "next_month_key": next_month_key,     # HTMLの月ナビゲーションリンク用
+        "current_period_type": current_period_type, 
+    }
     return render(
         request,
         "dashboard/charts/chart.html",
-        {"expense_data": expense_data},
+        context,
     )
-
 
 
 @login_required(login_url="login")

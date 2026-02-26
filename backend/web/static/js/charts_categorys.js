@@ -6,7 +6,7 @@ const categoriesContainer = document.getElementById("chart-categories");
 // カテゴリリストを更新する関数
 // 外部から呼び出せるようにグローバルに定義
 window.updateCategoryList = function (labels, values, bg) {
-  // ここが変更点！関数化
+  // 関数化
   if (!categoriesContainer) return;
 
   // コンテナの中身を一度クリアする
@@ -18,8 +18,8 @@ window.updateCategoryList = function (labels, values, bg) {
   if (labels.length === 0) {
     // labels は引数から受け取る
     const noDataMessage = document.createElement("div");
-    noDataMessage.className = "text-sm text-slate-500";
-    noDataMessage.textContent = "No data";
+    noDataMessage.className = "text-lg  pt-20 text-center text-slate-500";
+    noDataMessage.textContent = "支出データがありません。";
     categoriesContainer.appendChild(noDataMessage);
     return;
   }

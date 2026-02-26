@@ -1,9 +1,8 @@
-{% load static %}
-{% with request.resolver_match.url_name as url_name %}
-<div class="fixed bottom-0 left-0 w-full h-24 z-10 bg-transparent ">
-  <div class="absolute w-full h-full z-40 grid grid-cols-5 px-6 pointer-events-none ">
+{% load static %} {% with request.resolver_match.url_name as url_name %}
+<div class="fixed bottom-0 left-0 w-full h-24 z-10 bg-transparent">
+  <div class="absolute w-full h-full z-40 grid grid-cols-5 px-6 pointer-events-none">
     {% if url_name == "dashboard" %}
-    <div class="col-start-1 flex items-center justify-center relative pointer-events-auto ">
+    <div class="col-start-1 flex items-center justify-center relative pointer-events-auto">
       <div class="flex items-center justify-center absolute z-20 bg-[rgb(var(--app-bg))] rounded-full bottom-2 w-24 h-24 footer-circle-shadow">
         <div class="z-40 h-16 w-16 bg-orange-400 rounded-full footer-circle-button-shadow"></div>
       </div>
@@ -49,7 +48,7 @@
           {% if request.user.image_url %}
           <img src="{{ request.user.image_url }}" alt="account" class="w-[56px] h-[56px] rounded-full object-cover" data-user-avatar />
           {% else %}
-          <img src="{% static 'assets/images/default-avatar.png' %}" alt="account" class="w-[56px] h-[56px] rounded-full object-cover" data-user-avatar />
+          <img src="{% static 'assets/images/login.png' %}" alt="account" class="w-[56px] h-[56px] rounded-full object-cover" data-user-avatar />
           {% endif %}
         </div>
       </div>

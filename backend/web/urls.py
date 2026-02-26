@@ -1,8 +1,17 @@
-# backend/web/urls.py
+
 from django.urls import path
+
 from . import views
 
 urlpatterns = [
+    # テスト
+    # path("", views.index_page, name="index"),
+    # path("settings", views.settings_page, name="settings"),
+    # path("user", views.user_page, name="user"),
+    # path("charts", views.charts_page, name="charts"),
+    # path("dashboard/",views.dashboard_page, name="dashboard"),
+    # path("test-footer/", views.test_footer_page, name="test_footer"),
+
     # 開発
     path("", views.index_page, name="index"),
     path("login/", views.login_page, name="login"),
@@ -37,7 +46,7 @@ urlpatterns = [
     path("dashboard/account/", views.account_page, name="account"),
     path("account/edit/", views.account_edit, name="account_edit"),
 
-    # APIs
+    # API
     path("api/categories/create/", views.category_create_api, name="category_create_api"),
     path(
         "api/categories/<int:category_id>/rename/",
@@ -49,6 +58,22 @@ urlpatterns = [
         views.category_delete_api,
         name="category_delete_api",
     ),
+    path(
+        "api/account/username/",
+        views.account_username_update_api,
+        name="account_username_update_api",
+    ),
+    path(
+        "api/account/email/",
+        views.account_user_email_update_api,
+        name="account_user_email_update_api",
+    ),
+    path(
+        "api/account/password/",
+        views.account_user_password_update_api,
+        name="account_user_password_update_api",
+    ),
+    path("api/account/profile-image/", views.profile_image_update_api, name="profile_image_update_api"),
     path("api/users", views.users_api, name="users_api"),
 
     # # レシートテスト用
@@ -59,10 +84,6 @@ urlpatterns = [
     path("api/categories/<int:category_id>/rename/", views.category_rename_api, name="category_rename_api"),
     path("api/categories/<int:category_id>/delete/", views.category_delete_api, name="category_delete_api"),
     path("api/users/", views.users_api, name="users_api"),
-    path("api/account/profile-image/", views.account_profile_image_api, name="account_profile_image_api"),
-    path("api/account/username/", views.account_username_api, name="account_username_api"),
-    path("api/account/email/", views.account_email_api, name="account_email_api"),
-    path("api/account/password/", views.account_user_password_update_api, name="account_user_password_update_api"),
     path("api/account/delete/", views.account_delete_api, name="account_delete_api"),
     path("api/account/theme-choice/complete/", views.signup_theme_choice_complete_api, name="signup_theme_choice_complete_api"),
     path("api/receipts/analyze/", views.receipt_analyze_api, name="receipt_analyze_api"),
