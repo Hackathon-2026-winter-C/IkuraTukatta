@@ -399,7 +399,7 @@ def dashboard_page(request):
     month_in_total = 0
     month_out_total = 0
     for e in month_qs:
-        if e.category.is_in_type:
+        if e.category.is_income:
             month_in_total += int(e.amount)
         else:
             month_out_total += int(e.amount)
@@ -414,7 +414,7 @@ def dashboard_page(request):
         key = e.expense_date.isoformat()
 
         # category.is_io_type が 1 なら収入、そうでなければ支出
-        if e.category.is_in_type:
+        if e.category.is_income:
             daily[key]["in"] += int(e.amount)
         else:
             daily[key]["out"] += int(e.amount)
@@ -482,12 +482,12 @@ def dashboard_list_page(request):
             {
                 "id": e.id,
                 "amount": e.amount,
-                "amount_sign": "+" if e.category.is_in_type else "-",
-                "mode": "income" if e.category.is_in_type else "expense",
+                "amount_sign": "+" if e.category.is_income else "-",
+                "mode": "income" if e.category.is_income else "expense",
                 "category": e.category.name,
                 "categoryColor": e.category.color,
                 "icon_key": e.category.icon_key,
-                "memo": e.memo,
+                "title": e.title,
                 "can_edit": can_edit,
                 "owner_username": (u.username if u else ""),
                 "owner_email": (u.email if u else ""),
@@ -521,14 +521,14 @@ def dashboard_moneyflow_form_page(request):
             "name": cat.name,
             "icon_key": icon_key,
             "color": color,
-            "is_in_type": bool(cat.is_in_type),
+            "is_income": bool(cat.is_income),
             "is_builtin": bool(cat.is_builtin),
         }
 
     categories = []
     if mode in ("expense", "income","receipt"):
-        is_in_type = (mode == "income")
-        qs = Category.objects.filter(query, is_in_type=is_in_type).order_by("id")
+        is_income = (mode == "income")
+        qs = Category.objects.filter(query, is_income=is_income).order_by("id")
         categories = [normalize_category(cat) for cat in qs]
 
     if request.method == "POST":
@@ -559,16 +559,16 @@ def dashboard_moneyflow_form_page(request):
         except Category.DoesNotExist:
             return JsonResponse({"ok": False, "error": "カテゴリが見つからないよ"}, status=404)
 
-        if mode == "expense" and cat.is_in_type:
+        if mode == "expense" and cat.is_income:
             return JsonResponse({"ok": False, "error": "支出タブでは収入カテゴリは選べないよ"}, status=400)
-        if mode == "income" and (not cat.is_in_type):
+        if mode == "income" and (not cat.is_income):
             return JsonResponse({"ok": False, "error": "収入タブでは支出カテゴリは選べないよ"}, status=400)
 
         created = MoneyFlow.objects.create(
             category=cat,
             amount=amount,
             expense_date=expense_date,
-            memo=title,
+            title=title,
         )
         return redirect(f"{redirect('dashboard_list').url}?focus={created.id}")
 
@@ -601,7 +601,7 @@ def receipt_analyze_api(request):
 
     query = _category_query_for_user(request.user)
     expense_categories = list(
-        Category.objects.filter(query, is_in_type=False)
+        Category.objects.filter(query, is_income=False)
         .order_by("id")
         .values("id", "name")
     )
@@ -681,8 +681,8 @@ def dashboard_moneyflow_category_page(request):
     query = Q(user=request.user)
     base_qs = Category.objects.filter(query).order_by("id")
 
-    expense_categories_raw = base_qs.filter(is_in_type=False)
-    income_categories_raw = base_qs.filter(is_in_type=True)
+    expense_categories_raw = base_qs.filter(is_income=False)
+    income_categories_raw = base_qs.filter(is_income=True)
 
     expense_categories = [normalize_category(cat) for cat in expense_categories_raw]
     income_categories = [normalize_category(cat) for cat in income_categories_raw]
@@ -729,15 +729,15 @@ def category_create_api(request):
     if not CATEGORY_COLOR_RE.match(color):
         return JsonResponse({"ok": False, "error": "color must be #RRGGBB"}, status=400)
 
-    is_in_type = bool(is_io_type)
+    is_income = bool(is_io_type)
     query = _category_query_for_user(request.user)
 
     limit = MAX_EXPENSE_CATEGORIES if is_io_type == 0 else MAX_INCOME_CATEGORIES
-    current_count = Category.objects.filter(query, is_in_type=is_in_type).count()
+    current_count = Category.objects.filter(query, is_income=is_income).count()
     if current_count >= limit:
         return JsonResponse({"ok": False, "error": "これ以上カテゴリは追加できないよ"}, status=409)
 
-    exists = Category.objects.filter(query, is_in_type=is_in_type, name=name).exists()
+    exists = Category.objects.filter(query, is_income=is_income, name=name).exists()
     if exists:
         return JsonResponse({"ok": False, "error": "同じ名前のカテゴリが既にあるよ"}, status=409)
 
@@ -746,7 +746,7 @@ def category_create_api(request):
         group=None,
         name=name,
         color=color,
-        is_in_type=is_in_type,
+        is_income=is_income,
         icon_key="default",
         is_builtin=False,
     )
@@ -758,7 +758,7 @@ def category_create_api(request):
                 "name": cat.name,
                 "color": cat.color,
                 "is_io_type": is_io_type,
-                "is_in_type": cat.is_in_type,
+                "is_income": cat.is_income,
                 "icon_key": cat.icon_key,
             },
         }
@@ -784,7 +784,7 @@ def category_rename_api(request, category_id: int):
         return JsonResponse({"ok": False, "error": "このカテゴリは変更できないよ"}, status=400)
 
     exists = (
-        Category.objects.filter(query, is_in_type=cat.is_in_type, name=name)
+        Category.objects.filter(query, is_income=cat.is_income, name=name)
         .exclude(id=cat.id)
         .exists()
     )
@@ -835,7 +835,7 @@ def dashboard_moneyflow_edit_page(request):
 
     mode = (request.GET.get("mode") or request.POST.get("mode") or "").strip()
     if mode not in ("expense", "income", "receipt"):
-        mode = "income" if entry.category.is_in_type else "expense"
+        mode = "income" if entry.category.is_income else "expense"
 
     query = _category_query_for_user(request.user)
 
@@ -847,14 +847,14 @@ def dashboard_moneyflow_edit_page(request):
             "name": cat.name,
             "icon_key": icon_key,
             "color": color,
-            "is_in_type": bool(cat.is_in_type),
+            "is_income": bool(cat.is_income),
             "is_builtin": bool(cat.is_builtin),
         }
 
     categories = []
     if mode in ("expense", "income"):
-        is_in_type = (mode == "income")
-        qs = Category.objects.filter(query, is_in_type=is_in_type).order_by("id")
+        is_income = (mode == "income")
+        qs = Category.objects.filter(query, is_income=is_income).order_by("id")
         categories = [normalize_category(cat) for cat in qs]
 
     if request.method == "POST":
@@ -885,16 +885,16 @@ def dashboard_moneyflow_edit_page(request):
         except Category.DoesNotExist:
             return JsonResponse({"ok": False, "error": "カテゴリが見つからないよ"}, status=404)
 
-        if mode in ("expense", "receipt") and cat.is_in_type:
+        if mode in ("expense", "receipt") and cat.is_income:
             return JsonResponse({"ok": False, "error": "支出タブでは収入カテゴリは選べないよ"}, status=400)
-        if mode == "income" and (not cat.is_in_type):
+        if mode == "income" and (not cat.is_income):
             return JsonResponse({"ok": False, "error": "収入タブでは支出カテゴリは選べないよ"}, status=400)
 
         entry.category = cat
         entry.amount = amount
         entry.expense_date = expense_date
-        entry.memo = title
-        entry.save(update_fields=["category", "amount", "expense_date", "memo"])
+        entry.title = title
+        entry.save(update_fields=["category", "amount", "expense_date", "title"])
 
         return redirect(f"{redirect('dashboard_list').url}?focus={entry.id}")
 
@@ -956,7 +956,7 @@ def charts_page(request):
             "amount": int(e.amount),
             "category": e.category.name,
             "categoryColor": e.category.color,
-            "memo": e.memo,
+            "title": e.title,
             "owner": {
                 "id": e.category.user_id,
                 "username": e.category.user.username if e.category.user else "",

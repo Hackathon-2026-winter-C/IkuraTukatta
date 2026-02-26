@@ -27,7 +27,7 @@
     </div>
 
     {% if mode_receipt %}
-          <button id="receipt-open-btn" type="button" class="btn btn-main w-full flex items-center justify-center">レシートを追加</button>
+    <button id="receipt-open-btn" type="button" class="btn btn-main w-full flex items-center justify-center">レシートを追加</button>
     <input type="file" accept="image/*" class="hidden" id="receipt-image-input" />
     {% endif %}
 
@@ -49,7 +49,7 @@
 
       <!-- title -->
       <div class="relative w-full">
-        <input id="title" name="title" value="{% if request.POST.title %}{{ request.POST.title }}{% elif entry %}{{ entry.memo }}{% endif %}" placeholder=" " class="input w-full !px-4 !pt-6 !pb-3 text-black" />
+        <input id="title" name="title" value="{% if request.POST.title %}{{ request.POST.title }}{% elif entry %}{{ entry.title }}{% endif %}" placeholder=" " class="input w-full !px-4 !pt-6 !pb-3 text-black" />
         <label for="title" class="absolute left-4 top-1 text-[11px] opacity-60 pointer-events-none">Title</label>
       </div>
 
@@ -108,9 +108,28 @@
 
     <!-- ===== 削除（編集時のみ） ===== -->
     {% if entry %}
-    <form method="post" action="{% url 'dashboard_moneyflow_delete' %}?id={{ entry.id }}">
+    <form id="delete-form" method="post" action="{% url 'dashboard_moneyflow_delete' %}?id={{ entry.id }}">
       {% csrf_token %}
-      <button type="submit" class="btn btn-red w-full" onclick="return confirm('このデータを削除しますか？');">削　除</button>
+      <button type="button" id="open-moneyflow-delete-modal" class="btn btn-red w-full">削　除</button>
+
+      <!-- ===== 収支削除確認モーダル ===== -->
+      <div id="moneyflow-delete-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50 modal-light">
+        <button type="button" id="moneyflow-delete-modal-bg" class="absolute inset-0 w-full h-full"></button>
+
+        <div class="absolute inset-x-0 bottom-0">
+          <div class="w-full flex flex-col items-center gap-4 pt-10">
+            <div class="neu-panel w-full flex flex-col gap-4">
+              <h3 class="text-xl font-bold text-black text-center mb-3">収支を削除</h3>
+
+              <p class="text-sm text-[#111] text-center">このデータを削除しますか？</p>
+              <p class="text-xs text-black/50 text-center">削除すると元に戻せません。</p>
+
+              <button type="submit" class="btn btn-red w-full">削除する</button>
+              <button type="button" class="btn btn-sub w-full" data-close-moneyflow-delete-modal>キャンセル</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </form>
     <button type="button" class="btn btn-sub w-full mt-3" onclick="history.back()">戻　る</button>
     {% endif %}
@@ -321,6 +340,26 @@
       window.location.href = url.toString();
     });
   });
+
+  // ---------- delete modal ----------
+  const deleteOpenBtn = document.getElementById("open-moneyflow-delete-modal");
+  const deleteModal = document.getElementById("moneyflow-delete-modal");
+  const deleteBg = document.getElementById("moneyflow-delete-modal-bg");
+  const deleteCloseBtns = deleteModal?.querySelectorAll("[data-close-moneyflow-delete-modal]") || [];
+
+  const openDeleteModal = () => deleteModal?.classList.remove("hidden");
+  const closeDeleteModal = () => deleteModal?.classList.add("hidden");
+
+  if (deleteOpenBtn && deleteModal && deleteBg) {
+    deleteOpenBtn.addEventListener("click", openDeleteModal);
+    deleteBg.addEventListener("click", closeDeleteModal);
+    deleteCloseBtns.forEach((btn) => btn.addEventListener("click", closeDeleteModal));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !deleteModal.classList.contains("hidden")) {
+        closeDeleteModal();
+      }
+    });
+  }
 </script>
 
 {% endblock %}

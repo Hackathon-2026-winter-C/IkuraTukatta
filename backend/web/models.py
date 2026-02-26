@@ -140,7 +140,7 @@ class Category(models.Model):
     )
 
     # 収入カテゴリなら True、支出カテゴリなら False
-    is_in_type = models.BooleanField()
+    is_income = models.BooleanField()
 
     # フロントで使うアイコンキー（例: "food", "salary"）
     icon_key = models.CharField(max_length=50)
@@ -190,7 +190,7 @@ class MoneyFlow(models.Model):
     expense_date = models.DateField()
 
     # メモ（任意）
-    memo = models.CharField(max_length=255, null=True, blank=True)
+    title = models.CharField(max_length=255, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

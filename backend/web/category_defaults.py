@@ -2,7 +2,7 @@ from .models import Category
 
 
 DEFAULT_CATEGORY_SPECS = [
-    # 支出（is_in_type=False）
+    # 支出（is_income=False）
     ("食費", False, "food", "#FFB44F"),
     ("住居費", False, "home", "#E1BFFF"),
     ("交通費", False, "transport", "#62B2FD"),
@@ -12,7 +12,7 @@ DEFAULT_CATEGORY_SPECS = [
     ("医療費", False, "medical", "#9F97F7"),
     ("日用品", False, "daily", "#AEE3F5"),
     ("支出その他", False, "other_exp", "#86BE63"),
-    # 収入（is_in_type=True）
+    # 収入（is_income=True）
     ("給料", True, "salary", "#FACC15"),
     ("収入その他", True, "other_inc", "#FFD5D2"),
 ]
@@ -25,10 +25,10 @@ def create_default_categories(user):
             group=None,             # 個人用カテゴリ
             name=name,              # カテゴリ名
             color=color_hex,        # 表示カラー
-            is_in_type=is_in_type,  # 収入(True) / 支出(False)
+            is_income=is_income,  # 収入(True) / 支出(False)
             icon_key=icon_key,      # フロント用アイコンキー
             is_builtin=True,        # 初期カテゴリであることを示すフラグ
         )
-        for name, is_in_type, icon_key, color_hex in DEFAULT_CATEGORY_SPECS
+        for name, is_income, icon_key, color_hex in DEFAULT_CATEGORY_SPECS
     ]
     Category.objects.bulk_create(categories)
