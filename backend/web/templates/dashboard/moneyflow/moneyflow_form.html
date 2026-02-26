@@ -1,6 +1,6 @@
 {% extends "base.html" %} {% load static %} {% block title %}Record{% endblock %} {% block content %}
 
-<main class="w-full flex flex-col items-center px-4 pb-28 pt-3">
+<main class="w-full flex flex-col items-center px-4 pb-28 pt-5">
   <div class="w-full max-w-[420px] space-y-4">
     <!-- ===== 支出 / 収入 / レシート ===== -->
     <div id="record-seg" class="relative flex w-full h-10 rounded-full p-1 border border-white/25 bg-white/15 backdrop-blur-lg app-shadow">
@@ -26,10 +26,10 @@
       </div>
     </div>
 
-      {% if mode_receipt %}
-          <button id="receipt-open-btn" type="button" class="w-full h-12 rounded-2xl bg-[#FF9400] text-white font-bold flex items-center justify-center shadow-lg ">レシートを追加</button>
-          <input type="file" accept="image/*" class="hidden" id="receipt-image-input">
-      {% endif %}
+    {% if mode_receipt %}
+          <button id="receipt-open-btn" type="button" class="btn btn-main w-full flex items-center justify-center">レシートを追加</button>
+    <input type="file" accept="image/*" class="hidden" id="receipt-image-input" />
+    {% endif %}
 
     <!-- ===============================
          新規 / 編集 兼用フォーム
@@ -49,7 +49,7 @@
 
       <!-- title -->
       <div class="relative w-full">
-        <input id="title" name="title" value="{% if request.POST.title %}{{ request.POST.title }}{% elif entry %}{{ entry.title }}{% endif %}" placeholder=" " class="input w-full !px-4 !pt-6 !pb-3 text-black" />
+        <input id="title" name="title" value="{% if request.POST.title %}{{ request.POST.title }}{% elif entry %}{{ entry.memo }}{% endif %}" placeholder=" " class="input w-full !px-4 !pt-6 !pb-3 text-black" />
         <label for="title" class="absolute left-4 top-1 text-[11px] opacity-60 pointer-events-none">Title</label>
       </div>
 
@@ -103,15 +103,16 @@
         <p id="category-error" class="hidden mt-2 text-[11px] text-red-500"></p>
       </section>
 
-      <button id="submit-btn" type="submit" class="w-full h-12 rounded-2xl bg-[#FF9400] text-white font-semibold app-shadow active:translate-y-[1px] transition disabled:opacity-40 disabled:active:translate-y-0">{% if entry %}変　更{% else %}記　録{% endif %}</button>
+      <button id="submit-btn" type="submit" class="btn btn-main w-full disabled:opacity-40 disabled:active:translate-y-0">{% if entry %}変　更{% else %}記　録{% endif %}</button>
     </form>
 
     <!-- ===== 削除（編集時のみ） ===== -->
     {% if entry %}
     <form method="post" action="{% url 'dashboard_moneyflow_delete' %}?id={{ entry.id }}">
       {% csrf_token %}
-      <button type="submit" class="w-full h-12 rounded-2xl bg-[#FF3B30] text-white font-semibold app-shadow active:translate-y-[1px] transition" onclick="return confirm('このデータを削除しますか？');">削　除</button>
+      <button type="submit" class="btn btn-red w-full" onclick="return confirm('このデータを削除しますか？');">削　除</button>
     </form>
+    <button type="button" class="btn btn-sub w-full mt-3" onclick="history.back()">戻　る</button>
     {% endif %}
   </div>
 </main>
