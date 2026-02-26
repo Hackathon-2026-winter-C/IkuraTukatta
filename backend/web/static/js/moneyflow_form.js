@@ -200,3 +200,25 @@
     });
   });
 
+  // ---------- delete modal ----------
+  const deleteOpenBtn = document.getElementById("open-moneyflow-delete-modal");
+  const deleteModal = document.getElementById("moneyflow-delete-modal");
+  const deleteBg = document.getElementById("moneyflow-delete-modal-bg");
+  const deleteCloseBtns =
+    deleteModal?.querySelectorAll("[data-close-moneyflow-delete-modal]") || [];
+
+  const openDeleteModal = () => deleteModal?.classList.remove("hidden");
+  const closeDeleteModal = () => deleteModal?.classList.add("hidden");
+
+  if (deleteOpenBtn && deleteModal && deleteBg) {
+    deleteOpenBtn.addEventListener("click", openDeleteModal);
+    deleteBg.addEventListener("click", closeDeleteModal);
+    deleteCloseBtns.forEach((btn) =>
+      btn.addEventListener("click", closeDeleteModal)
+    );
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !deleteModal.classList.contains("hidden")) {
+        closeDeleteModal();
+      }
+    });
+  }
