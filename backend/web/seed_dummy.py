@@ -18,14 +18,14 @@ def seed():
         user.save(update_fields=["password"])
 
     categories = {}
-    for name, is_in_type, icon_key, color_hex in DEFAULT_CATEGORY_SPECS:
+    for name, is_income, icon_key, color_hex in DEFAULT_CATEGORY_SPECS:
         cat, _ = Category.objects.update_or_create(
             user=user,
             group=None,
             name=name,
             defaults={
                 "color": color_hex,
-                "is_in_type": is_in_type,
+                "is_income": is_income,
                 "icon_key": icon_key,
                 "is_builtin": True,
             },
@@ -95,11 +95,11 @@ def seed():
         ("医療費", 4500, "2026-02-28", "美容室"),
     ]
 
-    for name, amount, expense_date, memo in moneyflow_specs:
+    for name, amount, expense_date, title in moneyflow_specs:
         MoneyFlow.objects.update_or_create(
             category=categories[name],
             expense_date=date.fromisoformat(expense_date),
-            memo=memo,
+            title=title,
             defaults={
                 "amount": Decimal(str(amount)),
                 "receipt_id": None,
