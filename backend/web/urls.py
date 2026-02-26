@@ -74,6 +74,15 @@ urlpatterns = [
         name="account_user_password_update_api",
     ),
     path("api/account/profile-image/", views.profile_image_update_api, name="profile_image_update_api"),
+    path("api/users", views.users_api, name="users_api"),
+
+    # # レシートテスト用
+    # path("receipt_test/", views.receipt_test_page),
+    # path("receipt_upload_api", views.receipt_upload_api),
+    # path("receipt_save_api", views.receipt_save_api),
+    
+    path("api/categories/<int:category_id>/rename/", views.category_rename_api, name="category_rename_api"),
+    path("api/categories/<int:category_id>/delete/", views.category_delete_api, name="category_delete_api"),
     path("api/users/", views.users_api, name="users_api"),
     path("api/account/delete/", views.account_delete_api, name="account_delete_api"),
     path("api/account/theme-choice/complete/", views.signup_theme_choice_complete_api, name="signup_theme_choice_complete_api"),
