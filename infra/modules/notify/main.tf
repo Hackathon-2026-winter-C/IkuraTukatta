@@ -38,6 +38,28 @@ resource "aws_cloudwatch_event_target" "ec2_ready_to_sns" {
   arn       = aws_sns_topic.ec2_ready.arn
 }
 
+resource "aws_cloudwatch_event_rule" "ec2_error" {
+  name        = "${var.environment}-ec2-error-rule"
+  description = "Notify when EC2 launch/terminate fails in target ASG"
+
+  event_pattern = jsonencode({
+    source = ["aws.autoscaling"]
+    detail-type = [
+      "EC2 Instance Launch Unsuccessful",
+      "EC2 Instance Terminate Unsuccessful",
+    ]
+    detail = {
+      AutoScalingGroupName = [var.autoscaling_group_name]
+    }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "ec2_error_to_sns" {
+  rule      = aws_cloudwatch_event_rule.ec2_error.name
+  target_id = "Ec2ErrorToSns"
+  arn       = aws_sns_topic.ec2_ready.arn
+}
+
 data "aws_iam_policy_document" "sns_topic_policy" {
   statement {
     sid       = "AllowEventBridgePublish"
@@ -53,7 +75,10 @@ data "aws_iam_policy_document" "sns_topic_policy" {
     condition {
       test     = "ArnEquals"
       variable = "aws:SourceArn"
-      values   = [aws_cloudwatch_event_rule.ec2_ready.arn]
+      values = [
+        aws_cloudwatch_event_rule.ec2_ready.arn,
+        aws_cloudwatch_event_rule.ec2_error.arn,
+      ]
     }
   }
 }

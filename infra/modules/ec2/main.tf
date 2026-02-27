@@ -83,6 +83,10 @@ resource "aws_launch_template" "app" {
   image_id      = var.ami_id
   instance_type = var.instance_type
 
+  monitoring {
+    enabled = var.enable_detailed_monitoring
+  }
+
   iam_instance_profile {
     name = aws_iam_instance_profile.ec2.name
   }
@@ -126,6 +130,7 @@ resource "aws_autoscaling_group" "app" {
   target_group_arns         = [var.target_group_arn]
   health_check_type         = "ELB"
   health_check_grace_period = 300
+  default_instance_warmup   = var.asg_default_instance_warmup
   min_size                  = var.asg_min_size
   max_size                  = var.asg_max_size
   desired_capacity          = var.asg_desired_capacity
@@ -139,6 +144,37 @@ resource "aws_autoscaling_group" "app" {
     key                 = "Name"
     value               = "${var.project_name}-asg-instance"
     propagate_at_launch = true
+  }
+}
+
+resource "aws_autoscaling_policy" "cpu_target_tracking" {
+  name                      = "${var.project_name}-cpu-target-tracking"
+  autoscaling_group_name    = aws_autoscaling_group.app.name
+  policy_type               = "TargetTrackingScaling"
+  estimated_instance_warmup = var.asg_default_instance_warmup
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+
+    target_value = var.scale_out_cpu_target
+  }
+}
+
+resource "aws_autoscaling_policy" "alb_request_target_tracking" {
+  name                      = "${var.project_name}-alb-req-target-tracking"
+  autoscaling_group_name    = aws_autoscaling_group.app.name
+  policy_type               = "TargetTrackingScaling"
+  estimated_instance_warmup = var.asg_default_instance_warmup
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ALBRequestCountPerTarget"
+      resource_label         = "${var.alb_arn_suffix}/${var.target_group_arn_suffix}"
+    }
+
+    target_value = var.scale_out_requests_per_target
   }
 }
 

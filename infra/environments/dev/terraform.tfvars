@@ -27,8 +27,15 @@ acm_certificate_arn = "arn:aws:acm:ap-northeast-1:048588986880:certificate/2e574
 
 
 # ec2
-ec2_instance_type = "t3.micro"
-aws_s3_bucket     = "hackathon-media-s3-bucket-20260207"
+ec2_instance_type                 = "t3.micro"
+ec2_asg_min_size                  = 1
+ec2_asg_max_size                  = 6
+ec2_asg_desired_capacity          = 2
+ec2_asg_default_instance_warmup   = 300
+ec2_enable_detailed_monitoring    = true
+ec2_scale_out_cpu_target          = 55
+ec2_scale_out_requests_per_target = 100
+aws_s3_bucket                     = "hackathon-media-s3-bucket-20260207"
 
 # app runtime envs
 django_secret_key_param_name = "/hackathon/dev/app/django/secret-key"

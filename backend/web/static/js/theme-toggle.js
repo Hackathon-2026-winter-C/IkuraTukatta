@@ -8,7 +8,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const applyTheme = (isDark) => {
     root.setAttribute("data-theme", isDark ? "dark" : "light");
-    toggles.forEach((t) => (t.checked = !isDark));
+    toggles.forEach((t) => {
+      const nextChecked = !isDark;
+      if (t.checked !== nextChecked) t.checked = nextChecked;
+    });
     // cookieにtheme=dark or lightを保存（ライト/ダークを即反映させるため）
     document.cookie = `theme=${isDark ? "dark" : "light"}; Max-Age=31536000; Path=/; SameSite=Lax`;
   };

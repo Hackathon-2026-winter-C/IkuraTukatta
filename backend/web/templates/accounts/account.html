@@ -73,7 +73,7 @@
       </span>
 
       <label class="switch">
-        <input id="checkbox" type="checkbox" data-theme-toggle />
+        <input id="checkbox" type="checkbox" data-theme-toggle {% if request.COOKIES.theme == 'dark' %}{% else %}checked{% endif %} />
         <span class="slider">
           <div class="star star_1"></div>
           <div class="star star_2"></div>

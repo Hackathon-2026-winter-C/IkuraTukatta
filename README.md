@@ -1,142 +1,55 @@
-# 初期ファイル構成
+# いくらつかった
 
-```text
-/
-├── backend
-│   ├── config
-│   │   ├── __init__.py
-│   │   ├── asgi.py
-│   │   ├── settings.py
-│   │   ├── urls.py
-│   │   └── wsgi.py
-│   ├── Dockerfile
-│   ├── manage.py
-│   ├── requirements.txt
-│   ├── scripts
-│   │   └── entrypoint.sh    #python manage.pyの実行ファイル
-│   └── web
-│       ├── apps.py
-│       ├── models.py        #DB構成変わると変える必要あり
-│       ├── static
-│       ├── templates
-│       ├── theme
-│       ├── urls.py          #urlの定義
-│       └── views.py
-├── CチームER図.drawio
-├── db
-│   └── init
-│       ├── schema.sql       #ER図からDB構成
-│       └── seed.sql         #ダミーデータ
-├── docker-compose.yml
-├── infra                    #AWS(Terraform)
-└── README.md
-```
+## 想定ユーザー
 
-# docker 立ち上げ方
+- 家計簿を始めたいが、続かずに挫折してきた人
 
-## ①.env.sample から.env を作成
+## 課題
 
-```bash
-ディレクトリルートで実行
-cp .env.sample .env
-```
+入力や管理の手間が多く、情報が散らかって把握しづらい状況が続いている。  
+その結果、「管理したいのに続かない」と感じてしまう。
 
-## ②
+## 解決策
 
-```bash
-ディレクトリルートで実行
-docker compose up --build
-```
+口座連携や難しい設定をせず、レシートを取り込むだけで簡単に管理できる仕組みを提供。  
+「何にいくら使っているか」を自然に自覚できる状態を作る。
 
-# アクセス方法
+## 主要機能
 
-```text
-http://localhost:8000/
-http://localhost:8000/charts
-http://localhost:8000/dashboard
+### 認証・アカウント
 
-http://localhost:8000/api/users
-↑テストで作成
-```
+- ログイン
+- ログアウト
+- アカウント登録
+- Google ログイン
 
-# Django Template でフォーマッターが邪魔する場合
+### 家計管理
 
-以下プラグインのインストール
-Unibeautify - Universal Formatter
+- 支出入力
+- 収入入力
+- レシート入力
+- 支出・収入の編集、削除
 
-ディレクトリルートで.vscode/settings.json を作成
+### 可視化
 
-```json:settings.json
-{
-  "files.associations": {
-    "**/templates/**/*.html": "django-html"
-  },
-  "emmet.includeLanguages": {
-    "django-html": "html",
-    "django": "html"
-  },
-  "emmet.showExpandedAbbreviation": "always",
-  "emmet.triggerExpansionOnTab": true,
-  "editor.quickSuggestions": {
-    "other": true,
-    "comments": false,
-    "strings": true
-  },
-  "html.autoClosingTags": true
-}
-```
+- カレンダー表示
+- リスト表示
+- チャート表示
 
+### その他
 
+- グループ家計簿
+- プロフィール編集
+- 名前変更
+- メールアドレス変更
+- パスワード変更
+- カラーモード選択
+- アカウント削除
 
+## アプリ URL
 
-# セキュリティ対策
+[https://ikuratukatta.click](https://ikuratukatta.click)
 
-1. SQLインジェクション対策
-Django ORMを使用し、SQLを直接記述しないことで、ユーザー入力がSQL文として実行されることを防止している。
+## インフラ構成
 
-  views.py などで ORM を利用
-
-    Models.object,filter(field=value)
-
-
-2. CSRF対策
-DjangoのCSRFミドルウェアとテンプレートのトークン機構利用し、不正なPOSTリクエストを防止している。
-
-  settings.py
-  
-    MIDDLEWARE = [
-      "django.middlewere.csrf.CsrfViwe.Middleware",
-    ]
-
-  html
-
-    <form method="post>
-      {% csrf_token %}
-    </form>
-
-
-3. XSS対策
-Djangoテンプレートの自動エスケープ気候により、ユーザー入力がHTMLやJavaScriptとして実行されることを防止している。
-
-  {{ user_input }}   <!-- 自動的にエスケープされる -->
-
-  settings.py
-
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-
-
-4. クリックジャッキング対策
-X_Frame-Optionsヘッダを付与し、外部サイトからiframeで埋め込まれることを防止している。
-
-  settings.py
-
-    X_FRAME_OPTIONS = "DENY"
-
-    MIDDLEWARE = [
-      "django.middleware.clickjacking.XframeMiddleware",
-    ]
-
-5. CORS対策
-フロントエンドとバックエンドを同一オリジンで運用し、外部オリジンからのアクセスを許可していない。
-
-
+![インフラ構成図](https://hackathon-media-s3-bucket-20260207.s3.ap-northeast-1.amazonaws.com/%E3%82%A4%E3%83%B3%E3%83%95%E3%83%A9%E6%A7%8B%E6%88%90%E5%9B%B3v11.svg)
