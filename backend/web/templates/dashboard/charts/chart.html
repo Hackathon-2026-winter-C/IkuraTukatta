@@ -36,42 +36,37 @@
       </div>
     </div>
 
-<div class="card w-full mb-2.5 bg-[rgb(var(--app-bg))] app-shadow">
-
-    <!-- 年移動ナビ -->
-    <div id="year-navigation" class="flex items-center justify-between mb-3">
-      <a href="/dashboard/charts/?year={{ prev_year }}" aria-label="prev year" class="grid place-items-center w-[38px] h-[38px] mt-[12px] ml-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> ← </a>
-      <div id="year-display" class="text-[24px] mt-[12px] font-bold text-[rgb(var(--app-text))]">{{ current_year_display }}</div>
-      <a href="/dashboard/charts/?year={{ next_year }}" aria-label="next year" class="grid place-items-center w-[38px] h-[38px] mt-[12px] mr-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> → </a>
-    </div>
-
-    <!-- 月移動ナビ -->
-    <div id="month-navigation" class="flex items-center justify-between mb-3" style="display: none;">
-      <a href="/dashboard/charts/?year={{ current_year_display }}&month={{ prev_month_key }}" aria-label="prev month" class="grid place-items-center w-[38px] h-[38px] mt-[12px] ml-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> ← </a>
-      <div id="month-display" class="flex items-center justify-center h-[44px] mt-[12px] font-bold text-[rgb(var(--app-text))]">
-        <span id="month-year" class="text-2xl leading-none"> {{ year_label }}. </span>
-        <span id="month-num" class="text-3xl text-[#FF9400] ml-1 leading-none"> {{ month_num }} </span>
+    <div class="card w-full mb-2.5 bg-[rgb(var(--app-bg))] app-shadow">
+      <!-- 年移動ナビ -->
+      <div id="year-navigation" class="flex items-center justify-between mb-3">
+        <a id="year-prev" href="/dashboard/charts/?year={{ prev_year }}" aria-label="prev year" class="grid place-items-center w-[38px] h-[38px] mt-[12px] ml-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> ← </a>
+        <div id="year-display" class="text-[24px] mt-[12px] font-bold text-[rgb(var(--app-text))]">{{ current_year_display }}</div>
+        <a id="year-next" href="/dashboard/charts/?year={{ next_year }}" aria-label="next year" class="grid place-items-center w-[38px] h-[38px] mt-[12px] mr-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> → </a>
       </div>
-      <a href="/dashboard/charts/?year={{ current_year_display }}&month={{ next_month_key }}" aria-label="next month" class="grid place-items-center w-[38px] h-[38px] mt-[12px] mr-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> → </a>
-    </div>
-    <!-- 円グラフ表示 -->
-      <div class="p-4 h-64 shadow flex justify-center items-center rounded-[15px] bg-transparent">
-        <canvas id="expense-chart" class= "hidden w-56 h-56 mb-[4px]"></canvas>
-        <div id="chart-empty" class="mt-3 text-lg text-[rgb(var(--app-text))]" hidden>
-          支出データがありません。
+
+      <!-- 月移動ナビ -->
+      <div id="month-navigation" class="flex items-center justify-between mb-3" style="display: none">
+        <a id="month-prev" href="/dashboard/charts/?year={{ current_year_display }}&month={{ prev_month_key }}" aria-label="prev month" class="grid place-items-center w-[38px] h-[38px] mt-[12px] ml-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> ← </a>
+        <div id="month-display" class="flex items-center justify-center h-[44px] mt-[12px] font-bold text-[rgb(var(--app-text))]">
+          <span id="month-year" class="text-2xl leading-none"> {{ year_label }}. </span>
+          <span id="month-num" class="text-3xl text-[#FF9400] ml-1 leading-none"> {{ month_num }} </span>
         </div>
+        <a id="month-next" href="/dashboard/charts/?year={{ current_year_display }}&month={{ next_month_key }}" aria-label="next month" class="grid place-items-center w-[38px] h-[38px] mt-[12px] mr-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> → </a>
       </div>
-</div>
-
-    <div class="card w-full bg-[rgb(var(--app-bg))] app-shadow h-[350px] overflow-scroll "> 
-          <div id="chart-categories" class="mt-2.5 p-5 text-xl text-[rgb(var(--app-text))]" ></div>
+      <!-- 円グラフ表示 -->
+      <div class="p-4 h-64 shadow flex justify-center items-center rounded-[15px] bg-transparent">
+        <canvas id="expense-chart" class="hidden w-56 h-56 mb-[4px]" width="224" height="224"></canvas>
+        <div id="chart-empty" class="mt-3 text-lg text-[rgb(var(--app-text))]" hidden>支出データがありません。</div>
+      </div>
     </div>
-  </div> 
+
+    <div class="card w-full bg-[rgb(var(--app-bg))] app-shadow h-[350px] overflow-scroll">
+      <div id="chart-categories" class="mt-2.5 p-5 text-xl text-[rgb(var(--app-text))]"></div>
+    </div>
+  </div>
 </main>
 
-{{ processed_chart_data|json_script:"processed-chart-data" }}
-{{ current_period_type|json_script:"initial-period-type" }} 
-
+{{ processed_chart_data|json_script:"processed-chart-data" }} {{ current_period_type|json_script:"initial-period-type" }}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="{% static 'js/charts.js' %}"></script>
@@ -84,7 +79,7 @@
 <script src="{% static 'js/charts_period_switcher.js' %}"></script>
 
 <!-- ここに ledger-switcher.js を追加 -->
-<script src="{% static 'js/ledger-switcher.js' %}"></script> 
+<script src="{% static 'js/ledger-switcher.js' %}"></script>
 
 <script>
   initSegmented({

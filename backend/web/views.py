@@ -933,16 +933,15 @@ def dashboard_moneyflow_delete_page(request):
 def create_nested_defaultdict_int():
     return defaultdict(int)
 
-@login_required(login_url="login")
-@ensure_csrf_cookie
-def charts_page(request):
+
+def build_charts_payload(request):
     get_user_ids = get_scope_user_ids(request)
     qs = (
         MoneyFlow.objects.select_related("category", "category__user")
         .filter(category__user_id__in=get_user_ids)
         .order_by("-expense_date", "-id")
     )
-    all_expenses = list(qs) # 全期間の生データを取得
+    all_expenses = list(qs)  # 全期間の生データを取得
 
     # 年ごとの集計用
     yearly_totals = defaultdict(create_nested_defaultdict_int)
@@ -953,18 +952,19 @@ def charts_page(request):
     monthly_colors = {}
 
     # 年の処理
-    current_year_str = request.GET.get('year')
+    current_year_str = request.GET.get("year")
     if current_year_str:
         current_year = int(current_year_str)
     else:
         current_year = date.today().year
     prev_year = current_year - 1
     next_year = current_year + 1
+
     # 月の処理
-    current_month_str = request.GET.get('month')
+    current_month_str = request.GET.get("month")
     if current_month_str:
         try:
-            year_part, month_part = map(int, current_month_str.split('-'))
+            year_part, month_part = map(int, current_month_str.split("-"))
             current_month_date = date(year_part, month_part, 1)
         except ValueError:
             current_month_date = date(current_year, date.today().month, 1)
@@ -974,20 +974,24 @@ def charts_page(request):
 
     # python-dateutil を使わない場合の prev_month_date と next_month_date の計算
     # 前の月を計算
-    if current_month_date.month == 1: # 1月の場合
-        prev_month_date = date(current_month_date.year - 1, 12, 1) # 前年の12月
+    if current_month_date.month == 1:  # 1月の場合
+        prev_month_date = date(current_month_date.year - 1, 12, 1)  # 前年の12月
     else:
-        prev_month_date = date(current_month_date.year, current_month_date.month - 1, 1) # 前の月
+        prev_month_date = date(
+            current_month_date.year, current_month_date.month - 1, 1
+        )  # 前の月
     # 次の月を計算
-    if current_month_date.month == 12: # 12月の場合
-        next_month_date = date(current_month_date.year + 1, 1, 1) # 次の年の1月
+    if current_month_date.month == 12:  # 12月の場合
+        next_month_date = date(current_month_date.year + 1, 1, 1)  # 次の年の1月
     else:
-        next_month_date = date(current_month_date.year, current_month_date.month + 1, 1) # 次の月
+        next_month_date = date(
+            current_month_date.year, current_month_date.month + 1, 1
+        )  # 次の月
     prev_month_key = f"{prev_month_date.year}-{prev_month_date.month:02d}"
     next_month_key = f"{next_month_date.year}-{next_month_date.month:02d}"
 
     # 現在の表示期間タイプを決定 (JavaScriptに渡すため)
-    current_period_type = 'month' if current_month_str else 'year'
+    current_period_type = "month" if current_month_str else "year"
 
     for e in all_expenses:
         expense_year = e.expense_date.year
@@ -1008,15 +1012,17 @@ def charts_page(request):
     current_yearly_data = yearly_totals[current_year]
     yearly_labels = list(current_yearly_data.keys())
 
-    yearly_values = [] # まず空のリストを初期化する
-    for label in yearly_labels: # yearly_labels の各要素をループする
-        value = current_yearly_data[label] # 各ラベルに対応する値を取得する
-        yearly_values.append(value) # 各ラベルに対応する値を取得する
+    yearly_values = []  # まず空のリストを初期化する
+    for label in yearly_labels:  # yearly_labels の各要素をループする
+        value = current_yearly_data[label]  # 各ラベルに対応する値を取得する
+        yearly_values.append(value)  # 各ラベルに対応する値を取得する
 
-    yearly_bg = [] # まず空のリストを初期化する
-    for label in yearly_labels: # yearly_labels の各要素をループする
-        color = yearly_colors.get(label, "#999999") # 各ラベルに対応する色を取得する。見つからなければ "#999999" を使う
-        yearly_bg.append(color) # 取得した色をリストに追加する
+    yearly_bg = []  # まず空のリストを初期化する
+    for label in yearly_labels:  # yearly_labels の各要素をループする
+        color = yearly_colors.get(
+            label, "#999999"
+        )  # 各ラベルに対応する色を取得する。見つからなければ "#999999" を使う
+        yearly_bg.append(color)  # 取得した色をリストに追加する
 
     yearly_total_amount = sum(yearly_values)
     yearly_formatted_total_amount = f"¥{yearly_total_amount:,}"
@@ -1025,16 +1031,18 @@ def charts_page(request):
     current_monthly_data = monthly_totals[current_month_key]
     monthly_labels = list(current_monthly_data.keys())
 
-    monthly_values =[] # まず空のリストを初期化する
-    for label in monthly_labels: # monthly_labels の各要素をループする
-        value = current_monthly_data[label] # 各ラベルに対応する値を取得する
-        monthly_values.append(value) # 取得した値をリストに追加する
+    monthly_values = []  # まず空のリストを初期化する
+    for label in monthly_labels:  # monthly_labels の各要素をループする
+        value = current_monthly_data[label]  # 各ラベルに対応する値を取得する
+        monthly_values.append(value)  # 取得した値をリストに追加する
 
-    monthly_bg = [] # まず空のリストを初期化する
-    for label in monthly_labels: # monthly_labels の各要素をループする
-        color = monthly_colors.get(label, "#999999") # 各ラベルに対応する色を取得する。見つからなければ "#999999" を使う
-        monthly_bg.append(color) # 取得した色をリストに追加する
-    
+    monthly_bg = []  # まず空のリストを初期化する
+    for label in monthly_labels:  # monthly_labels の各要素をループする
+        color = monthly_colors.get(
+            label, "#999999"
+        )  # 各ラベルに対応する色を取得する。見つからなければ "#999999" を使う
+        monthly_bg.append(color)  # 取得した色をリストに追加する
+
     monthly_total_amount = sum(monthly_values)
     monthly_formatted_total_amount = f"¥{monthly_total_amount:,}"
 
@@ -1043,7 +1051,7 @@ def charts_page(request):
             "labels": yearly_labels,
             "values": yearly_values,
             "bg": yearly_bg,
-            "formattedTotalAmount" : yearly_formatted_total_amount,
+            "formattedTotalAmount": yearly_formatted_total_amount,
             "currentYearDisplay": current_year,
         },
         "month": {
@@ -1051,24 +1059,40 @@ def charts_page(request):
             "values": monthly_values,
             "bg": monthly_bg,
             "formattedTotalAmount": monthly_formatted_total_amount,
-            "currentYearDisplay": current_year, 
+            "currentYearDisplay": current_year,
             "currentMonthKey": current_month_key,
         },
     }
-    context = {
-        "processed_chart_data": processed_chart_data, 
+
+    return {
+        "processed_chart_data": processed_chart_data,
         "current_year_display": current_year,
-        "prev_year": prev_year, 
-        "next_year": next_year, 
-        "prev_month_key": prev_month_key,     # HTMLの月ナビゲーションリンク用
-        "next_month_key": next_month_key,     # HTMLの月ナビゲーションリンク用
-        "current_period_type": current_period_type, 
+        "prev_year": prev_year,
+        "next_year": next_year,
+        "prev_month_key": prev_month_key,
+        "next_month_key": next_month_key,
+        "current_period_type": current_period_type,
+        "year_label": current_month_date.year,
+        "month_num": current_month_date.month,
     }
+
+@login_required(login_url="login")
+@ensure_csrf_cookie
+def charts_page(request):
+    context = build_charts_payload(request)
     return render(
         request,
         "dashboard/charts/chart.html",
         context,
     )
+
+
+@login_required(login_url="login")
+@require_GET
+def charts_data_api(request):
+    payload = build_charts_payload(request)
+    payload["ok"] = True
+    return JsonResponse(payload)
 
 
 @login_required(login_url="login")
