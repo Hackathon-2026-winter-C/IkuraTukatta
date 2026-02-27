@@ -30,33 +30,45 @@ window.initSegmented = function initSegmented({ rootId, sliderId, radioName }) {
       return;
     }
 
-    const delta = Math.abs(idx - prevIndex);
-    if (delta <= 1) {
-      slider.style.transitionDuration = "300ms";
-      slider.style.width = `${w}px`;
-      slider.style.left = `${targetLeft}px`;
-      prevIndex = idx;
-      return;
-    }
+    // const delta = Math.abs(idx - prevIndex);
+    // if (delta <= 1) {
+    //   slider.style.transitionDuration = "300ms";
+    //   slider.style.width = `${w}px`;
+    //   slider.style.left = `${targetLeft}px`;
+    //   prevIndex = idx;
+    //   return;
+    // }
 
-    const midIdx = prevIndex + Math.sign(idx - prevIndex);
-    const midLeft = padding + w * midIdx;
-    const seq = ++animSeq;
+    // const midIdx = prevIndex + Math.sign(idx - prevIndex);
+    // const midLeft = padding + w * midIdx;
+    // const seq = ++animSeq;
 
+    // slider.style.transitionDuration = "300ms";
+    // slider.style.width = `${w}px`;
+    // slider.style.left = `${midLeft}px`;
+    // prevIndex = idx;
+
+    // slider.addEventListener(
+    //   "transitionend",
+    //   (e) => {
+    //     if (e.propertyName !== "left" || seq !== animSeq) return;
+    //     slider.style.transitionDuration = "300ms";
+    //     slider.style.left = `${targetLeft}px`;
+    //   },
+    //   { once: true }
+    // );
+
+    // 1. 移動距離に関わらず、アニメーション時間を設定
     slider.style.transitionDuration = "300ms";
+
+    // 2. 目的地の幅と位置を直接指定（一気に移動）
     slider.style.width = `${w}px`;
-    slider.style.left = `${midLeft}px`;
+    slider.style.left = `${targetLeft}px`;
+
+    // 3. 現在のインデックスを更新
     prevIndex = idx;
 
-    slider.addEventListener(
-      "transitionend",
-      (e) => {
-        if (e.propertyName !== "left" || seq !== animSeq) return;
-        slider.style.transitionDuration = "300ms";
-        slider.style.left = `${targetLeft}px`;
-      },
-      { once: true }
-    );
+
   };
 
   move();
