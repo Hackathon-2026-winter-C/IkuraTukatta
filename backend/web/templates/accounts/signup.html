@@ -1,4 +1,4 @@
-{% extends 'accounts/base.html' %} {% load static %} {% block title %}サインアップ{% endblock title %} {% block content %}
+{% extends 'accounts/base.html' %} {% load static %} {% block title %}サインアップ{% endblock title %} {% block body_class %}overflow-hidden h-screen{% endblock %} {% block content %}
 <div class="w-full flex flex-col items-center gap-4 px-4 pt-10 pb-10">
   <div class="w-full max-w-[420px] flex flex-col gap-3">
     <div class="flex items-center relative w-full">
@@ -37,7 +37,7 @@
       </form>
     </div>
     <script type="module" src="{% static 'js/signup-icon-change.js' %}" defer="defer"></script>
-
-    {% endblock %}
   </div>
 </div>
+
+{% endblock %}

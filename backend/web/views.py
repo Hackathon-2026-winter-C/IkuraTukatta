@@ -10,16 +10,12 @@ from django.urls import reverse
 from google.oauth2 import id_token as google_id_token
 from google.auth.transport import requests as google_requests
 
-from datetime import date # dateモジュールをインポート
-
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
 from botocore.exceptions import BotoCoreError, ClientError
 from PIL import UnidentifiedImageError
-
-from .profile_image_service import save_profile_image
 
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -29,9 +25,6 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
-
-from botocore.exceptions import BotoCoreError, ClientError
-from PIL import UnidentifiedImageError
 
 from .profile_image_service import save_profile_image
 from .forms import EmailUserCreationForm, UserUpdateForm
@@ -1063,12 +1056,10 @@ def charts_page(request):
         },
     }
     context = {
-        "current_user_username": request.user.username,
         "processed_chart_data": processed_chart_data, 
         "current_year_display": current_year,
         "prev_year": prev_year, 
         "next_year": next_year, 
-        "current_month_key": current_month_key, # HTMLの月ナビゲーションリンク用
         "prev_month_key": prev_month_key,     # HTMLの月ナビゲーションリンク用
         "next_month_key": next_month_key,     # HTMLの月ナビゲーションリンク用
         "current_period_type": current_period_type, 

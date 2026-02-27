@@ -19,7 +19,7 @@
     </div>
 
     <!-- ===== Segmented (Charts: Year / Month) ===== -->
-    <div id="charts-seg" class="relative flex w-full h-10 rounded-full p-1 border-white/25 backdrop-blur-lg app-shadow">
+    <div id="charts-seg" class="relative flex w-full h-10 rounded-full p-1 border border-white/25 bg-white/15 backdrop-blur-lg app-shadow">
       <!-- slider -->
       <div id="charts-slider" class="absolute top-1 bottom-1 left-1 rounded-full bg-white shadow-[0_3px_12px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.08)] transition-[left,width] duration-300"></div>
 
@@ -48,7 +48,10 @@
     <!-- 月移動ナビ -->
     <div id="month-navigation" class="flex items-center justify-between mb-3" style="display: none;">
       <a href="/dashboard/charts/?year={{ current_year_display }}&month={{ prev_month_key }}" aria-label="prev month" class="grid place-items-center w-[38px] h-[38px] mt-[12px] ml-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> ← </a>
-      <div id="month-display" class="text-[22px] mt-[12px] font-bold text-[rgb(var(--app-text))]">{{ current_year_display }}</div> 
+      <div id="month-display" class="flex items-center justify-center h-[44px] mt-[12px] font-bold text-[rgb(var(--app-text))]">
+        <span id="month-year" class="text-2xl leading-none"> {{ year_label }}. </span>
+        <span id="month-num" class="text-3xl text-[#FF9400] ml-1 leading-none"> {{ month_num }} </span>
+      </div>
       <a href="/dashboard/charts/?year={{ current_year_display }}&month={{ next_month_key }}" aria-label="next month" class="grid place-items-center w-[38px] h-[38px] mt-[12px] mr-[12px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> → </a>
     </div>
     <!-- 円グラフ表示 -->
