@@ -53,7 +53,7 @@ variable "rds_master_username" {
   type = string
 }
 
-variable "rds_master_password" {
+variable "rds_master_password_param_name" {
   type = string
 }
 
@@ -88,7 +88,7 @@ variable "ec2_asg_max_size" {
 
 variable "ec2_asg_desired_capacity" {
   type    = number
-  default = 1
+  default = 2
 }
 
 variable "ec2_django_setup_revision" {
@@ -131,9 +131,8 @@ variable "google_oauth_client_id" {
   default = "794076670847-6mfhuj5lufrkimsdfqubdolpeaii534q.apps.googleusercontent.com"
 }
 
-variable "django_secret_key" {
-  type      = string
-  sensitive = true
+variable "django_secret_key_param_name" {
+  type = string
 }
 
 variable "domain_name" {
@@ -154,5 +153,10 @@ variable "acm_certificate_arn" {
   type = string
 }
 
+variable "mattermost_webhook_param_name" {
+  type = string
+}
 
-
+variable "notify_autoscaling_group_name" {
+  type = string
+}

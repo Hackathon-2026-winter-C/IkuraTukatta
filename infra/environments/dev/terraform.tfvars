@@ -9,15 +9,15 @@ enable_nat_gateway   = true
 
 ecr_repository_name = "hachathon-winter-c-app"
 
-rds_instance_class          = "db.t3.micro"
-rds_allocated_storage       = 20
-rds_max_allocated_storage   = 100
-rds_database_name           = "ikuratukatta_rds"
-rds_master_username         = "admin"
-rds_master_password         = "admin1234"
-rds_multi_az                = false # prodでtrue
-rds_backup_retention_period = 0     # prodで7
-rds_skip_final_snapshot     = true  # prodでfalse
+rds_instance_class             = "db.t3.micro"
+rds_allocated_storage          = 20
+rds_max_allocated_storage      = 100
+rds_database_name              = "ikuratukatta_rds"
+rds_master_username            = "admin"
+rds_master_password_param_name = "/hackathon/dev/rds/master-password"
+rds_multi_az                   = false # prodでtrue
+rds_backup_retention_period    = 0     # prodで7
+rds_skip_final_snapshot        = true  # prodでfalse
 
 # domain
 domain_name         = "ikuratukatta.click"
@@ -31,4 +31,8 @@ ec2_instance_type = "t3.micro"
 aws_s3_bucket     = "hackathon-media-s3-bucket-20260207"
 
 # app runtime envs
-django_secret_key = "replace-with-strong-random-secret-key"
+django_secret_key_param_name = "/hackathon/dev/app/django/secret-key"
+
+# notify
+mattermost_webhook_param_name = "/hackathon/dev/mattermost/webhook-url"
+notify_autoscaling_group_name = "dev-app-asg"
