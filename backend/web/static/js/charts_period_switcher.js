@@ -19,6 +19,12 @@ const yearNavigation = document.getElementById("year-navigation");
 const monthNavigation = document.getElementById("month-navigation");
 const yearDisplay = document.getElementById("year-display");
 const monthDisplay = document.getElementById("month-display");
+const monthYear = document.getElementById("month-year");
+const monthNum = document.getElementById("month-num");
+const yearPrev = document.getElementById("year-prev");
+const yearNext = document.getElementById("year-next");
+const monthPrev = document.getElementById("month-prev");
+const monthNext = document.getElementById("month-next");
 
 // ラジオボタンの変更を処理するメイン関数
 function handlePeriodChange() {
@@ -53,21 +59,22 @@ function handlePeriodChange() {
     } else if (selectedPeriod === 'month') {
         if (yearNavigation) yearNavigation.style.display = 'none';
         if (monthNavigation) monthNavigation.style.display = 'flex';
-        if (monthDisplay) {
+        if (monthDisplay && monthYear && monthNum) {
             const monthKey = processedChartData.month.currentMonthKey; // views.pyから渡されたキーを取得
+            let yearStr;
+            let monthStr;
             if (monthKey) {
-                const [yearStr, monthStr] = monthKey.split('-'); // "YYYY-MM"を分割
-                const monthNum = parseInt(monthStr, 10); // 月の数値を取得 (例: "02" -> 2)
-                // Dateオブジェクトを使って月名に変換 (月は0から始まるため、monthNum - 1)
-                const dateForMonthName = new Date(parseInt(yearStr, 10), monthNum - 1, 1);
-                const monthName = dateForMonthName.toLocaleString('en-US', { month: 'long' }); // 例: "February"
-                monthDisplay.textContent = `${monthName}, ${yearStr}`;
+                [yearStr, monthStr] = monthKey.split('-'); // "YYYY-MM"を分割
             } else {
                 // monthKeyがない場合のフォールバック 
                 const now = new Date();
-                const currentMonthName = now.toLocaleString('en-US', { month: 'long' });
-                monthDisplay.textContent = `${processedChartData.month.currentYearDisplay} ${currentMonthName}`;
+                yearStr = String(now.getFullYear());
+                monthStr = String(now.getMonth() + 1).padStart(2, "0");
             }
+
+            const monthNumber = parseInt(monthStr, 10);
+            monthYear.textContent = `${yearStr}.`;
+            monthNum.textContent = `${monthNumber}`;
         }
     }
 
@@ -80,6 +87,66 @@ function handlePeriodChange() {
     }
 }
 
+function updateNavLinks(payload) {
+  if (!payload) return;
+  if (yearPrev && payload.prev_year) {
+    yearPrev.href = `/dashboard/charts/?year=${payload.prev_year}`;
+  }
+  if (yearNext && payload.next_year) {
+    yearNext.href = `/dashboard/charts/?year=${payload.next_year}`;
+  }
+  if (monthPrev && payload.prev_month_key) {
+    const prevYear = payload.prev_month_key.split("-")[0];
+    monthPrev.href = `/dashboard/charts/?year=${prevYear}&month=${payload.prev_month_key}`;
+  }
+  if (monthNext && payload.next_month_key) {
+    const nextYear = payload.next_month_key.split("-")[0];
+    monthNext.href = `/dashboard/charts/?year=${nextYear}&month=${payload.next_month_key}`;
+  }
+}
+
+async function fetchAndApplyChartData(targetUrl) {
+  try {
+    const url = new URL(targetUrl, window.location.origin);
+    const apiUrl = new URL("/api/charts/data/", window.location.origin);
+    const year = url.searchParams.get("year");
+    const month = url.searchParams.get("month");
+    if (year) apiUrl.searchParams.set("year", year);
+    if (month) apiUrl.searchParams.set("month", month);
+
+    const res = await fetch(apiUrl.toString(), {
+      headers: { "X-Requested-With": "fetch" },
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      throw new Error(data?.error || "failed");
+    }
+
+    if (data.processed_chart_data) {
+      processedChartData = data.processed_chart_data;
+    }
+    if (yearDisplay && data.current_year_display) {
+      yearDisplay.textContent = data.current_year_display;
+    }
+    updateNavLinks(data);
+
+    handlePeriodChange();
+    window.history.replaceState(null, "", url.toString());
+  } catch (e) {
+    window.location.href = targetUrl;
+  }
+}
+
+function bindNavLinks() {
+  const links = [yearPrev, yearNext, monthPrev, monthNext].filter(Boolean);
+  links.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      fetchAndApplyChartData(link.href);
+    });
+  });
+}
+
 // イベントリスナーの登録
 // 'chart-period' という名前のラジオボタンの変更を監視
 const radioOptions = document.querySelectorAll('input[name="chart-period"]');
@@ -88,6 +155,7 @@ radioOptions.forEach(radio => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+  bindNavLinks();
   // URLパラメータに基づいてラジオボタンを選択
   const initialRadio = document.getElementById(`chart-${initialPeriodType}`);
   if (initialRadio) {
@@ -96,9 +164,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // その後、handlePeriodChangeを呼び出して初期表示を更新
   handlePeriodChange();
+  updateNavLinks({
+    prev_year: yearPrev ? new URL(yearPrev.href).searchParams.get("year") : null,
+    next_year: yearNext ? new URL(yearNext.href).searchParams.get("year") : null,
+    prev_month_key: monthPrev ? new URL(monthPrev.href).searchParams.get("month") : null,
+    next_month_key: monthNext ? new URL(monthNext.href).searchParams.get("month") : null,
+  });
 });
-
-
 
 
 
