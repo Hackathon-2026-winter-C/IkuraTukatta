@@ -87,6 +87,7 @@ urlpatterns = [
     path("api/account/delete/", views.account_delete_api, name="account_delete_api"),
     path("api/account/theme-choice/complete/", views.signup_theme_choice_complete_api, name="signup_theme_choice_complete_api"),
     path("api/receipts/analyze/", views.receipt_analyze_api, name="receipt_analyze_api"),
+    path("api/charts/data/", views.charts_data_api, name="charts_data_api"),
 
     # ===== 共有 APIs  =====
     path("api/groups/available/", views.groups_available_api, name="groups_available_api"),

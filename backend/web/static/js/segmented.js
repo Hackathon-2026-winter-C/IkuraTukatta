@@ -6,7 +6,10 @@ window.initSegmented = function initSegmented({ rootId, sliderId, radioName }) {
   const radios = Array.from(root.querySelectorAll(`input[name="${radioName}"]`));
   if (!radios.length) return;
 
-  const move = () => {
+  let prevIndex = 0;
+  let animSeq = 0;
+
+  const move = (opts = {}) => {
     const checkedIndex = radios.findIndex((r) => r.checked);
     const idx = checkedIndex >= 0 ? checkedIndex : 0;
 
@@ -17,11 +20,46 @@ window.initSegmented = function initSegmented({ rootId, sliderId, radioName }) {
     const count = radios.length || 1;
     const w = innerW / count;
 
+    const targetLeft = padding + w * idx;
+
+    if (opts.instant) {
+      slider.style.transitionDuration = "0ms";
+      slider.style.width = `${w}px`;
+      slider.style.left = `${targetLeft}px`;
+      prevIndex = idx;
+      return;
+    }
+
+    const delta = Math.abs(idx - prevIndex);
+    if (delta <= 1) {
+      slider.style.transitionDuration = "300ms";
+      slider.style.width = `${w}px`;
+      slider.style.left = `${targetLeft}px`;
+      prevIndex = idx;
+      return;
+    }
+
+    const midIdx = prevIndex + Math.sign(idx - prevIndex);
+    const midLeft = padding + w * midIdx;
+    const seq = ++animSeq;
+
+    slider.style.transitionDuration = "300ms";
     slider.style.width = `${w}px`;
-    slider.style.left = `${padding + w * idx}px`;
+    slider.style.left = `${midLeft}px`;
+    prevIndex = idx;
+
+    slider.addEventListener(
+      "transitionend",
+      (e) => {
+        if (e.propertyName !== "left" || seq !== animSeq) return;
+        slider.style.transitionDuration = "300ms";
+        slider.style.left = `${targetLeft}px`;
+      },
+      { once: true }
+    );
   };
 
   move();
   radios.forEach((r) => r.addEventListener("change", move));
-  window.addEventListener("resize", move);
+  window.addEventListener("resize", () => move({ instant: true }));
 };
