@@ -35,11 +35,13 @@ window.updateChart = function(labels, values, bg, formattedTotalAmount) {
 
   if (labels.length === 0) {
     if (chartEmptyMessage) chartEmptyMessage.hidden = false;
+    chartEl.classList.add("hidden");
     if (myChartInstance) myChartInstance.destroy(); // チャートを破棄
     myChartInstance = null; // インスタンスをクリア
     return;
   } else {
     if (chartEmptyMessage) chartEmptyMessage.hidden = true;
+    chartEl.classList.remove("hidden");
   }
 
   if (myChartInstance) {
