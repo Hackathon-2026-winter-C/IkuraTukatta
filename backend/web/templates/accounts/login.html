@@ -1,0 +1,44 @@
+{% extends 'accounts/base.html' %} {% load static %} {% block title %}ログイン{% endblock title %} {% block body_class %}overflow-hidden h-screen{% endblock %} {% block content %}
+{% comment %} <h2 class="text-[rgb(var(--app-text))]">ログインページ</h2> {% endcomment %}
+
+<main class="bg-black flex flex-col items-center w-full min-h-[100vh]  justify-end gap-1 ">
+  {# ロゴ画像 #}
+  <div class=" pb-4">
+    <img src="https://hackathon-media-s3-bucket-20260207.s3.ap-northeast-1.amazonaws.com/login.png" alt="いくらつかった？" class="w-[80vw] max-w-[380px]" loading="lazy" />
+  </div>
+
+  <div class="neu-panel w-full ">
+    <form class="auth-form" method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      <input type="email" name="email" class="input" value="{{ email|default:'' }}" placeholder="メールアドレス" />
+      <input type="password" name="password" class="input" placeholder="パスワード" />
+
+      <button type="submit" class="btn btn-main">Login</button>
+
+
+      {% if error %}
+    <p class="text-red-500 text-sm">{{ error }}</p>
+      {% endif %}
+    </form>
+
+    <div class="text-center text-black my-2">OR</div>
+
+    <button type="button" id="google-login-btn" class="btn btn-sub flex items-center justify-center gap-2">
+      <img src="{% static 'assets/images/google.svg' %}" alt="Google" class="w-4 h-4" />
+      <span>Continue with Google</span>
+    </button>
+    <div id="google-signin-hidden" class="fixed -left-[9999px] top-0"></div>
+    <p id="google-login-error" class="hidden mt-2 text-sm text-red-500"></p>
+
+    <div class="text-center text-black mt-2">
+      アカウントをお持ちでない方は
+      <a href="{% url 'signup' %}" class="text-[#FF9400] font-bold">こちら</a>
+    </div>
+  </div>
+</main>
+<script>window.GOOGLE_CLIENT_ID = "{{ google_client_id|escapejs }}";</script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/google-login.js' %}" defer></script>
+
+{% endblock content %}

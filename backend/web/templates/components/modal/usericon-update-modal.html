@@ -1,0 +1,24 @@
+{% load static %}
+
+<div class="w-full flex flex-col items-center gap-4 pt-10">
+  <div class="neu-panel w-full flex flex-col gap-4">
+    <h3 class="text-xl font-bold text-black text-center mb-3">写真を変更しますか？</h3>
+
+    <label id="pick-profile-image" for="profile-image-input" class="mx-auto block cursor-pointer">
+      {% if request.user.image_url %}
+      <img id="profile-image-preview" src="{{ request.user.image_url }}" data-initial-src="{{ request.user.image_url }}" alt="preview" class="w-36 h-36 rounded-[18px] object-cover" />
+      {% else %}
+      <img id="profile-image-preview" src="{% static 'assets/images/default-avatar.png' %}" data-initial-src="{% static 'assets/images/default-avatar.png' %}" alt="preview" class="w-36 h-36 rounded-[18px] object-cover" />
+      {% endif %}
+    </label>
+
+    <input id="profile-image-input" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" />
+
+    <button id="submit-profile-image" type="button" class="btn btn-main w-full p-0 text-[16px] mt-3 flex justify-center items-center">
+      変更する
+    </button>
+    <button class="btn btn-sub" data-close-icon-modal>
+      キャンセル
+    </button>
+  </div>
+</div>

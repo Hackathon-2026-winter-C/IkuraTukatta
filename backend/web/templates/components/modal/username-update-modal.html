@@ -1,0 +1,16 @@
+{% load static %}
+
+<div class="w-full flex flex-col items-center gap-4 pt-10">
+  <div class="neu-panel w-full flex flex-col gap-4">
+    <h3 class="text-xl font-bold text-black text-center mb-3">ユーザーネームを変更しますか？</h3>
+
+    <input id="username-input" type="text" class="h-10 w-full rounded-xl bg-white pl-3" value="{{ request.user.username }}" />
+
+    <button id="submit-username" type="button" class="btn btn-main w-full p-0 text-[16px] mt-3 flex justify-center items-center">
+      変更する
+    </button>
+    <button type="button" class="btn btn-sub" data-close-username-modal>
+      キャンセル
+    </button>
+  </div>
+</div>

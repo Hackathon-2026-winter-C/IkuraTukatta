@@ -1,0 +1,104 @@
+{% extends "base.html" %} {% load static %}
+<!-- 1,000,000 → 1,000,000 みたいに桁区切りするため -->
+{% load humanize %} {% block title %}Calendar{% endblock %} {% block content %}
+
+<!-- ページ全体のラッパー -->
+<main class="w-full flex flex-col items-center px-4 pt-5 pb-5">
+  <!-- ===== 共有プルダウン ===== -->
+  <div id="ledger-switcher" class="ledger-switcher w-full max-w-[420px] mb-2.5">
+    <button type="button" id="ledger-switcher-btn" class="ledger-switcher__btn">
+      <div class="flex items-center gap-2">
+        <span id="ledger-switcher-label" class="text-base text-[rgb(var(--app-text))]">読み込み中…</span>
+        <span id="ledger-switcher-badge" class="ledger-switcher__badge">表示中</span>
+      </div>
+
+      <span id="ledger-switcher-chevron" class="transition-transform duration-200"> {% include "icons/ui/chevron-down.svg" %} </span>
+    </button>
+
+    <div id="ledger-switcher-menu" class="ledger-switcher__menu" aria-hidden="true"></div>
+  </div>
+
+  <!-- カレンダー全体のカード -->
+  <section class="w-full max-w-[420px] mt-3 p-4 rounded-3xl bg-[rgb(var(--app-bg))] app-shadow">
+    <!-- ================= 月移動ナビ ================= -->
+    <div class="relative mb-3 h-[44px]">
+      <!-- 左ボタン -->
+      <a href="/dashboard/?ym={{ prev_ym }}" aria-label="prev month" class="absolute left-0 top-0 grid place-items-center w-[44px] h-[44px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> ← </a>
+
+      <!-- 右ボタン -->
+      <a href="/dashboard/?ym={{ next_ym }}" aria-label="next month" class="absolute right-0 top-0 grid place-items-center w-[44px] h-[44px] rounded-full bg-[rgb(var(--app-bg))] text-[rgb(var(--app-text))] font-extrabold no-underline app-shadow transition active:translate-y-[1px] active:brightness-[0.985]"> → </a>
+
+      <div class="flex items-center justify-center h-[44px] font-bold text-[rgb(var(--app-text))]">
+        <span class="text-2xl leading-none"> {{ year_label }}. </span>
+        <span class="text-3xl text-[#FF9400] ml-1 leading-none"> {{ month_num }} </span>
+      </div>
+    </div>
+    　
+
+    <!-- ================= 曜日ヘッダー ================= -->
+    <div class="grid grid-cols-7 text-center text-xs font-bold mb-2">
+      <!-- 日〜土のラベル -->
+      <div class="text-[rgb(var(--app-text))]">日</div>
+      <div class="text-[rgb(var(--app-text))]">月</div>
+      <div class="text-[rgb(var(--app-text))]">火</div>
+      <div class="text-[rgb(var(--app-text))]">水</div>
+      <div class="text-[rgb(var(--app-text))]">木</div>
+      <div class="text-[rgb(var(--app-text))]">金</div>
+      <div class="text-[rgb(var(--app-text))]">土</div>
+    </div>
+
+    <!-- ================= 日付グリッド ================= -->
+    <div class="grid grid-cols-7 gap-y-2">
+      <!-- weeks は view.py で作った「週 × 日」の二重配列 -->
+      {% for week in weeks %} {% for cell in week %}
+
+      <!-- 今月以外の日（前月・次月分）は空マス -->
+      {% if not cell.in_month %}
+      <div class="h-14 rounded-lg"></div>
+
+      {% else %}
+      <!-- 今月の日付マス -->
+      <!-- クリックするとその日の明細ページへ -->
+      <a href="/dashboard/list?date={{ cell.ds }}" class="calendar-day group h-[70px] rounded-lg flex flex-col items-center justify-between py-2 cursor-pointer transition-colors hover:bg-amber-500 {% if cell.is_today %} bg-amber-500 text-white font-bold {% endif %}">
+        <!-- 日付番号（1,2,3...） -->
+        <!-- ホバー時は白文字 -->
+        <span class="text-sm font-medium leading-none text-[rgb(var(--app-text))] group-hover:text-white"> {{ cell.day }} </span>
+
+        <!-- 支出額 -->
+        <!-- 0円なら opacity-0 で非表示 -->
+        <!-- 今日なら白文字、通常は青 -->
+        <span class="text-[10px] leading-tight font-bold {% if cell.is_today %} text-white {% else %} text-blue-500 group-hover:text-white {% endif %} {% if cell.out_total <= 0 %} opacity-0 {% endif %}"> -{{ cell.out_total|intcomma }} </span>
+
+        <!-- 収入額 -->
+        <!-- 0円なら opacity-0 で非表示 -->
+        <!-- 今日なら白文字、通常は赤 -->
+        <span class="text-[10px] leading-tight font-bold {% if cell.is_today %} text-white {% else %} text-red-500 group-hover:text-white {% endif %} {% if cell.in_total <= 0 %} opacity-0 {% endif %}"> +{{ cell.in_total|intcomma }} </span>
+      </a>
+      {% endif %} {% endfor %} {% endfor %}
+    </div>
+  </section>
+
+  <!-- 月の合計 -->
+  <section class="w-full max-w-[420px] mt-3 p-4 rounded-3xl bg-[rgb(var(--app-bg))] app-shadow">
+    <p class="text-[11px] text-[rgb(var(--app-text))] opacity-60">{{ month }}月の合計</p>
+    <div class="mt-3 grid grid-cols-3 gap-3 text-center">
+      <div class="rounded-2xl px-3 py-3 bg-[rgba(255,255,255,0.25)]">
+        <p class="text-[10px] opacity-60">収入</p>
+        <p class="text-sm font-bold text-red-500">+{{ month_in_total|intcomma }}</p>
+      </div>
+      <div class="rounded-2xl px-3 py-3 bg-[rgba(255,255,255,0.25)]">
+        <p class="text-[10px] opacity-60">支出</p>
+        <p class="text-sm font-bold text-blue-500">-{{ month_out_total|intcomma }}</p>
+      </div>
+      <div class="rounded-2xl px-3 py-3 bg-[rgba(255,255,255,0.25)]">
+        <p class="text-[10px] opacity-60">残高</p>
+        <p class="text-sm font-bold text-[rgb(var(--app-text))]">{{ month_balance|intcomma }}</p>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="{% static 'js/dashboard.js' %}"></script>
+  <script src="{% static 'js/ledger-switcher.js' %}" defer></script>
+</main>
+
+{% endblock %}

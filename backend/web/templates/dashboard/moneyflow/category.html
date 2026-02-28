@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}カテゴリ{% endblock %}
+
+{% block content %}
+
+<main class="w-full flex flex-col items-center bg-[rgb(var(--app-bg))] px-4 pb-24 pt-5">
+  <div class="w-full max-w-[420px] space-y-6">
+
+    <!-- ===== 支出カテゴリ一覧 ===== -->
+    <section class="rounded-3xl  app-shadow px-5 pt-5 pb-6">
+      <div class="mb-4">
+        <p class="text-[9px] font-semibold text-[rgb(var(--app-text))]">支出カテゴリ</p>
+      </div>
+
+      <div class="grid grid-cols-4 gap-4 justify-items-center">
+        {% for cat in expense_categories %}
+          {% if cat.name == "支出その他" or cat.name == "その他" %}
+            <button type="button" class="w-[60px] grid place-items-center" style="--c: {{ cat.color }};">
+          {% else %}
+            <button
+              type="button"
+              class="w-[60px] grid place-items-center"
+              style="--c: {{ cat.color }};"
+              data-open="rename"
+              data-id="{{ cat.id }}"
+              data-name="{{ cat.name }}"
+              data-builtin="{{ cat.is_builtin }}"
+            >
+          {% endif %}
+
+              <span
+                class="w-[60px] h-[60px] rounded-full bg-white border-2 flex items-center justify-center"
+                style="border-color: var(--c);"
+              >
+                <span class="flex flex-col items-center gap-[3px]" style="color: var(--c);">
+                  <span class="w-6 h-6 flex items-center justify-center [&_svg]:w-6 [&_svg]:h-6 [&_svg]:block">
+                    {% include "icons/category/"|add:cat.icon_key|add:".svg" %}
+                  </span>
+                  <span class="text-[9px] font-semibold leading-none max-w-[52px] truncate">
+                    {{ cat.name }}
+                  </span>
+                </span> 
+              </span>
+
+            </button>
+        {% endfor %}
+
+        {% for _ in expense_placeholders %}
+          <button type="button" class="w-[60px] grid place-items-center" data-open="create" data-io="0">
+            <span class="w-[60px] h-[60px] rounded-full bg-white border-2 border-dotted flex items-center justify-center border-black/25 dark:border-white/25">
+              <span class="w-6 h-6 flex items-center justify-center text-[#C5C5C5]">
+                {% include "icons/category/plus.svg" %}
+              </span>
+            </span>
+          </button>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- ===== 収入カテゴリ一覧 ===== -->
+    <section class="rounded-3xl bg-[rgb(var(--app-bg))] app-shadow px-5 pt-5 pb-6">
+      <div class="mb-4">
+        <p class="text-[9px] font-semibold text-[rgb(var(--app-text))]">収入カテゴリ</p>
+      </div>
+
+      <div class="grid grid-cols-4 gap-4 justify-items-center">
+        {% for cat in income_categories %}
+          {% if cat.name == "収入その他" or cat.name == "その他" %}
+            <button type="button" class="w-[60px] grid place-items-center" style="--c: {{ cat.color }};">
+          {% else %}
+            <button
+              type="button"
+              class="w-[60px] grid place-items-center"
+              style="--c: {{ cat.color }};"
+              data-open="rename"
+              data-id="{{ cat.id }}"
+              data-name="{{ cat.name }}"
+              data-builtin="{{ cat.is_builtin }}"
+            >
+          {% endif %}
+
+              <span
+                class="w-[60px] h-[60px] rounded-full bg-white border-2 flex items-center justify-center"
+                style="border-color: var(--c);"
+              >
+                <span class="flex flex-col items-center gap-[3px]" style="color: var(--c);">
+                  <span class="w-6 h-6 flex items-center justify-center [&_svg]:w-6 [&_svg]:h-6 [&_svg]:block">
+                    {% include "icons/category/"|add:cat.icon_key|add:".svg" %}
+                  </span>
+                  <span class="text-[9px] font-semibold leading-none max-w-[52px] truncate">
+                    {{ cat.name }}
+                  </span>
+                </span>
+              </span>
+
+            </button>
+        {% endfor %}
+
+        {% for _ in income_placeholders %}
+          <button type="button" class="w-[60px] grid place-items-center" data-open="create" data-io="1">
+            <span class="w-[60px] h-[60px] rounded-full bg-white border-2 border-dotted flex items-center justify-center border-black/25 dark:border-white/25">
+              <span class="w-6 h-6 flex items-center justify-center text-[#C5C5C5]">
+                {% include "icons/category/plus.svg" %}
+              </span>
+            </span>
+          </button>
+        {% endfor %}
+      </div>
+    </section>
+<a
+  href="{% url 'dashboard_moneyflow_form' %}"
+  class="btn btn-sub block text-center"
+>
+  戻る
+</a>
+
+
+  </div>
+</main>
+
+<!-- ===== カテゴリ追加／名前変更モーダル（ライト固定） ===== -->
+<div id="cat-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50 modal-light">
+  <button type="button" id="cat-modal-bg" class="absolute inset-0 w-full h-full"></button>
+
+  <div class="absolute inset-x-0 bottom-0">
+    <div class="w-full flex flex-col items-center gap-4 pt-10">
+      <div class="neu-panel w-full flex flex-col gap-4">
+        <h3 id="cat-modal-title" class="text-xl font-bold text-black text-center mb-3">カテゴリ追加</h3>
+
+        <div class="flex justify-center mt-1">
+          <div
+            id="cat-modal-iconcircle"
+            class="w-[66px] h-[66px] rounded-full grid place-items-center bg-white/70 border-2"
+            style="border-color: var(--cat-accent, #FF9400);"
+          >
+            <div id="cat-modal-icon" class="grid place-items-center [&_svg]:w-[40px] [&_svg]:h-[40px]">
+              <span class="w-[28px] h-[28px] flex items-center justify-center text-[#C5C5C5] [&_svg]:w-[28px] [&_svg]:h-[28px] [&_svg]:block">
+                {% include "icons/category/default.svg" %}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <input id="cat-name" type="text" class="h-10 w-full rounded-xl bg-white pl-3" placeholder="カテゴリ名" />
+        <p id="cat-error" class="text-sm text-red-500 hidden"></p>
+
+        <div id="cat-color-row" class="flex items-center justify-between">
+          <p class="text-sm text-black/50">カラー</p>
+          <input id="cat-color" type="color" value="#FF9400" class="w-12 h-9 rounded-xl border-0 bg-transparent" />
+        </div>
+
+        <button type="button" id="cat-submit" class="btn btn-main w-full p-0 text-[16px] flex justify-center items-center">
+          <span id="cat-submit-text">登　録</span>
+        </button>
+
+        <button type="button" id="cat-cancel" class="btn btn-sub">キャンセル</button>
+
+        <button type="button" id="cat-delete" class="btn btn-sub hidden text-[#D11]">削　除</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== カテゴリ削除確認モーダル（ライト固定） ===== -->
+<div id="cat-delete-modal" class="fixed inset-0 hidden bg-[rgb(var(--app-text)/0.5)] z-50 modal-light">
+  <button type="button" id="cat-delete-bg" class="absolute inset-0 w-full h-full"></button>
+
+  <div class="absolute inset-x-0 bottom-0">
+    <div class="w-full flex flex-col items-center gap-4 pt-10">
+      <div class="neu-panel w-full flex flex-col gap-4">
+        <h3 class="text-xl font-bold text-black text-center mb-3">カテゴリ削除</h3>
+
+        <p id="cat-delete-title" class="text-sm text-[#111] text-center">このカテゴリを削除しますか？</p>
+        <p class="text-xs text-black/50 text-center">削除すると元に戻せません。</p>
+
+        <button type="button" id="cat-delete-confirm" class="btn btn-main w-full p-0 text-[16px] flex justify-center items-center">削　除</button>
+        <button type="button" id="cat-delete-cancel" class="btn btn-sub">キャンセル</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="{% static 'js/category.js' %}"></script>
+{% endblock %}
