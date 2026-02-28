@@ -6,7 +6,7 @@
       <div class="flex items-center justify-center absolute z-20 bg-[rgb(var(--app-bg))] rounded-full bottom-2 md:bottom-10 w-24 h-24 footer-circle-shadow">
         <div class="z-40 h-16 w-16 bg-orange-400 rounded-full footer-circle-button-shadow"></div>
       </div>
-      <div class="flex flex-col items-center justify-center gap-5 md:gap-7 z-40 relative pt-3.5 md:pt-0">
+      <div class="flex flex-col items-center justify-center gap-5 md:gap-8 z-40 relative pt-3.5 md:pt-0">
         <span class="material-icons text-white scale-125 mt-3">calendar_today</span>
         <p class="text-orange-400">Calendar</p>
       </div>
@@ -16,7 +16,7 @@
       <div class="flex items-center justify-center absolute z-20 bg-[rgb(var(--app-bg))] rounded-full bottom-2 md:bottom-10 w-24 h-24 footer-circle-shadow">
         <div class="z-40 h-16 w-16 bg-orange-400 rounded-full footer-circle-button-shadow"></div>
       </div>
-      <div class="flex flex-col items-center justify-center gap-5 md:gap-7 z-40 relative pt-3.5 md:pt-0">
+      <div class="flex flex-col items-center justify-center gap-5 md:gap-8 z-40 relative pt-3.5 md:pt-0">
         <span class="material-icons text-white scale-125 mt-3">format_list_bulleted</span>
         <p class="text-orange-400">List</p>
       </div>
@@ -26,7 +26,7 @@
       <div class="flex items-center justify-center absolute z-20 bg-[rgb(var(--app-bg))] rounded-full bottom-2 md:bottom-10 w-24 h-24 footer-circle-shadow">
         <div class="z-40 h-16 w-16 bg-orange-400 rounded-full footer-circle-button-shadow"></div>
       </div>
-      <div class="flex flex-col items-center justify-center gap-5 md:gap-7 z-40 relative pt-3.5 md:pt-0">
+      <div class="flex flex-col items-center justify-center gap-5 md:gap-8 z-40 relative pt-3.5 md:pt-0">
         <span class="material-icons text-white scale-125 mt-3">add</span>
         <p class="text-orange-400">Record</p>
       </div>
@@ -36,7 +36,7 @@
       <div class="flex items-center justify-center absolute z-20 bg-[rgb(var(--app-bg))] rounded-full bottom-2 md:bottom-10 w-24 h-24 footer-circle-shadow">
         <div class="z-40 h-16 w-16 bg-orange-400 rounded-full footer-circle-button-shadow"></div>
       </div>
-      <div class="flex flex-col items-center justify-center gap-5 md:gap-7 z-40 relative pt-3.5 md:pt-0">
+      <div class="flex flex-col items-center justify-center gap-5 md:gap-8 z-40 relative pt-3.5 md:pt-0">
         <span class="material-icons text-white scale-125 mt-3">access_time</span>
         <p class="text-orange-400">Chart</p>
       </div>
@@ -48,7 +48,7 @@
           {% if request.user.image_url %}
           <img src="{{ request.user.image_url }}" alt="account" class="w-[56px] h-[56px] rounded-full object-cover" data-user-avatar />
           {% else %}
-          <img src="{% static 'assets/images/login.png' %}" alt="account" class="w-[56px] h-[56px] rounded-full object-cover" data-user-avatar />
+          <img src="https://hackathon-media-s3-bucket-20260207.s3.ap-northeast-1.amazonaws.com/login.png" alt="account" class="w-[56px] h-[56px]  rounded-full object-cover" data-user-avatar />
           {% endif %}
         </div>
       </div>
@@ -78,7 +78,7 @@
       {% if request.user.image_url %}
       <img src="{{ request.user.image_url }}" alt="account" class="w-[25px] h-[25px] scale-125 rounded-full object-cover transition hover:scale-150 cursor-pointer {% if url_name == 'account' %}invisible{% endif %}" data-user-avatar />
       {% else %}
-      <img src="{% static 'assets/images/default-avatar.png' %}" alt="account" class="w-[25px] h-[25px] scale-125 rounded-full object-cover transition hover:scale-150 cursor-pointer {% if url_name == 'account' %}invisible{% endif %}" data-user-avatar />
+      <img src="https://hackathon-media-s3-bucket-20260207.s3.ap-northeast-1.amazonaws.com/default-avatar.png" alt="account" class="w-[25px] h-[25px] rounded-full object-cover transition hover:scale-125 cursor-pointer {% if url_name == 'account' %}invisible{% endif %}" data-user-avatar />
       {% endif %}
     </a>
   </footer>

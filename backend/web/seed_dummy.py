@@ -9,9 +9,10 @@ from web.category_defaults import DEFAULT_CATEGORY_SPECS
 
 @transaction.atomic
 def seed():
+
     user, created = User.objects.get_or_create(
         email="haruto@example.com",
-        defaults={"username": "haruto", "image_url":"https://hackathon-media-s3-bucket-20260207.s3.ap-northeast-1.amazonaws.com/default-avatar.png"},
+        defaults={"username": "haruto"},
     )
     if created or not user.has_usable_password():
         user.set_password("demo1234")
@@ -98,6 +99,61 @@ def seed():
     for name, amount, expense_date, title in moneyflow_specs:
         MoneyFlow.objects.update_or_create(
             category=categories[name],
+            expense_date=date.fromisoformat(expense_date),
+            title=title,
+            defaults={
+                "amount": Decimal(str(amount)),
+                "receipt_id": None,
+            },
+        )
+
+    hina, created = User.objects.get_or_create(
+        email="hina@example.com",
+        defaults={"username": "hina"},
+    )
+    if created or not hina.has_usable_password():
+        hina.set_password("demo1234")
+        hina.save(update_fields=["password"])
+
+    hina_categories = {}
+    for name, is_income, icon_key, color_hex in DEFAULT_CATEGORY_SPECS:
+        cat, _ = Category.objects.update_or_create(
+            user=hina,
+            group=None,
+            name=name,
+            defaults={
+                "color": color_hex,
+                "is_income": is_income,
+                "icon_key": icon_key,
+                "is_builtin": True,
+            },
+        )
+        hina_categories[name] = cat
+
+    hina_moneyflow_specs = [
+        # ===== 2025年12月 =====
+        ("給料", 185000, "2025-12-10", "給料"),
+        ("食費", 1600, "2025-12-11", "ランチとカフェ"),
+        ("収入その他", 12000, "2025-12-15", "フリマアプリ売上"),
+        ("交通費", 2500, "2025-12-18", "電車定期チャージ"),
+        ("娯楽", 4800, "2025-12-24", "友達とクリスマスディナー"),
+        # ===== 2026年1月 =====
+        ("給料", 190000, "2026-01-10", "給料"),
+        ("食費", 2300, "2026-01-12", "スーパーで食材まとめ買い"),
+        ("収入その他", 8000, "2026-01-16", "お年玉"),
+        ("日用品", 1800, "2026-01-20", "ドラッグストアで日用品"),
+        ("住居費", 62000, "2026-01-27", "家賃"),
+        # ===== 2026年2月 =====
+        ("給料", 190000, "2026-02-10", "給料"),
+        ("食費", 2100, "2026-02-11", "外食ランチ"),
+        ("収入その他", 6000, "2026-02-14", "フリマアプリ売上"),
+        ("医療費", 3500, "2026-02-21", "歯医者"),
+        ("光熱費", 9000, "2026-02-26", "電気・ガス・水道"),
+    ]
+
+    for name, amount, expense_date, title in hina_moneyflow_specs:
+        MoneyFlow.objects.update_or_create(
+            category=hina_categories[name],
             expense_date=date.fromisoformat(expense_date),
             title=title,
             defaults={
