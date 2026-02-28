@@ -501,7 +501,7 @@ def dashboard_list_page(request):
 # 収支入力
 @login_required(login_url="login")
 def dashboard_moneyflow_form_page(request):
-    mode = (request.GET.get("mode") or "expense").strip()
+    mode = (request.POST.get("mode") or request.GET.get("mode") or "expense").strip()
     if mode not in ("expense", "income", "receipt"):
         mode = "expense"
 
@@ -519,11 +519,12 @@ def dashboard_moneyflow_form_page(request):
             "is_builtin": bool(cat.is_builtin),
         }
 
-    categories = []
-    if mode in ("expense", "income","receipt"):
-        is_income = (mode == "income")
-        qs = Category.objects.filter(query, is_income=is_income).order_by("id")
-        categories = [normalize_category(cat) for cat in qs]
+    expense_qs = Category.objects.filter(query, is_income=False).order_by("id")
+    income_qs = Category.objects.filter(query, is_income=True).order_by("id")
+    expense_categories = [normalize_category(cat) for cat in expense_qs]
+    income_categories = [normalize_category(cat) for cat in income_qs]
+
+    categories = income_categories if mode == "income" else expense_categories
 
     if request.method == "POST":
         # if mode == "receipt":
@@ -553,7 +554,7 @@ def dashboard_moneyflow_form_page(request):
         except Category.DoesNotExist:
             return JsonResponse({"ok": False, "error": "カテゴリが見つからないよ"}, status=404)
 
-        if mode == "expense" and cat.is_income:
+        if mode in ("expense", "receipt") and cat.is_income:
             return JsonResponse({"ok": False, "error": "支出タブでは収入カテゴリは選べないよ"}, status=400)
         if mode == "income" and (not cat.is_income):
             return JsonResponse({"ok": False, "error": "収入タブでは支出カテゴリは選べないよ"}, status=400)
@@ -578,6 +579,8 @@ def dashboard_moneyflow_form_page(request):
         {
             "today": date.today().isoformat(),
             "categories": categories,
+            "expense_categories": expense_categories,
+            "income_categories": income_categories,
             "mode_expense": (mode == "expense"),
             "mode_income": (mode == "income"),
             "mode_receipt": (mode == "receipt"),
@@ -845,11 +848,11 @@ def dashboard_moneyflow_edit_page(request):
             "is_builtin": bool(cat.is_builtin),
         }
 
-    categories = []
-    if mode in ("expense", "income"):
-        is_income = (mode == "income")
-        qs = Category.objects.filter(query, is_income=is_income).order_by("id")
-        categories = [normalize_category(cat) for cat in qs]
+    expense_qs = Category.objects.filter(query, is_income=False).order_by("id")
+    income_qs = Category.objects.filter(query, is_income=True).order_by("id")
+    expense_categories = [normalize_category(cat) for cat in expense_qs]
+    income_categories = [normalize_category(cat) for cat in income_qs]
+    categories = income_categories if mode == "income" else expense_categories
 
     if request.method == "POST":
         if mode == "receipt":
@@ -905,6 +908,8 @@ def dashboard_moneyflow_edit_page(request):
             "entry": entry,
             "today": date.today().isoformat(),
             "categories": categories,
+            "expense_categories": expense_categories,
+            "income_categories": income_categories,
             "mode_expense": (mode == "expense"),
             "mode_income": (mode == "income"),
             "mode_receipt": (mode == "receipt"),

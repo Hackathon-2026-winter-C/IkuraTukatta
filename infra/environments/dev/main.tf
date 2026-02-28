@@ -59,17 +59,23 @@ module "ec2" {
   source     = "../../modules/ec2"
   depends_on = [module.vpc, module.notify]
 
-  project_name          = "${var.environment}-app"
-  vpc_id                = module.vpc.vpc_id
-  private_subnet_ids    = module.vpc.private_subnet_ids
-  alb_security_group_id = module.alb.alb_security_group_id
-  target_group_arn      = module.alb.target_group_arn
+  project_name            = "${var.environment}-app"
+  vpc_id                  = module.vpc.vpc_id
+  private_subnet_ids      = module.vpc.private_subnet_ids
+  alb_security_group_id   = module.alb.alb_security_group_id
+  alb_arn_suffix          = module.alb.alb_arn_suffix
+  target_group_arn        = module.alb.target_group_arn
+  target_group_arn_suffix = module.alb.target_group_arn_suffix
 
-  instance_type         = var.ec2_instance_type
-  asg_min_size          = var.ec2_asg_min_size
-  asg_max_size          = var.ec2_asg_max_size
-  asg_desired_capacity  = var.ec2_asg_desired_capacity
-  django_setup_revision = var.ec2_django_setup_revision
+  instance_type                 = var.ec2_instance_type
+  asg_min_size                  = var.ec2_asg_min_size
+  asg_max_size                  = var.ec2_asg_max_size
+  asg_desired_capacity          = var.ec2_asg_desired_capacity
+  asg_default_instance_warmup   = var.ec2_asg_default_instance_warmup
+  enable_detailed_monitoring    = var.ec2_enable_detailed_monitoring
+  scale_out_cpu_target          = var.ec2_scale_out_cpu_target
+  scale_out_requests_per_target = var.ec2_scale_out_requests_per_target
+  django_setup_revision         = var.ec2_django_setup_revision
 
   ecr_repository_url    = module.ecr.repository_url
   region                = var.aws_region

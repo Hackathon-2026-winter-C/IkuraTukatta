@@ -1,10 +1,25 @@
-window.initSegmented = function initSegmented({ rootId, sliderId, radioName }) {
+window.initSegmented = function initSegmented({
+  rootId,
+  sliderId,
+  radioName,
+  durationMs = 300,
+  longJumpMs = null,
+}) {
   const root = document.getElementById(rootId);
   const slider = document.getElementById(sliderId);
   if (!root || !slider) return;
 
   const radios = Array.from(root.querySelectorAll(`input[name="${radioName}"]`));
   if (!radios.length) return;
+
+  const toMs = (value, fallback) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.max(0, n) : fallback;
+  };
+
+  const singleMs = toMs(durationMs, 300);
+  const totalLongMs = toMs(longJumpMs, singleMs * 2);
+  const longStepMs = Math.round(totalLongMs / 2);
 
   let prevIndex = 0;
   let animSeq = 0;
@@ -32,7 +47,7 @@ window.initSegmented = function initSegmented({ rootId, sliderId, radioName }) {
 
     const delta = Math.abs(idx - prevIndex);
     if (delta <= 1) {
-      slider.style.transitionDuration = "300ms";
+      slider.style.transitionDuration = `${singleMs}ms`;
       slider.style.width = `${w}px`;
       slider.style.left = `${targetLeft}px`;
       prevIndex = idx;
@@ -43,7 +58,7 @@ window.initSegmented = function initSegmented({ rootId, sliderId, radioName }) {
     const midLeft = padding + w * midIdx;
     const seq = ++animSeq;
 
-    slider.style.transitionDuration = "300ms";
+    slider.style.transitionDuration = `${longStepMs}ms`;
     slider.style.width = `${w}px`;
     slider.style.left = `${midLeft}px`;
     prevIndex = idx;
@@ -52,7 +67,7 @@ window.initSegmented = function initSegmented({ rootId, sliderId, radioName }) {
       "transitionend",
       (e) => {
         if (e.propertyName !== "left" || seq !== animSeq) return;
-        slider.style.transitionDuration = "300ms";
+        slider.style.transitionDuration = `${longStepMs}ms`;
         slider.style.left = `${targetLeft}px`;
       },
       { once: true }

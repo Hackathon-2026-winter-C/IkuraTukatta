@@ -18,8 +18,18 @@ variable "alb_security_group_id" {
   type        = string
 }
 
+variable "alb_arn_suffix" {
+  description = "ALB ARN suffix"
+  type        = string
+}
+
 variable "target_group_arn" {
   description = "Target group ARN"
+  type        = string
+}
+
+variable "target_group_arn_suffix" {
+  description = "Target group ARN suffix"
   type        = string
 }
 
@@ -51,6 +61,30 @@ variable "asg_desired_capacity" {
   description = "Auto Scaling Group desired capacity"
   type        = number
   default     = 2
+}
+
+variable "asg_default_instance_warmup" {
+  description = "Default instance warmup for Auto Scaling policies"
+  type        = number
+  default     = 300
+}
+
+variable "enable_detailed_monitoring" {
+  description = "Enable detailed EC2 monitoring"
+  type        = bool
+  default     = true
+}
+
+variable "scale_out_cpu_target" {
+  description = "Target CPU utilization percentage for target tracking"
+  type        = number
+  default     = 55
+}
+
+variable "scale_out_requests_per_target" {
+  description = "Target ALB request count per target for target tracking"
+  type        = number
+  default     = 100
 }
 
 variable "ecr_repository_url" {

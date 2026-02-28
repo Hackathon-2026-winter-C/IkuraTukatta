@@ -91,6 +91,26 @@ variable "ec2_asg_desired_capacity" {
   default = 2
 }
 
+variable "ec2_asg_default_instance_warmup" {
+  type    = number
+  default = 300
+}
+
+variable "ec2_enable_detailed_monitoring" {
+  type    = bool
+  default = true
+}
+
+variable "ec2_scale_out_cpu_target" {
+  type    = number
+  default = 55
+}
+
+variable "ec2_scale_out_requests_per_target" {
+  type    = number
+  default = 100
+}
+
 variable "ec2_django_setup_revision" {
   type    = string
   default = "v1"
